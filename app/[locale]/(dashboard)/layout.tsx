@@ -1,4 +1,4 @@
-import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { AppShell } from "@/components/layout/app-shell";
 import type { Locale } from "@/lib/i18n";
 
 export default async function DashboardLayout({
@@ -10,5 +10,5 @@ export default async function DashboardLayout({
 }) {
   const { locale } = await params;
 
-  return <DashboardShell locale={locale as Locale}>{children}</DashboardShell>;
+  return <AppShell>{children}</AppShell>;
 }

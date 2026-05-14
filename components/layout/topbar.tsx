@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, Globe, LogOut } from "lucide-react";
+import { Search, Globe, LogOut, Menu } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,47 @@ export function Topbar({ locale }: { locale: Locale }) {
   const pathname = usePathname() || "/";
   const router = useRouter();
 
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("sidebarCollapsed") ?? "false");
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    const onToggle = () => {
+      setCollapsed((prev) => {
+        const next = !prev;
+        try {
+          localStorage.setItem("sidebarCollapsed", JSON.stringify(next));
+        } catch (e) {
+          /* ignore */
+        }
+        return next;
+      });
+    };
+
+    const onSet = (e: Event) => {
+      if (e instanceof CustomEvent && typeof e.detail === "object" && e.detail && "collapsed" in e.detail) {
+        const newVal = !!e.detail.collapsed;
+        setCollapsed(newVal);
+        try {
+          localStorage.setItem("sidebarCollapsed", JSON.stringify(newVal));
+        } catch (e) {
+          /* ignore */
+        }
+      }
+    };
+
+    document.addEventListener("sidebar:toggle", onToggle);
+    document.addEventListener("sidebar:set", onSet as EventListener);
+    return () => {
+      document.removeEventListener("sidebar:toggle", onToggle);
+      document.removeEventListener("sidebar:set", onSet as EventListener);
+    };
+  }, []);
+
   const handleLogout = () => {
     try {
       localStorage.removeItem("token");
@@ -44,9 +86,23 @@ export function Topbar({ locale }: { locale: Locale }) {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-white/10 bg-brand-navy text-white">
+    <header
+      className={cn(
+        "fixed top-0 left-0 right-0 z-40 border-b border-white/10 bg-brand-navy text-white transition-all duration-200",
+        // On large screens, offset the header to the right of the sidebar so it doesn't span the full width.
+        collapsed ? "lg:left-16" : "lg:left-72",
+      )}
+    >
       <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="w-10" />
+        <div className="flex items-center">
+          <button
+            className={cn(buttonVariants({ variant: "ghost" as any, size: "icon" }))}
+            aria-label="Alternar sidebar"
+            onClick={() => document.dispatchEvent(new CustomEvent("sidebar:toggle"))}
+          >
+            <Menu className="size-4" />
+          </button>
+        </div>
 
         <div className="flex-1 flex justify-center px-4">
           <div className="w-full max-w-2xl">

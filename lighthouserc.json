@@ -1,0 +1,47 @@
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "http://localhost:3000/",
+        "http://localhost:3000/es",
+        "http://localhost:3000/en",
+        "http://localhost:3000/es/dashboard",
+        "http://localhost:3000/en/dashboard",
+        "http://localhost:3000/es/access",
+        "http://localhost:3000/en/access",
+        "http://localhost:3000/es/admin",
+        "http://localhost:3000/en/admin",
+        "http://localhost:3000/es/finance",
+        "http://localhost:3000/en/finance",
+        "http://localhost:3000/es/hr",
+        "http://localhost:3000/en/hr",
+        "http://localhost:3000/es/inventory",
+        "http://localhost:3000/en/inventory",
+        "http://localhost:3000/es/marketing",
+        "http://localhost:3000/en/marketing",
+        "http://localhost:3000/es/memberships",
+        "http://localhost:3000/en/memberships",
+        "http://localhost:3000/es/pos",
+        "http://localhost:3000/en/pos",
+        "http://localhost:3000/es/RH",
+        "http://localhost:3000/en/RH",
+        "http://localhost:3000/es/specialists",
+        "http://localhost:3000/en/specialists"
+      ],
+      "numberOfRuns": 1
+    },
+    "assert": {
+      "assertions": {
+        "categories:accessibility": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

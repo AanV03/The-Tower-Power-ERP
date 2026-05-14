@@ -12,7 +12,7 @@ export default async function LocaleHomePage({ params }: { params: Promise<{ loc
     <main className="min-h-screen bg-background">
       <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center gap-8 px-6 py-12">
         <div className="max-w-3xl">
-          <p className="mb-4 text-sm font-semibold uppercase text-primary">
+          <p className="mb-4 text-sm font-semibold uppercase text-foreground">
             {dictionary.landing.eyebrow}
           </p>
           <h1 className="text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
