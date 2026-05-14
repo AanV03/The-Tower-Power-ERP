@@ -77,8 +77,8 @@ export function AppSidebar({ locale }: { locale: Locale }) {
           "lg:sticky lg:top-0 lg:h-screen lg:z-20",
         )}
       >
-        <div className={cn("flex h-16 items-center gap-3 border-b border-white/10 px-5", collapsed ? "justify-center" : "") }>
-          <div className={cn("flex size-10 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground", collapsed ? "w-10 h-10" : "") }>
+        <div className={cn("flex h-16 items-center gap-3 border-b border-white/10", collapsed ? "justify-center px-2" : "px-5") }>
+          <div className={cn("flex items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground", collapsed ? "w-10 h-10 text-base" : "w-12 h-10")}>
             {defaultBrand.logoText}
           </div>
           {!collapsed && (
@@ -103,23 +103,15 @@ export function AppSidebar({ locale }: { locale: Locale }) {
                   key={item.id}
                   href={href as unknown as any}
                   className={cn(
-                    "flex gap-3 rounded-md px-3 py-3 text-sm transition-colors",
+                    "flex gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                     isActive ? "bg-primary text-primary-foreground" : "text-white/80 hover:bg-white/10 hover:text-white",
-                    collapsed ? "justify-center" : "items-start",
+                    collapsed ? "justify-center" : "items-center",
                   )}
                 >
-                  <Icon className={cn("mt-0.5 size-4 shrink-0", collapsed ? "m-0" : "") } aria-hidden="true" />
+                  <Icon className={cn("size-4 shrink-0", collapsed ? "m-0" : "")} aria-hidden="true" />
                   {!collapsed && (
                     <span className="min-w-0">
                       <span className="block font-medium">{item.labels[locale]}</span>
-                      <span
-                        className={cn(
-                          "mt-0.5 block text-xs leading-5",
-                          isActive ? "text-primary-foreground/80" : "text-white/50",
-                        )}
-                      >
-                        {item.description[locale]}
-                      </span>
                     </span>
                   )}
                 </Link>
@@ -129,10 +121,10 @@ export function AppSidebar({ locale }: { locale: Locale }) {
 
           <div className="border-t border-white/10 px-3 py-3 w-full flex-none">
             <div className="flex items-center justify-between gap-2">
-              {!collapsed && <div className="text-xs text-white/60">© Gerpy ERP</div>}
-                  <div className="flex items-center gap-2">
-                    {!collapsed && <div className="text-xs text-white/50">&nbsp;</div>}
-                  </div>
+              <div className="text-xs text-white/60">{collapsed ? '©' : '© Gerpy ERP'}</div>
+              <div className="flex items-center gap-2">
+                {!collapsed && <div className="text-xs text-white/50">&nbsp;</div>}
+              </div>
             </div>
           </div>
         </div>
