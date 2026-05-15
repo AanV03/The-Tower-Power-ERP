@@ -9,15 +9,16 @@ export function StatusBadge({
   locale: Locale;
 }) {
   const map = {
-    active: { label: { es: "Activo", en: "Active" }, variant: "secondary" as const },
-    warning: { label: { es: "Atención", en: "Warning" }, variant: "default" as const },
-    critical: { label: { es: "Crítico", en: "Critical" }, variant: "destructive" as const },
+    active: { label: { es: "Activo", en: "Active", fr: "Actif" }, variant: "secondary" as const },
+    warning: { label: { es: "Atención", en: "Warning", fr: "Avertissement" }, variant: "default" as const },
+    critical: { label: { es: "Crítico", en: "Critical", fr: "Critique" }, variant: "destructive" as const },
   };
 
   const label = map[status].label[locale];
   const statusDescription = {
     es: { active: "Estado activo", warning: "Requiere atención", critical: "Estado crítico" },
     en: { active: "Active status", warning: "Requires attention", critical: "Critical status" },
+    fr: { active: "Statut actif", warning: "Demande une attention", critical: "Statut critique" },
   };
 
   return (

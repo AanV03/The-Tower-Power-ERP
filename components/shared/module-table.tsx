@@ -45,6 +45,17 @@ export function ModuleTable({
       noData: "No recent activity",
       noDataDesc: "There are no events to show.",
     },
+    fr: {
+      title: "Activité récente",
+      description: "Événements opérationnels prêts à se connecter aux API futures.",
+      item: "Élément",
+      branch: "Succursale",
+      status: "Statut",
+      amount: "Valeur",
+      owner: "Responsable",
+      noData: "Pas d'activité récente",
+      noDataDesc: "Il n'y a pas d'événements à afficher.",
+    },
   }[locale];
 
   if (isLoading) {

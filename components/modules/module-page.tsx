@@ -24,6 +24,10 @@ export function ModulePage({
       title: "Operational trend",
       description: "Sample data to design future API integration.",
     },
+    fr: {
+      title: "Tendance opérationnelle",
+      description: "Données d'exemple pour concevoir l'intégration future de l'API.",
+    },
   }[locale];
 
   return (

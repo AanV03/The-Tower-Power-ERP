@@ -24,6 +24,12 @@ export function AuditFeed({
       noData: "No audit events",
       noDataDesc: "No activities have been recorded.",
     },
+    fr: {
+      title: "Piste d'audit sécurisée",
+      description: "Trace des actions critiques pour RBAC et conformité.",
+      noData: "Pas d'événements d'audit",
+      noDataDesc: "Aucune activité n'a été enregistrée.",
+    },
   }[locale];
 
   if (isLoading) {
