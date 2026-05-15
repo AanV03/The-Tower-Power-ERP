@@ -72,9 +72,8 @@ export function AppSidebar({ locale }: { locale: Locale }) {
 
       <aside
         className={cn(
-          "hidden shrink-0 border-r bg-brand-navy text-white lg:flex lg:flex-col gerpy-sidebar",
+          "hidden shrink-0 border-r bg-brand-navy text-white lg:flex lg:flex-col gerpy-sidebar overflow-y-auto h-full",
           collapsed ? "w-16" : "w-72",
-          "lg:sticky lg:top-0 lg:h-screen lg:z-20",
         )}
       >
         <div className={cn("flex h-16 items-center gap-3 border-b border-white/10", collapsed ? "justify-center px-2" : "px-5") }>

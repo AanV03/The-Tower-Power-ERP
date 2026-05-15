@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning className={cn("font-sans", inter.variable)}>
-      <body>
+      <body className="overscroll-none">
         <Providers>{children}</Providers>
       </body>
     </html>

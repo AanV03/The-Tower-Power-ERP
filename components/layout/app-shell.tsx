@@ -32,14 +32,19 @@ export function AppShell({ children, className }: AppShellProps) {
   const shouldGuard = guardedModules.has(moduleKey);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen flex flex-col bg-background">
+      {/* Fixed Topbar */}
       <Topbar locale={(parts[0] as any) ?? "es"} />
 
-      <div className="flex min-h-screen">
+      {/* Flex container for sidebar + content (fills remaining height after topbar) */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Fixed sidebar with sticky positioning within scroll context */}
         <AppSidebar locale={(parts[0] as any) ?? "es"} />
 
-        <div className="flex-1 flex flex-col pt-16 min-h-[calc(100vh-4rem)]">
+        {/* Main content area with flex column to handle mobile nav + main */}
+        <div className="flex-1 flex flex-col overflow-hidden">
           <MobileModuleNav locale={(parts[0] as any) ?? "es"} />
+          {/* Main scrollable area */}
           <main className={cn("flex-1 overflow-auto", className)}>{children}</main>
         </div>
       </div>
