@@ -62,28 +62,30 @@ export function AppSidebar({ locale }: { locale: Locale }) {
         dangerouslySetInnerHTML={{
           __html: `
           .gerpy-sidebar *::-webkit-scrollbar { width: 8px; height:8px }
-          .gerpy-sidebar *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 999px }
-          .gerpy-sidebar * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.06) transparent }
+          .gerpy-sidebar *::-webkit-scrollbar-thumb { background: var(--glass-opacity-light); border-radius: 999px }
+          .gerpy-sidebar * { scrollbar-width: thin; scrollbar-color: var(--glass-opacity-light) transparent }
           .gerpy-sidebar .sidebar-content::-webkit-scrollbar { width: 8px }
-          .gerpy-sidebar .sidebar-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 6px }
+          .gerpy-sidebar .sidebar-content::-webkit-scrollbar-thumb { background: var(--glass-opacity-medium); border-radius: 6px }
         `,
         }}
       />
 
       <aside
         className={cn(
-          "hidden shrink-0 border-r bg-brand-navy text-white lg:flex lg:flex-col gerpy-sidebar overflow-y-auto h-full",
+          "hidden shrink-0 border-r bg-brand-navy text-white lg:flex lg:flex-col gerpy-sidebar overflow-y-auto h-full glass-effect",
           collapsed ? "w-16" : "w-72",
         )}
+        role="navigation"
+        aria-label="Panel de navegación principal"
       >
-        <div className={cn("flex h-16 items-center gap-3 border-b border-white/10", collapsed ? "justify-center px-2" : "px-5") }>
+        <div className={cn("flex h-16 items-center gap-3 border-b border-[var(--sidebar-border-color)]", collapsed ? "justify-center px-2" : "px-5")}>
           <div className={cn("flex items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground", collapsed ? "w-10 h-10 text-base" : "w-12 h-10")}>
             {defaultBrand.logoText}
           </div>
           {!collapsed && (
             <div>
               <p className="text-sm font-semibold">{defaultBrand.name}</p>
-              <p className="text-xs text-white/60">Gym ERP SaaS</p>
+              <p className="text-xs" style={{ color: "var(--sidebar-text-secondary)" }}>{locale === "es" ? "Gimnasio ERP" : "Gym ERP"}</p>
             </div>
           )}
         </div>
@@ -102,10 +104,12 @@ export function AppSidebar({ locale }: { locale: Locale }) {
                   key={item.id}
                   href={href as unknown as any}
                   className={cn(
-                    "flex gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                    isActive ? "bg-primary text-primary-foreground" : "text-white/80 hover:bg-white/10 hover:text-white",
+                    "flex gap-3 rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2",
+                    isActive ? "bg-primary text-primary-foreground" : "hover:bg-[var(--glass-opacity-dark)] transition-all",
                     collapsed ? "justify-center" : "items-center",
                   )}
+                  style={!isActive ? { color: "var(--sidebar-text-primary)" } : undefined}
+                  aria-current={isActive ? "page" : undefined}
                 >
                   <Icon className={cn("size-4 shrink-0", collapsed ? "m-0" : "")} aria-hidden="true" />
                   {!collapsed && (
@@ -118,11 +122,10 @@ export function AppSidebar({ locale }: { locale: Locale }) {
             })}
           </nav>
 
-          <div className="border-t border-white/10 px-3 py-3 w-full flex-none">
+          <div className="border-t border-[var(--sidebar-border-color)] px-3 py-3 w-full flex-none">
             <div className="flex items-center justify-between gap-2">
-              <div className="text-xs text-white/60">{collapsed ? '©' : '© Gerpy ERP'}</div>
-              <div className="flex items-center gap-2">
-                {!collapsed && <div className="text-xs text-white/50">&nbsp;</div>}
+              <div className="text-xs" style={{ color: "var(--sidebar-text-secondary)" }}>
+                {collapsed ? '©' : `© ${new Date().getFullYear()} Gerpy`}
               </div>
             </div>
           </div>

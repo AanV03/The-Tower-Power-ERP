@@ -13,18 +13,49 @@ import {
 } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartSkeleton } from "@/components/skeletons";
+import { NoDataEmpty } from "@/components/empty-state";
 
 export function ModuleChart({
   title,
   description,
   data,
   type = "area",
+  isLoading = false,
 }: {
   title: string;
   description: string;
   data: { label: string; value: number }[];
   type?: "area" | "bar";
+  isLoading?: boolean;
 }) {
+  if (isLoading) {
+    return (
+      <Card className="min-h-[342px]">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartSkeleton />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <Card className="min-h-[342px]">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <NoDataEmpty title="Sin datos disponibles" description="No hay información para mostrar en el gráfico." />
+        </CardContent>
+      </Card>
+    );
+  }
   return (
     <Card className="min-h-[342px]">
       <CardHeader>
@@ -32,7 +63,7 @@ export function ModuleChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-56 w-full">
+        <div className="h-56 w-full" role="img" aria-label={title}>
           <ResponsiveContainer width="100%" height="100%">
             {type === "area" ? (
               <AreaChart data={data} margin={{ left: -24, right: 4, top: 8 }}>

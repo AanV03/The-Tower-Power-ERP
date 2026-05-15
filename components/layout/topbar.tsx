@@ -45,7 +45,8 @@ export function Topbar({ locale }: { locale: Locale }) {
 
   return (
     <header
-      className="flex-shrink-0 h-16 border-b border-white/10 bg-brand-navy text-white"
+      className="flex-shrink-0 h-16 border-b border-[var(--sidebar-border-color)] bg-brand-navy text-white glass-effect"
+      role="banner"
     >
       <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center">
@@ -59,15 +60,16 @@ export function Topbar({ locale }: { locale: Locale }) {
         </div>
 
         <div className="flex-1 flex justify-center px-4">
-          <div className="w-full max-w-2xl">
+          <div className="w-full max-w-xs sm:max-w-2xl">
             <Button
               variant="ghost"
-              className="relative flex h-10 w-full items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 text-left text-sm text-white/80"
+              className="relative flex h-10 w-full items-center gap-3 rounded-full border border-[var(--sidebar-border-color)] glass-effect-light px-4 text-left text-sm text-[var(--sidebar-text-primary)] focus-visible:ring-2 focus-visible:ring-offset-2"
               onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+              aria-label={dictionary.common.searchPlaceholder}
             >
-              <Search className="size-4 text-white/80" aria-hidden="true" />
-              <span className="flex-1">{dictionary.common.searchPlaceholder}</span>
-              <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-white/20 bg-white/5 px-1.5 font-mono text-[10px] font-medium text-white/80">
+              <Search className="size-4 text-[var(--sidebar-text-primary)]" aria-hidden="true" />
+              <span className="flex-1 hidden sm:inline">{dictionary.common.searchPlaceholder}</span>
+              <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-[var(--sidebar-border-color)] bg-[var(--glass-opacity-light)] px-1.5 font-mono text-[10px] font-medium text-[var(--sidebar-text-secondary)]">
                 <span className="text-xs">⌘</span>K
               </kbd>
             </Button>
@@ -78,41 +80,64 @@ export function Topbar({ locale }: { locale: Locale }) {
           <NotificationsPopover />
 
           <DropdownMenu>
-            <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost" as any, size: "icon" }))} aria-label="Idioma">
-              <Globe className="size-4" />
+            <DropdownMenuTrigger 
+              className={cn(buttonVariants({ variant: "ghost" as any, size: "icon" }))} 
+              aria-label={dictionary.common.language || "Idioma"}
+              aria-haspopup="menu"
+              aria-expanded="false"
+            >
+              <Globe className="size-4" aria-hidden="true" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-36">
-              <DropdownMenuLabel>Idioma</DropdownMenuLabel>
+              <DropdownMenuLabel>{dictionary.common.language || "Idioma"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {locales.map((targetLocale) => {
                 const href = pathname.replace(`/${locale}`, `/${targetLocale}`);
                 return (
-                  <DropdownMenuItem key={targetLocale} onClick={() => router.push(href as unknown as any)}>
-                    {targetLocale.toUpperCase()}
+                  <DropdownMenuItem 
+                    key={targetLocale} 
+                    onClick={() => router.push(href as unknown as any)}
+                    aria-current={locale === targetLocale ? "true" : undefined}
+                  >
+                    {targetLocale === "es" ? "Español" : "English"}
                   </DropdownMenuItem>
                 );
               })}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <button className={cn(buttonVariants({ variant: "ghost" as any, size: "icon" }))} aria-label="Cerrar sesión" onClick={handleLogout}>
-            <LogOut className="size-4" />
+          <button 
+            className={cn(buttonVariants({ variant: "ghost" as any, size: "icon" }))} 
+            aria-label={dictionary.common.logout || "Cerrar sesión"} 
+            onClick={handleLogout}
+            title="Cerrar sesión"
+          >
+            <LogOut className="size-4" aria-hidden="true" />
           </button>
 
           <DropdownMenu>
-            <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost" as any }))}>
+            <DropdownMenuTrigger 
+              className={cn(buttonVariants({ variant: "ghost" as any }))} 
+              aria-label={dictionary.common.account || "Mi cuenta"}
+              aria-haspopup="menu"
+              aria-expanded="false"
+            >
               <Avatar className="h-9 w-9 border-none">
-                <AvatarFallback className="bg-white/10 text-white font-medium">U</AvatarFallback>
+                <AvatarFallback className="bg-[var(--glass-opacity-dark)] text-white font-medium">U</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Cuenta</DropdownMenuLabel>
+              <DropdownMenuLabel>{dictionary.common.account || "Cuenta"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push(`/${locale}/profile` as unknown as any)}>Perfil</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push(`/${locale}/settings` as unknown as any)}>Configuración</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push(`/${locale}/profile` as unknown as any)}>
+                {dictionary.common.profile || "Perfil"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push(`/${locale}/settings` as unknown as any)}>
+                {dictionary.common.settings || "Configuración"}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} data-variant="destructive">
-                Cerrar sesión
+                {dictionary.common.logout || "Cerrar sesión"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

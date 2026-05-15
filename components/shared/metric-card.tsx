@@ -27,7 +27,7 @@ export function MetricCard({
     tone === "success" ? ArrowUpRight : tone === "danger" ? ArrowDownRight : Minus;
 
   return (
-    <Card>
+    <Card className="glass-effect">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {label}
@@ -40,9 +40,11 @@ export function MetricCard({
           </p>
           <span
             className={cn(
-              "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium",
+              "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium focus-visible:ring-2 focus-visible:ring-offset-2",
               toneStyles[tone],
             )}
+            aria-label={`Cambio: ${change}`}
+            role="status"
           >
             <Icon className="size-3.5" aria-hidden="true" />
             {change}

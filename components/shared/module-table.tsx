@@ -10,13 +10,17 @@ import {
 import type { ModuleRow } from "@/data/modules";
 import type { Locale } from "@/lib/i18n";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { TableSkeleton } from "@/components/skeletons";
+import { NoDataEmpty } from "@/components/empty-state";
 
 export function ModuleTable({
   rows,
   locale,
+  isLoading = false,
 }: {
   rows: ModuleRow[];
   locale: Locale;
+  isLoading?: boolean;
 }) {
   const labels = {
     es: {
@@ -27,6 +31,8 @@ export function ModuleTable({
       status: "Estado",
       amount: "Valor",
       owner: "Responsable",
+      noData: "Sin actividad reciente",
+      noDataDesc: "No hay eventos para mostrar.",
     },
     en: {
       title: "Recent activity",
@@ -36,8 +42,38 @@ export function ModuleTable({
       status: "Status",
       amount: "Value",
       owner: "Owner",
+      noData: "No recent activity",
+      noDataDesc: "There are no events to show.",
     },
   }[locale];
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{labels.title}</CardTitle>
+          <CardDescription>{labels.description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TableSkeleton rows={5} columns={5} />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!rows || rows.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{labels.title}</CardTitle>
+          <CardDescription>{labels.description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <NoDataEmpty title={labels.noData} description={labels.noDataDesc} />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -46,30 +82,35 @@ export function ModuleTable({
         <CardDescription>{labels.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{labels.item}</TableHead>
-              <TableHead>{labels.branch}</TableHead>
-              <TableHead>{labels.status}</TableHead>
-              <TableHead>{labels.amount}</TableHead>
-              <TableHead>{labels.owner}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow key={`${row.name}-${row.branch}`}>
-                <TableCell className="font-medium">{row.name}</TableCell>
-                <TableCell>{row.branch}</TableCell>
-                <TableCell>
-                  <StatusBadge status={row.status} locale={locale} />
-                </TableCell>
-                <TableCell>{row.amount}</TableCell>
-                <TableCell className="text-muted-foreground">{row.owner}</TableCell>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead aria-sort="none">{labels.item}</TableHead>
+                <TableHead aria-sort="none">{labels.branch}</TableHead>
+                <TableHead aria-sort="none">{labels.status}</TableHead>
+                <TableHead aria-sort="none">{labels.amount}</TableHead>
+                <TableHead aria-sort="none">{labels.owner}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row, idx) => (
+                <TableRow 
+                  key={`${row.name}-${row.branch}-${idx}`}
+                  className="focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <TableCell className="font-medium">{row.name}</TableCell>
+                  <TableCell>{row.branch}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={row.status} locale={locale} />
+                  </TableCell>
+                  <TableCell>{row.amount}</TableCell>
+                  <TableCell className="text-muted-foreground">{row.owner}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

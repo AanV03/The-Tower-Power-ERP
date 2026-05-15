@@ -15,6 +15,20 @@
     --brand-surface: #f4f4f4;
     --brand-canvas: #fcfcfc;
 
+    /* Glass variables */
+    --glass-bg: 255 255 255;
+    --glass-opacity: 0.06;
+    --glass-opacity-light: rgba(255, 255, 255, 0.06);
+    --glass-opacity-medium: rgba(255, 255, 255, 0.08);
+    --glass-opacity-dark: rgba(255, 255, 255, 0.1);
+    --header-glass-bg: rgba(255, 255, 255, 0.05);
+    --sidebar-text-primary: rgba(255, 255, 255, 0.8);
+    --sidebar-text-secondary: rgba(255, 255, 255, 0.6);
+    --sidebar-text-tertiary: rgba(255, 255, 255, 0.5);
+    --sidebar-border-color: rgba(255, 255, 255, 0.1);
+    --text-muted: #64748b;
+    --text-muted-secondary: #94a3b8;
+
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -59,6 +73,20 @@
     --brand-green: #00e699;
     --brand-surface: #2c3036;
     --brand-canvas: #212529;
+
+    /* Glass variables - dark mode */
+    --glass-bg: 18 18 20;
+    --glass-opacity: 0.06;
+    --glass-opacity-light: rgba(255, 255, 255, 0.06);
+    --glass-opacity-medium: rgba(255, 255, 255, 0.08);
+    --glass-opacity-dark: rgba(255, 255, 255, 0.1);
+    --header-glass-bg: rgba(255, 255, 255, 0.05);
+    --sidebar-text-primary: rgba(255, 255, 255, 0.8);
+    --sidebar-text-secondary: rgba(255, 255, 255, 0.6);
+    --sidebar-text-tertiary: rgba(255, 255, 255, 0.5);
+    --sidebar-border-color: rgba(255, 255, 255, 0.1);
+    --text-muted: #94a3b8;
+    --text-muted-secondary: #64748b;
 
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
@@ -118,10 +146,19 @@
 
 @layer components {
   .erp-page-grid {
-    @apply grid gap-4 md:grid-cols-2 xl:grid-cols-4;
+    @apply grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
   }
 
   .erp-section {
     @apply w-full px-4 py-4 sm:px-6 lg:px-8;
+  }
+
+  /* Glassmorphism component base */
+  .glass-effect {
+    @apply bg-[var(--header-glass-bg)] backdrop-blur-md border border-[var(--sidebar-border-color)];
+  }
+
+  .glass-effect-light {
+    @apply backdrop-blur-sm bg-[var(--glass-opacity-light)];
   }
 }

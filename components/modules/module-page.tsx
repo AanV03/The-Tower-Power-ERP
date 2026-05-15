@@ -27,7 +27,7 @@ export function ModulePage({
   }[locale];
 
   return (
-    <section className="erp-section space-y-6">
+    <section className="erp-section space-y-6" role="main" aria-label={config.title[locale]}>
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="max-w-3xl">
           <p className="text-sm font-semibold uppercase text-primary">
@@ -43,7 +43,7 @@ export function ModulePage({
         <QuickActions primaryLabel={config.primaryAction[locale]} locale={locale} />
       </div>
 
-      <div className="erp-page-grid">
+      <div className="erp-page-grid" aria-label="Métricas clave">
         {config.metrics.map((metric) => (
           <MetricCard
             key={metric.label[locale]}

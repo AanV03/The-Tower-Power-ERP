@@ -14,5 +14,19 @@ export function StatusBadge({
     critical: { label: { es: "Crítico", en: "Critical" }, variant: "destructive" as const },
   };
 
-  return <Badge variant={map[status].variant}>{map[status].label[locale]}</Badge>;
+  const label = map[status].label[locale];
+  const statusDescription = {
+    es: { active: "Estado activo", warning: "Requiere atención", critical: "Estado crítico" },
+    en: { active: "Active status", warning: "Requires attention", critical: "Critical status" },
+  };
+
+  return (
+    <Badge
+      variant={map[status].variant}
+      aria-label={statusDescription[locale][status]}
+      role="status"
+    >
+      {label}
+    </Badge>
+  );
 }
