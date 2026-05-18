@@ -1,10 +1,10 @@
 "use client";
 
-import { Bell, Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { getDictionary, type Locale } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n";
 
 export function QuickActions({
   primaryLabel,
@@ -13,7 +13,6 @@ export function QuickActions({
   primaryLabel: string;
   locale: Locale;
 }) {
-  const dictionary = getDictionary(locale);
   const message =
     locale === "es"
       ? "Acción registrada en el prototipo frontend."
@@ -36,17 +35,9 @@ export function QuickActions({
     }
   };
 
-  const handleNotifications = () => {
-    try {
-      toast.warning(message);
-    } catch (error) {
-      console.error("[QUICK_ACTIONS_NOTIFICATIONS_ERROR]", error);
-    }
-  };
-
   return (
-    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Acciones rápidas">
-      <Button 
+    <div className="flex shrink-0 items-center gap-2" role="group" aria-label="Acciones rápidas">
+      <Button
         onClick={handlePrimaryAction}
         className="focus-visible:ring-2 focus-visible:ring-offset-2"
         aria-label={primaryLabel}
@@ -54,25 +45,15 @@ export function QuickActions({
         <Plus className="mr-2" aria-hidden="true" />
         {primaryLabel}
       </Button>
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={handleRefresh} 
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handleRefresh}
         aria-label={locale === "es" ? "Actualizar" : "Refresh"}
         title={locale === "es" ? "Actualizar" : "Refresh"}
         className="focus-visible:ring-2 focus-visible:ring-offset-2"
       >
         <RefreshCw className="size-4" aria-hidden="true" />
-      </Button>
-      <Button 
-        variant="outline" 
-        size="icon" 
-        onClick={handleNotifications} 
-        aria-label={dictionary.common.notifications}
-        title={dictionary.common.notifications}
-        className="focus-visible:ring-2 focus-visible:ring-offset-2"
-      >
-        <Bell className="size-4" aria-hidden="true" />
       </Button>
     </div>
   );

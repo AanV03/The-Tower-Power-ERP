@@ -32,20 +32,18 @@ export function ModulePage({
 
   return (
     <section className="erp-section space-y-6" role="main" aria-label={config.title[locale]}>
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase text-primary">
-            Gerpy ERP
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-foreground">
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-3xl font-semibold tracking-normal text-foreground">
             {config.title[locale]}
           </h1>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
-            {config.subtitle[locale]}
-          </p>
+          <QuickActions primaryLabel={config.primaryAction[locale]} locale={locale} />
         </div>
-        <QuickActions primaryLabel={config.primaryAction[locale]} locale={locale} />
+        <p className="text-sm leading-6 text-muted-foreground sm:text-base">
+          {config.subtitle[locale]}
+        </p>
       </div>
+
 
       <div className="erp-page-grid" aria-label="Métricas clave">
         {config.metrics.map((metric) => (
