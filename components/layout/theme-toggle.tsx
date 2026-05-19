@@ -1,28 +1,19 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
-
-import { Button } from "@/components/ui/button";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { getDictionary, type Locale } from "@/lib/i18n";
 
 export function ThemeToggle({ locale = "es" }: { locale?: Locale } = {}) {
-  const { resolvedTheme, setTheme } = useTheme();
   const dictionary = getDictionary(locale);
-  const isDark = resolvedTheme === "dark";
 
   return (
-    <Button
-      type="button"
-      variant="outline"
-      size="icon"
-      aria-label={isDark ? `${dictionary.common.theme}: ${dictionary.common.lightTheme}` : `${dictionary.common.theme}: ${dictionary.common.darkTheme}`}
-      aria-pressed={isDark ? "true" : "false"}
-      title={isDark ? dictionary.common.darkTheme : dictionary.common.lightTheme}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="focus-visible:ring-2 focus-visible:ring-offset-2"
-    >
-      {isDark ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />}
-    </Button>
+    <AnimatedThemeToggler
+      variant="circle"
+      duration={450}
+      aria-label={dictionary.common.theme}
+      title={dictionary.common.theme}
+      className="inline-flex size-10 items-center justify-center rounded-md text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0"
+      style={{ color: "white", background: "transparent" }}
+    />
   );
 }
