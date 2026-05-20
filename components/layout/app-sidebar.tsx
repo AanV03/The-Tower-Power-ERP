@@ -72,14 +72,18 @@ export function AppSidebar({ locale }: { locale: Locale }) {
 
       <aside
         className={cn(
-          "hidden shrink-0 border-r bg-brand-navy text-white lg:flex lg:flex-col gerpy-sidebar overflow-y-auto h-full glass-effect",
+          "hidden shrink-0 border-r text-white lg:flex lg:flex-col gerpy-sidebar overflow-y-auto h-full glass-effect",
           collapsed ? "w-16" : "w-72",
         )}
+        style={{ backgroundColor: "var(--sidebar-bg)" }}
         role="navigation"
         aria-label="Panel de navegación principal"
       >
         <div className={cn("flex h-16 items-center gap-3 border-b border-[var(--sidebar-border-color)]", collapsed ? "justify-center px-2" : "px-5")}>
-          <div className={cn("flex items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground", collapsed ? "w-10 h-10 text-base" : "w-12 h-10")}>
+          <div
+            className={cn("flex items-center justify-center rounded-md text-sm font-bold", collapsed ? "w-10 h-10 text-base" : "w-12 h-10")}
+            style={{ backgroundColor: "var(--brand-yellow)", color: "var(--brand-ink)" }}
+          >
             {defaultBrand.logoText}
           </div>
           {!collapsed && (
@@ -105,10 +109,16 @@ export function AppSidebar({ locale }: { locale: Locale }) {
                   href={href as unknown as any}
                   className={cn(
                     "flex gap-3 rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2",
-                    isActive ? "bg-primary text-primary-foreground" : "hover:bg-[var(--glass-opacity-dark)] transition-all",
+                    isActive
+                      ? "text-white"
+                      : "hover:bg-[var(--sidebar-accent-hover)] transition-all",
                     collapsed ? "justify-center" : "items-center",
                   )}
-                  style={!isActive ? { color: "var(--sidebar-text-primary)" } : undefined}
+                  style={{
+                    ...(isActive
+                      ? { backgroundColor: "var(--sidebar-accent-active)", color: "#fff" }
+                      : { color: "var(--sidebar-text-primary)" }),
+                  }}
                   aria-current={isActive ? "page" : undefined}
                 >
                   <Icon className={cn("size-4 shrink-0", collapsed ? "m-0" : "")} aria-hidden="true" />

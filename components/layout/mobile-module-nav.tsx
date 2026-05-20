@@ -48,7 +48,10 @@ function MobileDrawer({
       {/* Header */}
       <div className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--sidebar-border-color)] px-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-12 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
+          <div
+            className="flex h-10 w-12 items-center justify-center rounded-md text-sm font-bold"
+            style={{ backgroundColor: "var(--brand-yellow)", color: "var(--brand-ink)" }}
+          >
             {defaultBrand.logoText}
           </div>
           <div>

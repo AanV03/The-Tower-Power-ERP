@@ -29,6 +29,12 @@
     --text-muted: #64748b;
     --text-muted-secondary: #94a3b8;
 
+    /* Branding overridable tokens — editable from Admin panel */
+    --sidebar-bg: #023047;
+    --topbar-bg: #023047;
+    --sidebar-accent-active: #fb8500;
+    --sidebar-accent-hover: rgba(255, 255, 255, 0.1);
+
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -87,6 +93,12 @@
     --sidebar-border-color: rgba(255, 255, 255, 0.1);
     --text-muted: #94a3b8;
     --text-muted-secondary: #64748b;
+
+    /* Branding overridable tokens — dark mode */
+    --sidebar-bg: #023047;
+    --topbar-bg: #023047;
+    --sidebar-accent-active: #fb8500;
+    --sidebar-accent-hover: rgba(255, 255, 255, 0.1);
 
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);

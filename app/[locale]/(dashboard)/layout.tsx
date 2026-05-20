@@ -1,6 +1,8 @@
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { MobileModuleNav } from "@/components/layout/mobile-module-nav";
+import { BrandColorApplier } from "@/components/branding/brand-color-applier";
+import { BrandColorScript } from "@/components/branding/brand-color-script";
 import { cn } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n";
 
@@ -15,6 +17,9 @@ export default async function DashboardLayout({
 
   return (
     <div className="h-screen overflow-hidden flex bg-background">
+      <BrandColorScript />
+      {/* Applies persisted brand colors from localStorage to :root */}
+      <BrandColorApplier />
       {/* Sidebar - Left Panel, full height */}
       <AppSidebar locale={locale as Locale} />
 

@@ -44,7 +44,8 @@ export function Topbar({ locale }: { locale: Locale }) {
 
   return (
     <header
-      className="flex-shrink-0 h-16 border-b border-[var(--sidebar-border-color)] bg-brand-navy text-white glass-effect"
+      className="flex-shrink-0 h-16 border-b border-[var(--sidebar-border-color)] text-white glass-effect"
+      style={{ backgroundColor: "var(--topbar-bg)" }}
       role="banner"
     >
       <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -93,7 +94,7 @@ export function Topbar({ locale }: { locale: Locale }) {
             </button>
             
             {languageOpen && (
-              <div className="absolute right-0 mt-3 rounded-none shadow-lg bg-brand-navy border-t border-[var(--sidebar-border-color)] z-50 w-36">
+              <div className="absolute right-0 mt-3 rounded-none shadow-lg border-t border-[var(--sidebar-border-color)] z-50 w-36" style={{ backgroundColor: "var(--topbar-bg)" }}>
                 <div className="py-1">
                   {locales.map((targetLocale) => {
                     const href = pathname.replace(`/${locale}`, `/${targetLocale}`);
@@ -141,7 +142,7 @@ export function Topbar({ locale }: { locale: Locale }) {
             </button>
             
             {accountOpen && (
-              <div className="absolute right-0 mt-3 rounded-none shadow-lg bg-brand-navy border-t border-[var(--sidebar-border-color)] z-50 w-48">
+              <div className="absolute right-0 mt-3 rounded-none shadow-lg border-t border-[var(--sidebar-border-color)] z-50 w-48" style={{ backgroundColor: "var(--topbar-bg)" }}>
                 <div className="px-4 py-3 border-b border-[var(--sidebar-border-color)]">
                   <p className="text-sm font-semibold text-white">{dictionary.common.account}</p>
                 </div>
