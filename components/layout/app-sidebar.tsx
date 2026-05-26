@@ -87,7 +87,7 @@ export function AppSidebar({ locale }: { locale: Locale }) {
             <div>
               <p className="text-sm font-semibold">{defaultBrand.name}</p>
               <p className="text-xs" style={{ color: "var(--sidebar-text-secondary)" }}>
-                {locale === "es" ? "Gimnasio ERP" : "Gym ERP"}
+                {dictionary.common.productCategory}
               </p>
             </div>
           )}

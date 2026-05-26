@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 import { NativeSelect } from "@/components/ui/native-select";
 import { scopeOptions, tenantOptions } from "@/data/navigation";
-import type { Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 export function BranchScopeSelector({
   locale,
@@ -14,6 +14,7 @@ export function BranchScopeSelector({
   locale: Locale;
   inHeader?: boolean;
 }) {
+  const dictionary = getDictionary(locale);
   const iconClass = inHeader
     ? "pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-white/70"
     : "pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground";
@@ -24,7 +25,7 @@ export function BranchScopeSelector({
   return (
     <div className="grid gap-2 sm:grid-cols-2">
       <label className="sr-only" htmlFor="tenant-selector">
-        Tenant
+        {dictionary.common.tenant}
       </label>
       <div className="relative">
         <Building2 aria-hidden="true" className={iconClass} />
@@ -38,7 +39,7 @@ export function BranchScopeSelector({
       </div>
 
       <label className="sr-only" htmlFor="scope-selector">
-        Scope
+        {dictionary.common.scope}
       </label>
       <NativeSelect id="scope-selector" className={scopeClass} defaultValue="consolidated">
         {scopeOptions.map((scope) => (

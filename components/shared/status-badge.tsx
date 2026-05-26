@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import type { Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 export function StatusBadge({
   status,
@@ -8,23 +8,19 @@ export function StatusBadge({
   status: "active" | "warning" | "critical";
   locale: Locale;
 }) {
+  const dictionary = getDictionary(locale);
   const map = {
-    active: { label: { es: "Activo", en: "Active", fr: "Actif" }, variant: "secondary" as const },
-    warning: { label: { es: "Atención", en: "Warning", fr: "Avertissement" }, variant: "default" as const },
-    critical: { label: { es: "Crítico", en: "Critical", fr: "Critique" }, variant: "destructive" as const },
+    active: { label: dictionary.common.active, description: dictionary.status.activeDescription, variant: "secondary" as const },
+    warning: { label: dictionary.common.warning, description: dictionary.status.warningDescription, variant: "default" as const },
+    critical: { label: dictionary.common.critical, description: dictionary.status.criticalDescription, variant: "destructive" as const },
   };
 
-  const label = map[status].label[locale];
-  const statusDescription = {
-    es: { active: "Estado activo", warning: "Requiere atención", critical: "Estado crítico" },
-    en: { active: "Active status", warning: "Requires attention", critical: "Critical status" },
-    fr: { active: "Statut actif", warning: "Demande une attention", critical: "Statut critique" },
-  };
+  const label = map[status].label;
 
   return (
     <Badge
       variant={map[status].variant}
-      aria-label={statusDescription[locale][status]}
+      aria-label={map[status].description}
       role="status"
     >
       {label}

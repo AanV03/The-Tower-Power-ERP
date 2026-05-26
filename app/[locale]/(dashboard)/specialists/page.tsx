@@ -4,7 +4,7 @@ import { ModuleChart } from "@/components/shared/module-chart";
 import { ModuleTable } from "@/components/shared/module-table";
 import { QuickActions } from "@/components/shared/quick-actions";
 import { moduleConfigs } from "@/data/modules";
-import type { Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 export default async function SpecialistsPage({
   params,
@@ -14,21 +14,8 @@ export default async function SpecialistsPage({
   const { locale } = await params;
   const l = locale as Locale;
   const config = moduleConfigs["specialists"];
+  const dictionary = getDictionary(l);
 
-  const chartLabels: Record<Locale, { title: string; description: string }> = {
-    es: {
-      title: "Liquidaciones por semana",
-      description: "Monto acumulado de comisiones y rentas por período.",
-    },
-    en: {
-      title: "Settlements per week",
-      description: "Accumulated commissions and rent amounts per period.",
-    },
-    fr: {
-      title: "Règlements par semaine",
-      description: "Montants cumulés des commissions et loyers par période.",
-    },
-  };
 
   return (
     <section className="erp-section space-y-6" role="main" aria-label={config.title[l]}>
@@ -44,7 +31,7 @@ export default async function SpecialistsPage({
         </p>
       </div>
 
-      <div className="erp-page-grid" aria-label="Métricas clave">
+      <div className="erp-page-grid" aria-label={dictionary.common.metricsAriaLabel}>
         {config.metrics.map((metric) => (
           <MetricCard
             key={metric.label[l]}
@@ -52,15 +39,17 @@ export default async function SpecialistsPage({
             value={metric.value}
             change={metric.change}
             tone={metric.tone}
+            locale={l}
           />
         ))}
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
         <ModuleChart
-          title={chartLabels[l].title}
-          description={chartLabels[l].description}
+          title={dictionary.moduleChart.title}
+          description={dictionary.moduleChart.description}
           data={config.chart}
+          locale={l}
           type="area"
         />
         <AuditFeed locale={l} />

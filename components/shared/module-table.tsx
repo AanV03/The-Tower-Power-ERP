@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { ModuleRow } from "@/data/modules";
-import type { Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TableSkeleton } from "@/components/skeletons";
 import { NoDataEmpty } from "@/components/empty-state";
@@ -22,41 +22,7 @@ export function ModuleTable({
   locale: Locale;
   isLoading?: boolean;
 }) {
-  const labels = {
-    es: {
-      title: "Actividad reciente",
-      description: "Eventos operativos listos para conectarse a APIs futuras.",
-      item: "Concepto",
-      branch: "Sucursal",
-      status: "Estado",
-      amount: "Valor",
-      owner: "Responsable",
-      noData: "Sin actividad reciente",
-      noDataDesc: "No hay eventos para mostrar.",
-    },
-    en: {
-      title: "Recent activity",
-      description: "Operational events ready to connect to future APIs.",
-      item: "Item",
-      branch: "Branch",
-      status: "Status",
-      amount: "Value",
-      owner: "Owner",
-      noData: "No recent activity",
-      noDataDesc: "There are no events to show.",
-    },
-    fr: {
-      title: "Activité récente",
-      description: "Événements opérationnels prêts à se connecter aux API futures.",
-      item: "Élément",
-      branch: "Succursale",
-      status: "Statut",
-      amount: "Valeur",
-      owner: "Responsable",
-      noData: "Pas d'activité récente",
-      noDataDesc: "Il n'y a pas d'événements à afficher.",
-    },
-  }[locale];
+  const labels = getDictionary(locale).moduleTable;
 
   if (isLoading) {
     return (

@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Package, AlertCircle, Inbox, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { defaultLocale, formatMessage, getDictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export interface EmptyStateProps {
@@ -70,17 +71,21 @@ export function EmptyState({
 export function NoResultsEmpty({
   query,
   onClear,
+  locale = defaultLocale,
 }: {
   query: string;
   onClear: () => void;
+  locale?: Locale;
 }) {
+  const dictionary = getDictionary(locale);
+
   return (
     <EmptyState
       variant="search"
-      title="Sin resultados"
-      description={`No encontramos resultados para "${query}". Intenta con otros t\u00e9rminos.`}
+      title={dictionary.emptyState.noResults}
+      description={formatMessage(dictionary.emptyState.noResultsDescription, { query })}
       action={{
-        label: "Limpiar b\u00fasqueda",
+        label: dictionary.emptyState.clearSearch,
         onClick: onClear,
       }}
     />
@@ -88,38 +93,46 @@ export function NoResultsEmpty({
 }
 
 export function NoDataEmpty({
-  title = "Sin datos",
-  description = "No hay informaci\u00f3n disponible por el momento.",
+  title,
+  description,
   action,
+  locale = defaultLocale,
 }: {
   title?: string;
   description?: string;
   action?: EmptyStateProps["action"];
+  locale?: Locale;
 }) {
+  const dictionary = getDictionary(locale);
+
   return (
     <EmptyState
       variant="no-data"
-      title={title}
-      description={description}
+      title={title ?? dictionary.emptyState.noData}
+      description={description ?? dictionary.emptyState.noDataDescription}
       action={action}
     />
   );
 }
 
 export function ErrorEmpty({
-  title = "Ocurri\u00f3 un error",
-  description = "No pudimos cargar los datos. Por favor intenta de nuevo.",
+  title,
+  description,
   action,
+  locale = defaultLocale,
 }: {
   title?: string;
   description?: string;
   action?: EmptyStateProps["action"];
+  locale?: Locale;
 }) {
+  const dictionary = getDictionary(locale);
+
   return (
     <EmptyState
       variant="error"
-      title={title}
-      description={description}
+      title={title ?? dictionary.emptyState.error}
+      description={description ?? dictionary.emptyState.errorDescription}
       action={action}
     />
   );

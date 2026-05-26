@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { locales, type Locale } from "@/lib/i18n";
+import { getDictionary, locales, type Locale } from "@/lib/i18n";
 
 export function LocaleSwitcher({
   locale,
@@ -15,6 +15,7 @@ export function LocaleSwitcher({
   inHeader?: boolean;
 }) {
   const pathname = usePathname();
+  const dictionary = getDictionary(locale);
 
   return (
     <div
@@ -22,6 +23,7 @@ export function LocaleSwitcher({
         "flex items-center rounded-md p-1",
         inHeader ? "bg-transparent border border-white/10" : "bg-background",
       )}
+      aria-label={dictionary.common.language}
     >
       {locales.map((targetLocale) => {
         const href = pathname.replace(`/${locale}`, `/${targetLocale}`);
@@ -39,6 +41,7 @@ export function LocaleSwitcher({
             key={targetLocale}
             href={href as unknown as any}
             className={cn(buttonVariants({ variant: variant as any, size: "sm" }), extra)}
+            aria-label={dictionary.common.languageNames[targetLocale]}
           >
             {targetLocale}
           </Link>

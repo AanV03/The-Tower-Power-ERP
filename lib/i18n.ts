@@ -18,6 +18,15 @@ const dictionaries = {
   fr,
 } as const;
 
+export type Dictionary = typeof es;
+
 export function getDictionary(locale: Locale) {
   return dictionaries[locale] ?? dictionaries[defaultLocale];
+}
+
+export function formatMessage(template: string, values: Record<string, string | number>) {
+  return Object.entries(values).reduce(
+    (message, [key, value]) => message.replaceAll(`{${key}}`, String(value)),
+    template,
+  );
 }

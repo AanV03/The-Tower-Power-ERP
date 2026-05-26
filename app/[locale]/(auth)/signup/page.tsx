@@ -15,14 +15,15 @@ import {
   Mail,
   Lock,
 } from "lucide-react";
+import { defaultLocale, getDictionary, isLocale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /* ─── Password rule helpers ─────────────────────────────────────────── */
 const rules = [
-  { id: "length",  label: "Mínimo 8 caracteres",           test: (v: string) => v.length >= 8 },
-  { id: "upper",   label: "Al menos una letra mayúscula",  test: (v: string) => /[A-Z]/.test(v) },
-  { id: "number",  label: "Al menos un número",            test: (v: string) => /[0-9]/.test(v) },
-  { id: "special", label: "Al menos un carácter especial", test: (v: string) => /[^A-Za-z0-9]/.test(v) },
+  { id: "length", test: (v: string) => v.length >= 8 },
+  { id: "upper", test: (v: string) => /[A-Z]/.test(v) },
+  { id: "number", test: (v: string) => /[0-9]/.test(v) },
+  { id: "special", test: (v: string) => /[^A-Za-z0-9]/.test(v) },
 ] as const;
 
 function validateEmail(email: string) {
@@ -49,13 +50,20 @@ function RuleItem({ met, label }: { met: boolean; label: string }) {
 }
 
 /* ─── Strength bar ───────────────────────────────────────────────────── */
-function StrengthBar({ metCount }: { metCount: number }) {
-  const strengthLabel = ["", "Débil", "Regular", "Buena", "Fuerte"];
+function StrengthBar({
+  metCount,
+  labels,
+  title,
+}: {
+  metCount: number;
+  labels: string[];
+  title: string;
+}) {
   const colors = ["bg-red-500", "bg-orange-400", "bg-yellow-400", "bg-emerald-500"];
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-muted-foreground">Fortaleza de contraseña</span>
+        <span className="text-xs text-muted-foreground">{title}</span>
         {metCount > 0 && (
           <span
             className={cn(
@@ -66,7 +74,7 @@ function StrengthBar({ metCount }: { metCount: number }) {
               metCount === 4 && "text-emerald-500",
             )}
           >
-            {strengthLabel[metCount]}
+            {labels[metCount]}
           </span>
         )}
       </div>
@@ -154,7 +162,11 @@ function InputField({
 /* ─── Page ───────────────────────────────────────────────────────────── */
 export default function SignUpPage() {
   const params = useParams();
-  const locale = (params?.locale as string) ?? "es";
+  const localeParam = (params?.locale as string) ?? defaultLocale;
+  const locale = isLocale(localeParam) ? localeParam : defaultLocale;
+  const dictionary = getDictionary(locale);
+  const auth = dictionary.auth;
+  const strengthLabels = ["", auth.strength.weak, auth.strength.fair, auth.strength.good, auth.strength.strong];
 
   /* Fields */
   const [name, setName] = useState("");
@@ -175,35 +187,35 @@ export default function SignUpPage() {
   }, []);
 
   /* Validations */
-  const metRules = rules.map((r) => ({ ...r, met: r.test(password) }));
+  const metRules = rules.map((r) => ({ ...r, label: auth.passwordRules[r.id], met: r.test(password) }));
   const metCount = metRules.filter((r) => r.met).length;
   const allRulesMet = metCount === rules.length;
 
   const showChecklist = touched.password && password.length > 0;
 
   const nameError = touched.name && name.trim().length < 2
-    ? "El nombre debe tener al menos 2 caracteres"
+    ? auth.errors.nameMin
     : undefined;
 
   const emailError = touched.email
     ? email.length === 0
-      ? "El correo es obligatorio"
+      ? auth.errors.emailRequired
       : !validateEmail(email)
-        ? "Ingresa un correo válido"
+        ? auth.errors.emailInvalid
         : undefined
     : undefined;
 
   const passwordError = touched.password && password.length > 0 && !allRulesMet
-    ? "La contraseña no cumple los requisitos"
+    ? auth.errors.passwordRequirements
     : touched.password && password.length === 0
-      ? "La contraseña es obligatoria"
+      ? auth.errors.passwordRequired
       : undefined;
 
   const confirmError = touched.confirm
     ? confirm.length === 0
-      ? "Confirma tu contraseña"
+      ? auth.errors.confirmRequired
       : confirm !== password
-        ? "Las contraseñas no coinciden"
+        ? auth.errors.confirmMismatch
         : undefined
     : undefined;
 
@@ -251,10 +263,10 @@ export default function SignUpPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Crea tu cuenta
+              {auth.signup.title}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Únete a Gerpy ERP y empieza a gestionar tu gimnasio
+              {auth.signup.subtitle}
             </p>
           </div>
         </div>
@@ -270,8 +282,8 @@ export default function SignUpPage() {
               {/* Name */}
               <InputField
                 id="signup-name"
-                label="Nombre completo"
-                placeholder="Juan García"
+                label={auth.fields.name}
+                placeholder={auth.placeholders.name}
                 value={name}
                 onChange={setName}
                 onBlur={() => handleBlur("name")}
@@ -285,9 +297,9 @@ export default function SignUpPage() {
               {/* Email */}
               <InputField
                 id="signup-email"
-                label="Correo electrónico"
+                label={auth.fields.email}
                 type="email"
-                placeholder="tu@empresa.com"
+                placeholder={auth.placeholders.email}
                 value={email}
                 onChange={setEmail}
                 onBlur={() => handleBlur("email")}
@@ -301,7 +313,7 @@ export default function SignUpPage() {
               {/* Password */}
               <div className="space-y-1.5">
                 <label htmlFor="signup-password" className="block text-sm font-medium text-foreground">
-                  Contraseña
+                  {auth.fields.password}
                 </label>
                 <div className="relative">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -311,7 +323,7 @@ export default function SignUpPage() {
                     id="signup-password"
                     type={showPw ? "text" : "password"}
                     autoComplete="new-password"
-                    placeholder="••••••••"
+                    placeholder={auth.placeholders.password}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onBlur={() => handleBlur("password")}
@@ -328,7 +340,7 @@ export default function SignUpPage() {
                   <button
                     type="button"
                     id="signup-toggle-password"
-                    aria-label={showPw ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    aria-label={showPw ? auth.actions.hidePassword : auth.actions.showPassword}
                     onClick={() => setShowPw((v) => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
@@ -342,7 +354,7 @@ export default function SignUpPage() {
                     id="signup-pw-rules"
                     className="mt-2 rounded-xl border border-border bg-muted/40 p-4 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200"
                   >
-                    <StrengthBar metCount={metCount} />
+                    <StrengthBar metCount={metCount} labels={strengthLabels} title={auth.passwordStrength} />
                     <ul className="space-y-2 pt-1">
                       {metRules.map((r) => (
                         <RuleItem key={r.id} met={r.met} label={r.label} />
@@ -361,7 +373,7 @@ export default function SignUpPage() {
               {/* Confirm password */}
               <div className="space-y-1.5">
                 <label htmlFor="signup-confirm" className="block text-sm font-medium text-foreground">
-                  Confirmar contraseña
+                  {auth.fields.confirmPassword}
                 </label>
                 <div className="relative">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -371,7 +383,7 @@ export default function SignUpPage() {
                     id="signup-confirm"
                     type={showConfirm ? "text" : "password"}
                     autoComplete="new-password"
-                    placeholder="••••••••"
+                    placeholder={auth.placeholders.password}
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     onBlur={() => handleBlur("confirm")}
@@ -390,7 +402,7 @@ export default function SignUpPage() {
                   <button
                     type="button"
                     id="signup-toggle-confirm"
-                    aria-label={showConfirm ? "Ocultar confirmación" : "Mostrar confirmación"}
+                    aria-label={showConfirm ? auth.actions.hideConfirmation : auth.actions.showConfirmation}
                     onClick={() => setShowConfirm((v) => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
@@ -400,7 +412,7 @@ export default function SignUpPage() {
                 {/* Match indicator */}
                 {confirm.length > 0 && !confirmError && (
                   <p className="flex items-center gap-1 text-xs text-emerald-500">
-                    <CheckCircle2 className="size-3 shrink-0" /> Las contraseñas coinciden
+                    <CheckCircle2 className="size-3 shrink-0" /> {auth.signup.passwordMatch}
                   </p>
                 )}
                 {confirmError && (
@@ -429,12 +441,12 @@ export default function SignUpPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                     </svg>
-                    Creando cuenta…
+                    {auth.signup.loading}
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
                     <UserPlus className="size-4" />
-                    Crear cuenta
+                    {auth.signup.submit}
                   </span>
                 )}
               </button>
@@ -443,25 +455,25 @@ export default function SignUpPage() {
 
           {/* Footer */}
           <div className="border-t border-border px-8 py-5 text-center text-sm text-muted-foreground bg-muted/30">
-            ¿Ya tienes cuenta?{" "}
+            {auth.signup.footerPrefix}{" "}
             <Link
               href={`/${locale}/signin`}
               className="font-semibold hover:underline underline-offset-4 transition-colors"
               style={{ color: "var(--brand-orange)" }}
             >
-              Iniciar sesión
+              {auth.signup.footerAction}
             </Link>
           </div>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Al registrarte aceptas los{" "}
+          {auth.legal.signupPrefix}{" "}
           <Link href="#" className="underline underline-offset-4 hover:text-foreground transition-colors">
-            Términos de uso
+            {auth.legal.terms}
           </Link>{" "}
-          y la{" "}
+          {auth.legal.and}{" "}
           <Link href="#" className="underline underline-offset-4 hover:text-foreground transition-colors">
-            Política de privacidad
+            {auth.legal.privacy}
           </Link>
           .
         </p>

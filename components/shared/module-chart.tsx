@@ -15,20 +15,25 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSkeleton } from "@/components/skeletons";
 import { NoDataEmpty } from "@/components/empty-state";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 export function ModuleChart({
   title,
   description,
   data,
+  locale,
   type = "area",
   isLoading = false,
 }: {
   title: string;
   description: string;
   data: { label: string; value: number }[];
+  locale: Locale;
   type?: "area" | "bar";
   isLoading?: boolean;
 }) {
+  const dictionary = getDictionary(locale);
+
   if (isLoading) {
     return (
       <Card className="min-h-[342px]">
@@ -51,7 +56,7 @@ export function ModuleChart({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <NoDataEmpty title="Sin datos disponibles" description="No hay información para mostrar en el gráfico." />
+          <NoDataEmpty title={dictionary.moduleChart.noData} description={dictionary.moduleChart.noDataDesc} />
         </CardContent>
       </Card>
     );

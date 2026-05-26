@@ -4,14 +4,15 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Eye, EyeOff, LogIn, Dumbbell, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { defaultLocale, getDictionary, isLocale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /* ─── Password rule helpers ─────────────────────────────────────────── */
 const rules = [
-  { id: "length",    label: "Mínimo 8 caracteres",              test: (v: string) => v.length >= 8 },
-  { id: "upper",     label: "Al menos una letra mayúscula",     test: (v: string) => /[A-Z]/.test(v) },
-  { id: "number",    label: "Al menos un número",               test: (v: string) => /[0-9]/.test(v) },
-  { id: "special",   label: "Al menos un carácter especial",    test: (v: string) => /[^A-Za-z0-9]/.test(v) },
+  { id: "length", test: (v: string) => v.length >= 8 },
+  { id: "upper", test: (v: string) => /[A-Z]/.test(v) },
+  { id: "number", test: (v: string) => /[0-9]/.test(v) },
+  { id: "special", test: (v: string) => /[^A-Za-z0-9]/.test(v) },
 ] as const;
 
 function validateEmail(email: string) {
@@ -58,7 +59,10 @@ function StrengthBar({ metCount }: { metCount: number }) {
 /* ─── Page ───────────────────────────────────────────────────────────── */
 export default function SignInPage() {
   const params = useParams();
-  const locale = (params?.locale as string) ?? "es";
+  const localeParam = (params?.locale as string) ?? defaultLocale;
+  const locale = isLocale(localeParam) ? localeParam : defaultLocale;
+  const dictionary = getDictionary(locale);
+  const auth = dictionary.auth;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -70,7 +74,7 @@ export default function SignInPage() {
   const emailError = touched.email && email.length > 0 && !validateEmail(email);
   const emailEmpty = touched.email && email.length === 0;
 
-  const metRules = rules.map((r) => ({ ...r, met: r.test(password) }));
+  const metRules = rules.map((r) => ({ ...r, label: auth.passwordRules[r.id], met: r.test(password) }));
   const metCount = metRules.filter((r) => r.met).length;
   const showChecklist = touched.password && password.length > 0;
   const allRulesMet = metCount === rules.length;
@@ -120,10 +124,10 @@ export default function SignInPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Bienvenido de vuelta
+              {auth.signin.title}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Inicia sesión en tu cuenta de Gerpy ERP
+              {auth.signin.subtitle}
             </p>
           </div>
         </div>
@@ -139,14 +143,14 @@ export default function SignInPage() {
               {/* Email */}
               <div className="space-y-1.5">
                 <label htmlFor="signin-email" className="block text-sm font-medium text-foreground">
-                  Correo electrónico
+                  {auth.fields.email}
                 </label>
                 <div className="relative">
                   <input
                     id="signin-email"
                     type="email"
                     autoComplete="email"
-                    placeholder="tu@empresa.com"
+                    placeholder={auth.placeholders.email}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onBlur={() => handleBlur("email")}
@@ -163,12 +167,12 @@ export default function SignInPage() {
                 </div>
                 {emailEmpty && (
                   <p id="signin-email-error" className="flex items-center gap-1 text-xs text-destructive">
-                    <AlertCircle className="size-3" /> El correo es obligatorio
+                    <AlertCircle className="size-3" /> {auth.errors.emailRequired}
                   </p>
                 )}
                 {emailError && (
                   <p id="signin-email-error" className="flex items-center gap-1 text-xs text-destructive">
-                    <AlertCircle className="size-3" /> Ingresa un correo válido
+                    <AlertCircle className="size-3" /> {auth.errors.emailInvalid}
                   </p>
                 )}
               </div>
@@ -176,14 +180,14 @@ export default function SignInPage() {
               {/* Password */}
               <div className="space-y-1.5">
                 <label htmlFor="signin-password" className="block text-sm font-medium text-foreground">
-                  Contraseña
+                  {auth.fields.password}
                 </label>
                 <div className="relative">
                   <input
                     id="signin-password"
                     type={showPw ? "text" : "password"}
                     autoComplete="current-password"
-                    placeholder="••••••••"
+                    placeholder={auth.placeholders.password}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onBlur={() => handleBlur("password")}
@@ -200,7 +204,7 @@ export default function SignInPage() {
                   <button
                     type="button"
                     id="signin-toggle-password"
-                    aria-label={showPw ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    aria-label={showPw ? auth.actions.hidePassword : auth.actions.showPassword}
                     onClick={() => setShowPw((v) => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
@@ -230,7 +234,7 @@ export default function SignInPage() {
                   href="#"
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
                 >
-                  ¿Olvidaste tu contraseña?
+                  {auth.signin.forgotPassword}
                 </Link>
               </div>
 
@@ -253,12 +257,12 @@ export default function SignInPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                     </svg>
-                    Iniciando sesión…
+                    {auth.signin.loading}
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
                     <LogIn className="size-4" />
-                    Iniciar sesión
+                    {auth.signin.submit}
                   </span>
                 )}
               </button>
@@ -267,25 +271,25 @@ export default function SignInPage() {
 
           {/* Divider footer */}
           <div className="border-t border-border px-8 py-5 text-center text-sm text-muted-foreground bg-muted/30">
-            ¿No tienes cuenta?{" "}
+            {auth.signin.footerPrefix}{" "}
             <Link
               href={`/${locale}/signup`}
               className="font-semibold text-foreground hover:underline underline-offset-4 transition-colors"
               style={{ color: "var(--brand-orange)" }}
             >
-              Crear cuenta
+              {auth.signin.footerAction}
             </Link>
           </div>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Al continuar aceptas los{" "}
+          {auth.legal.continuePrefix}{" "}
           <Link href="#" className="underline underline-offset-4 hover:text-foreground transition-colors">
-            Términos de uso
+            {auth.legal.terms}
           </Link>{" "}
-          y la{" "}
+          {auth.legal.and}{" "}
           <Link href="#" className="underline underline-offset-4 hover:text-foreground transition-colors">
-            Política de privacidad
+            {auth.legal.privacy}
           </Link>
           .
         </p>

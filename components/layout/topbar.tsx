@@ -120,7 +120,7 @@ export function Topbar({ locale }: { locale: Locale }) {
                   {locales.map((targetLocale) => {
                     const href = pathname.replace(`/${locale}`, `/${targetLocale}`);
                     const isActive = locale === targetLocale;
-                    const label = targetLocale === "es" ? "Español" : targetLocale === "en" ? "English" : "Français";
+                    const label = dictionary.common.languageNames[targetLocale];
                     
                     return (
                       <button

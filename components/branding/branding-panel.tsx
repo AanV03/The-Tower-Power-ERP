@@ -10,6 +10,7 @@ import {
   normalizeBrandColors,
   type BrandColors,
 } from "@/components/branding/brand-color-applier";
+import { defaultLocale, formatMessage, getDictionary, isLocale, type Locale } from "@/lib/i18n";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -47,9 +48,21 @@ interface ColorCardProps {
   description: string;
   value: string;
   onChange: (v: string) => void;
+  colorPickerLabel: string;
+  colorHexLabel: string;
+  changeColorTitle: string;
 }
 
-function ColorCard({ id, label, description, value, onChange }: ColorCardProps) {
+function ColorCard({
+  id,
+  label,
+  description,
+  value,
+  onChange,
+  colorPickerLabel,
+  colorHexLabel,
+  changeColorTitle,
+}: ColorCardProps) {
   const pickerHex = toColorInputValue(value);
 
   return (
@@ -64,12 +77,12 @@ function ColorCard({ id, label, description, value, onChange }: ColorCardProps) 
           onChange={(e) => onChange(e.target.value)}
           className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
           autoComplete="off"
-          aria-label={`Color picker for ${label}`}
+          aria-label={colorPickerLabel}
         />
         <div
           className="block w-full h-full transition-opacity group-hover:opacity-90"
           style={{ backgroundColor: pickerHex }}
-          title="Click para cambiar color"
+          title={changeColorTitle}
           aria-hidden="true"
         >
           {/* Overlay hover */}
@@ -110,7 +123,7 @@ function ColorCard({ id, label, description, value, onChange }: ColorCardProps) 
           autoComplete="off"
           className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:border-[var(--sidebar-accent-active)] focus:outline-none focus:ring-1 focus:ring-[var(--sidebar-accent-active)] transition-colors"
           spellCheck={false}
-          aria-label={`${label} hex value`}
+          aria-label={colorHexLabel}
         />
       </div>
     </div>
@@ -119,77 +132,20 @@ function ColorCard({ id, label, description, value, onChange }: ColorCardProps) 
 
 // ─── i18n ─────────────────────────────────────────────────────────────────────
 
-const LABELS = {
-  es: {
-    title: "Colores de Identidad",
-    save: "Guardar cambios",
-    reset: "Restaurar defaults",
-    saved: "¡Guardado!",
-    preview: "Vista previa activa",
-    previewDesc: "Haz clic en el swatch para elegir un color. Los cambios se aplican en tiempo real.",
-  },
-  en: {
-    title: "Brand Colors",
-    save: "Save changes",
-    reset: "Restore defaults",
-    saved: "Saved!",
-    preview: "Live preview active",
-    previewDesc: "Click the swatch to pick a color. Changes apply in real time.",
-  },
-  fr: {
-    title: "Couleurs de Marque",
-    save: "Enregistrer",
-    reset: "Restaurer les défauts",
-    saved: "Enregistré !",
-    preview: "Aperçu en direct",
-    previewDesc: "Cliquez sur la pastille pour choisir une couleur. Les modifications s'appliquent en temps réel.",
-  },
-} as const;
-
 const COLOR_FIELDS: {
   key: "sidebarBg" | "topbarBg" | "primaryColor" | "accentColor";
-  labelEs: string;
-  labelEn: string;
-  labelFr: string;
-  descEs: string;
-  descEn: string;
-  descFr: string;
 }[] = [
   {
     key: "sidebarBg",
-    labelEs: "Sidebar",
-    labelEn: "Sidebar",
-    labelFr: "Sidebar",
-    descEs: "Fondo del panel de navegación lateral.",
-    descEn: "Background of the side navigation panel.",
-    descFr: "Arrière-plan de la navigation latérale.",
   },
   {
     key: "topbarBg",
-    labelEs: "Topbar",
-    labelEn: "Topbar",
-    labelFr: "Topbar",
-    descEs: "Fondo de la barra de herramientas superior.",
-    descEn: "Background of the top toolbar.",
-    descFr: "Arrière-plan de la barre supérieure.",
   },
   {
     key: "primaryColor",
-    labelEs: "Color Principal",
-    labelEn: "Primary Color",
-    labelFr: "Couleur Principale",
-    descEs: "Botones, estado activo y gráficas principales.",
-    descEn: "Buttons, active states and primary charts.",
-    descFr: "Boutons, états actifs et graphiques principaux.",
   },
   {
     key: "accentColor",
-    labelEs: "Color Secundario",
-    labelEn: "Secondary Color",
-    labelFr: "Couleur Secondaire",
-    descEs: "Logo del sidebar, alertas y resaltados secundarios.",
-    descEn: "Sidebar logo, alerts and secondary highlights.",
-    descFr: "Logo du sidebar, alertes et reflets secondaires.",
   },
 ];
 
@@ -200,8 +156,8 @@ interface BrandingPanelProps {
 }
 
 export function BrandingPanel({ locale }: BrandingPanelProps) {
-  const l = (["es", "en", "fr"].includes(locale) ? locale : "es") as keyof typeof LABELS;
-  const t = LABELS[l];
+  const l: Locale = isLocale(locale) ? locale : defaultLocale;
+  const t = getDictionary(l).branding;
 
   const [colors, setColors] = useState<BrandColors>(loadSaved);
   const [savedFlash, setSavedFlash] = useState(false);
@@ -250,11 +206,6 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
     resetBrandColors();
     document.dispatchEvent(new CustomEvent("brand:reset"));
   };
-
-  const fl = (f: typeof COLOR_FIELDS[0]) =>
-    l === "es" ? f.labelEs : l === "en" ? f.labelEn : f.labelFr;
-  const fd = (f: typeof COLOR_FIELDS[0]) =>
-    l === "es" ? f.descEs : l === "en" ? f.descEn : f.descFr;
 
   return (
     <section
@@ -307,10 +258,13 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
           <ColorCard
             key={f.key}
             id={`brand-${f.key}`}
-            label={fl(f)}
-            description={fd(f)}
+            label={t.fields[f.key].label}
+            description={t.fields[f.key].description}
             value={colors[f.key]}
             onChange={(v) => handleChange(f.key, v)}
+            colorPickerLabel={formatMessage(t.colorPicker, { label: t.fields[f.key].label })}
+            colorHexLabel={formatMessage(t.colorHex, { label: t.fields[f.key].label })}
+            changeColorTitle={t.changeColorTitle}
           />
         ))}
       </div>

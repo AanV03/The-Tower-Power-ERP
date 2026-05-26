@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
+import { useParams } from "next/navigation";
 import { AlertCircle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { defaultLocale, getDictionary, isLocale } from "@/lib/i18n";
 
 interface ErrorBoundaryProps {
   error: Error & { digest?: string };
@@ -10,6 +12,10 @@ interface ErrorBoundaryProps {
 }
 
 export function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
+  const params = useParams();
+  const localeParam = typeof params?.locale === "string" ? params.locale : defaultLocale;
+  const dictionary = getDictionary(isLocale(localeParam) ? localeParam : defaultLocale);
+
   useEffect(() => {
     // Log error to monitoring service
     console.error("[ERROR_BOUNDARY]", {
@@ -33,10 +39,10 @@ export function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
         {/* Content */}
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-bold text-foreground">
-            Algo salió mal
+            {dictionary.errors.title}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Disculpa, ocurrió un error inesperado. Por favor intenta de nuevo.
+            {dictionary.errors.description}
           </p>
         </div>
 
@@ -57,14 +63,14 @@ export function ErrorBoundary({ error, reset }: ErrorBoundaryProps) {
             variant="default"
           >
             <RotateCcw className="w-4 h-4" aria-hidden="true" />
-            Intentar de nuevo
+            {dictionary.errors.retry}
           </Button>
           <Button
             onClick={() => window.location.href = "/"}
             variant="outline"
             className="flex-1"
           >
-            Ir al inicio
+            {dictionary.errors.home}
           </Button>
         </div>
       </div>

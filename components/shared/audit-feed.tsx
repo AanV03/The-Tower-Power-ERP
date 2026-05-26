@@ -1,5 +1,5 @@
 import { auditTrail } from "@/data/navigation";
-import type { Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AuditFeedSkeleton } from "@/components/skeletons";
 import { NoDataEmpty } from "@/components/empty-state";
@@ -11,26 +11,7 @@ export function AuditFeed({
   locale: Locale;
   isLoading?: boolean;
 }) {
-  const labels = {
-    es: {
-      title: "Bitácora segura",
-      description: "Traza de acciones críticas para RBAC y cumplimiento.",
-      noData: "Sin eventos de auditoría",
-      noDataDesc: "No hay actividades registradas.",
-    },
-    en: {
-      title: "Secure audit trail",
-      description: "Trace of critical actions for RBAC and compliance.",
-      noData: "No audit events",
-      noDataDesc: "No activities have been recorded.",
-    },
-    fr: {
-      title: "Piste d'audit sécurisée",
-      description: "Trace des actions critiques pour RBAC et conformité.",
-      noData: "Pas d'événements d'audit",
-      noDataDesc: "Aucune activité n'a été enregistrée.",
-    },
-  }[locale];
+  const labels = getDictionary(locale).audit;
 
   if (isLoading) {
     return (
@@ -67,7 +48,7 @@ export function AuditFeed({
         <CardDescription>{labels.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-4" aria-label="Eventos de auditoría">
+        <ul className="space-y-4" aria-label={labels.listLabel}>
           {auditTrail.map((item, idx) => {
             const Icon = item.icon;
             return (

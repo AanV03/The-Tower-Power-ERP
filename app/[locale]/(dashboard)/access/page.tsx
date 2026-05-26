@@ -4,7 +4,7 @@ import { ModuleChart } from "@/components/shared/module-chart";
 import { ModuleTable } from "@/components/shared/module-table";
 import { QuickActions } from "@/components/shared/quick-actions";
 import { moduleConfigs } from "@/data/modules";
-import type { Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 export default async function AccessPage({
   params,
@@ -14,21 +14,8 @@ export default async function AccessPage({
   const { locale } = await params;
   const l = locale as Locale;
   const config = moduleConfigs["access"];
+  const dictionary = getDictionary(l);
 
-  const chartLabels: Record<Locale, { title: string; description: string }> = {
-    es: {
-      title: "Validaciones por hora",
-      description: "Flujo de accesos durante el día por sucursal.",
-    },
-    en: {
-      title: "Validations per hour",
-      description: "Access flow throughout the day by branch.",
-    },
-    fr: {
-      title: "Validations par heure",
-      description: "Flux d'accès au cours de la journée par succursale.",
-    },
-  };
 
   return (
     <section
@@ -48,7 +35,7 @@ export default async function AccessPage({
         </p>
       </div>
 
-      <div className="erp-page-grid" aria-label="Métricas clave">
+      <div className="erp-page-grid" aria-label={dictionary.common.metricsAriaLabel}>
         {config.metrics.map((metric) => (
           <MetricCard
             key={metric.label[l]}
@@ -56,15 +43,17 @@ export default async function AccessPage({
             value={metric.value}
             change={metric.change}
             tone={metric.tone}
+            locale={l}
           />
         ))}
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
         <ModuleChart
-          title={chartLabels[l].title}
-          description={chartLabels[l].description}
+          title={dictionary.moduleChart.title}
+          description={dictionary.moduleChart.description}
           data={config.chart}
+          locale={l}
           type="area"
         />
         <AuditFeed locale={l} />

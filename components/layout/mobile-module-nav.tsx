@@ -63,7 +63,7 @@ function MobileDrawer({
               {defaultBrand.name}
             </p>
             <p className="text-xs" style={{ color: "var(--sidebar-text-secondary)" }}>
-              {locale === "es" ? "Gimnasio ERP" : "Gym ERP"}
+              {dictionary.common.productCategory}
             </p>
           </div>
         </div>

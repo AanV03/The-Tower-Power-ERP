@@ -4,7 +4,7 @@ import { Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import type { Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 export function QuickActions({
   primaryLabel,
@@ -13,17 +13,15 @@ export function QuickActions({
   primaryLabel: string;
   locale: Locale;
 }) {
-  const message =
-    locale === "es"
-      ? "Acción registrada en el prototipo frontend."
-      : "Action registered in the frontend prototype.";
+  const dictionary = getDictionary(locale);
+  const message = dictionary.quickActions.successMessage;
 
   const handlePrimaryAction = () => {
     try {
       toast.success(message);
     } catch (error) {
       console.error("[QUICK_ACTIONS_ERROR]", error);
-      toast.error("Ocurrió un error al ejecutar la acción.");
+      toast.error(dictionary.quickActions.errorMessage);
     }
   };
 
@@ -36,7 +34,7 @@ export function QuickActions({
   };
 
   return (
-    <div className="flex shrink-0 items-center gap-2" role="group" aria-label="Acciones rápidas">
+    <div className="flex shrink-0 items-center gap-2" role="group" aria-label={dictionary.quickActions.groupLabel}>
       <Button
         onClick={handlePrimaryAction}
         className="focus-visible:ring-2 focus-visible:ring-offset-2"
@@ -49,8 +47,8 @@ export function QuickActions({
         variant="outline"
         size="icon"
         onClick={handleRefresh}
-        aria-label={locale === "es" ? "Actualizar" : "Refresh"}
-        title={locale === "es" ? "Actualizar" : "Refresh"}
+        aria-label={dictionary.common.refresh}
+        title={dictionary.common.refresh}
         className="focus-visible:ring-2 focus-visible:ring-offset-2"
       >
         <RefreshCw className="size-4" aria-hidden="true" />
