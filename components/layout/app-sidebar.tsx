@@ -3,23 +3,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { navigationItems } from "@/data/navigation";
 import { defaultBrand } from "@/lib/branding";
-import type { Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export function AppSidebar({ locale }: { locale: Locale }) {
+  const dictionary = getDictionary(locale);
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+
     try {
       return JSON.parse(localStorage.getItem("sidebarCollapsed") ?? "false");
     } catch {
       return false;
     }
   });
-  
 
   useEffect(() => {
     const onToggle = () => {
@@ -54,34 +55,30 @@ export function AppSidebar({ locale }: { locale: Locale }) {
     };
   }, []);
 
-  const filteredItems = navigationItems;
-
   return (
     <>
       <style
         dangerouslySetInnerHTML={{
           __html: `
-          .gerpy-sidebar *::-webkit-scrollbar { width: 8px; height:8px }
-          .gerpy-sidebar *::-webkit-scrollbar-thumb { background: var(--glass-opacity-light); border-radius: 999px }
+          .gerpy-sidebar *::-webkit-scrollbar { width: 8px; height: 8px }
+          .gerpy-sidebar *::-webkit-scrollbar-thumb { background: var(--glass-opacity-light); border-radius: 0 }
           .gerpy-sidebar * { scrollbar-width: thin; scrollbar-color: var(--glass-opacity-light) transparent }
           .gerpy-sidebar .sidebar-content::-webkit-scrollbar { width: 8px }
-          .gerpy-sidebar .sidebar-content::-webkit-scrollbar-thumb { background: var(--glass-opacity-medium); border-radius: 6px }
+          .gerpy-sidebar .sidebar-content::-webkit-scrollbar-thumb { background: var(--glass-opacity-medium); border-radius: 0 }
         `,
         }}
       />
 
       <aside
         className={cn(
-          "hidden shrink-0 border-r text-white lg:flex lg:flex-col gerpy-sidebar overflow-y-auto h-full glass-effect",
+          "glass-panel glass-sidebar hidden h-full shrink-0 overflow-y-auto border-y-0 border-l-0 text-[var(--sidebar-text-primary)] lg:flex lg:flex-col gerpy-sidebar",
           collapsed ? "w-16" : "w-72",
         )}
-        style={{ backgroundColor: "var(--sidebar-bg)" }}
-        role="navigation"
-        aria-label="Panel de navegación principal"
+        aria-label={dictionary.common.primaryNavigation}
       >
         <div className={cn("flex h-16 items-center gap-3 border-b border-[var(--sidebar-border-color)]", collapsed ? "justify-center px-2" : "px-5")}>
           <div
-            className={cn("flex items-center justify-center rounded-md text-sm font-bold", collapsed ? "w-10 h-10 text-base" : "w-12 h-10")}
+            className={cn("flex items-center justify-center rounded-none text-sm font-bold", collapsed ? "h-10 w-10 text-base" : "h-10 w-12")}
             style={{ backgroundColor: "var(--brand-yellow)", color: "var(--brand-ink)" }}
           >
             {defaultBrand.logoText}
@@ -89,16 +86,19 @@ export function AppSidebar({ locale }: { locale: Locale }) {
           {!collapsed && (
             <div>
               <p className="text-sm font-semibold">{defaultBrand.name}</p>
-              <p className="text-xs" style={{ color: "var(--sidebar-text-secondary)" }}>{locale === "es" ? "Gimnasio ERP" : "Gym ERP"}</p>
+              <p className="text-xs" style={{ color: "var(--sidebar-text-secondary)" }}>
+                {locale === "es" ? "Gimnasio ERP" : "Gym ERP"}
+              </p>
             </div>
           )}
         </div>
 
-        <div className={cn("flex flex-col flex-1 gerpy-sidebar-branded min-h-0", collapsed ? "items-center" : "")}>
-          {/* Search is provided by Topbar — remove duplicate input from sidebar */}
-
-          <nav className={cn("sidebar-content flex-1 space-y-1 overflow-y-auto p-3 w-full", collapsed ? "px-1" : "")} aria-label="ERP modules">
-            {filteredItems.map((item) => {
+        <div className={cn("flex min-h-0 flex-1 flex-col gerpy-sidebar-branded", collapsed ? "items-center" : "")}>
+          <nav
+            className={cn("sidebar-content w-full flex-1 space-y-1 overflow-y-auto p-3", collapsed ? "px-1" : "")}
+            aria-label={dictionary.common.moduleNavigation}
+          >
+            {navigationItems.map((item) => {
               const href = `/${locale}${item.href}`;
               const isActive = pathname === href || (item.href !== "/dashboard" && pathname.startsWith(href));
               const Icon = item.icon;
@@ -108,18 +108,17 @@ export function AppSidebar({ locale }: { locale: Locale }) {
                   key={item.id}
                   href={href as unknown as any}
                   className={cn(
-                    "flex gap-3 rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2",
-                    isActive
-                      ? "text-white"
-                      : "hover:bg-[var(--sidebar-accent-hover)] transition-all",
+                    "flex gap-3 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    isActive ? "text-primary-foreground" : "hover:bg-[var(--sidebar-accent-hover)] transition-all",
                     collapsed ? "justify-center" : "items-center",
                   )}
                   style={{
                     ...(isActive
-                      ? { backgroundColor: "var(--sidebar-accent-active)", color: "#fff" }
+                      ? { backgroundColor: "var(--sidebar-accent-active)" }
                       : { color: "var(--sidebar-text-primary)" }),
                   }}
                   aria-current={isActive ? "page" : undefined}
+                  aria-label={collapsed ? item.labels[locale] : undefined}
                 >
                   <Icon className={cn("size-4 shrink-0", collapsed ? "m-0" : "")} aria-hidden="true" />
                   {!collapsed && (
@@ -132,10 +131,10 @@ export function AppSidebar({ locale }: { locale: Locale }) {
             })}
           </nav>
 
-          <div className="border-t border-[var(--sidebar-border-color)] px-3 py-3 w-full flex-none">
+          <div className="w-full flex-none border-t border-[var(--sidebar-border-color)] px-3 py-3">
             <div className="flex items-center justify-between gap-2">
               <div className="text-xs" style={{ color: "var(--sidebar-text-secondary)" }}>
-                {collapsed ? '©' : `© ${new Date().getFullYear()} Gerpy`}
+                {collapsed ? "(c)" : `(c) ${new Date().getFullYear()} Gerpy`}
               </div>
             </div>
           </div>
