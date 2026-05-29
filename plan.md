@@ -2,10 +2,10 @@
 
 ## Current Phase
 
-- Phase: 3 - Module APIs
+- Phase: 4 - Premium Integrations
 - Branch: `Module-apis`
-- Status: Implemented
-- Goal: build authenticated, tenant-scoped APIs for dashboard summaries and core operational modules.
+- Status: Planned / deferred
+- Goal: document premium integration work for a future branch without implementing external service calls yet.
 
 ## Phase 1 Checklist
 
@@ -45,6 +45,118 @@
 - [x] Verify with `pnpm test:auth`, API tests, `pnpm typecheck`, and `pnpm build`.
 - [x] Connect dashboard module pages to tenant-scoped module summary data instead of static metric/table/chart mocks.
 
+## Phase 4 Plan - Premium Integrations
+
+Status: planned for a future branch. No Stripe, Resend, storage, worker, or live webhook implementation is included in the current `Module-apis` branch.
+
+Recommended branch:
+
+- `Premium-integrations`
+
+### Goals
+
+- Add production-grade third-party integrations that do not weaken the PostgreSQL source of truth.
+- Use Transactional Outbox for eventual work after SQL commits.
+- Persist external payloads and audit trails in MongoDB without blocking financial operations.
+- Keep all provider calls idempotent, observable, retryable, and tenant-scoped.
+
+### Stripe
+
+- Add Stripe SDK and env documentation:
+  - `STRIPE_SECRET_KEY`
+  - `STRIPE_WEBHOOK_SECRET`
+  - `STRIPE_PRICE_*` only if plans are fixed in Stripe.
+- Map Stripe customers to Gerpy users, members, tenants, or subscriptions through SQL references.
+- Create checkout/session endpoints for:
+  - SaaS tenant billing.
+  - Membership payments.
+  - One-time POS/payment links only if needed.
+- Add webhook route:
+  - Verify Stripe signature.
+  - Resolve `tenantId` from metadata, account mapping, or stored integration config.
+  - Enforce unique idempotency on `(provider, externalEventId)`.
+  - Update SQL payment/subscription/invoice state inside Prisma transaction.
+  - Write `OutboxEvent` for audit, CRM, analytics, and integration logs.
+- Do not write directly to MongoDB from webhook request handler except through an outbox worker in a later step.
+
+### Resend
+
+- Add Resend SDK and env documentation:
+  - `RESEND_API_KEY`
+  - `RESEND_FROM_EMAIL`
+- Create transactional email service for:
+  - Welcome/onboarding.
+  - Payment receipt.
+  - Failed payment.
+  - Subscription renewal reminder.
+  - Password/auth notification if Auth.js flow needs it later.
+- Prefer React Email templates when email design becomes part of the product.
+- Trigger emails from outbox events where possible, not directly from core transactions.
+
+### File Storage
+
+- Decide storage provider before implementation:
+  - Supabase Storage, Vercel Blob, or S3-compatible storage.
+- Initial document types:
+  - Tenant logos and brand assets.
+  - Legal documents.
+  - Employee documents.
+  - Supplier invoices.
+  - Member attachments if required by operations.
+- Store metadata in SQL and binary assets in object storage.
+- Keep signed URL generation tenant-scoped and permission-guarded.
+
+### Outbox Worker
+
+- Add worker/service for `OutboxEvent` processing:
+  - Claim pending events safely.
+  - Mark as `PROCESSING`, `PROCESSED`, or `FAILED`.
+  - Use retry attempts and `availableAt` for backoff.
+  - Ensure idempotent handlers.
+- First handlers:
+  - `audit.event.created` -> Mongo `audit_events`.
+  - `integration.event.received` -> Mongo `integration_event_logs`.
+  - `payment.succeeded` -> CRM/email/analytics updates.
+  - `subscription.changed` -> CRM/audit/email updates.
+
+### MongoDB Processing
+
+- Use existing Mongoose contracts from Phase 1.
+- Write Mongo documents from workers:
+  - `audit_events`
+  - `integration_event_logs`
+  - `crm_profiles`
+  - `analytics_snapshots`
+- Add indexes/unique keys where missing before high-volume writes.
+- Keep Mongo failures retryable; they must not invalidate committed SQL transactions.
+
+### Security And Observability
+
+- Never trust provider payload tenant IDs without verifying against stored integration configuration.
+- Verify all webhook signatures.
+- Add request/event IDs to logs.
+- Avoid logging secrets, tokens, card data, or raw PII beyond required audit fields.
+- Add provider event status transitions for support/debugging.
+
+### Mandatory Pause Before Live Testing
+
+Before running live provider calls, webhook tunnel tests, or worker jobs against real infrastructure:
+
+1. Stop and notify that provider credentials are required.
+2. User adds `.env` values for Stripe, Resend, storage, and any provider-specific secrets.
+3. If needed, provide setup tutorials for Stripe webhook CLI, Resend domain verification, and storage buckets.
+4. Continue only after user confirms `.env` and provider dashboards are ready.
+
+### Suggested Verification
+
+- `pnpm test:api`
+- `pnpm test:auth`
+- Provider unit tests with mocked SDK calls.
+- Webhook signature tests with fixed fixtures.
+- Outbox idempotency tests.
+- `pnpm typecheck`
+- `pnpm build`
+
 ## Mandatory Pause
 
 When real PostgreSQL or MongoDB databases are needed, stop before running connection tests, migrations, `prisma db push`, or seed scripts.
@@ -60,7 +172,7 @@ Required flow:
 
 - Phase 2 - Auth + Tenant Context: authentication, secure tenant resolution, RBAC, module guards, and branch scope.
 - Phase 3 - Module APIs: SaaS Admin, subscriptions, finance, POS, inventory, HR, marketing, and specialists APIs.
-- Phase 4 - Premium Integrations: Stripe, Resend, file storage, outbox workers, audit events, and MongoDB processing.
+- Phase 4 - Premium Integrations: Stripe, Resend, file storage, outbox workers, audit events, and MongoDB processing. Planned and deferred.
 - Phase 5 - Functional Frontend: replace static module mocks with real data, CRUD actions, filters, and dashboards.
 
 ## Decisions
