@@ -2,10 +2,10 @@
 
 ## Current Phase
 
-- Phase: 1 - Database Foundation
-- Branch: `Database-foundation`
+- Phase: 2 - Auth + Tenant Context
+- Branch: `Auth-tenant-context`
 - Status: Implemented
-- Goal: establish PostgreSQL/Prisma schemas and MongoDB/Mongoose document contracts without creating or connecting real databases.
+- Goal: implement Auth.js authentication, secure tenant resolution, RBAC context, module access context, and dashboard protection.
 
 ## Phase 1 Checklist
 
@@ -16,6 +16,20 @@
 - [x] Add documented env variables without real credentials.
 - [x] Add database validation scripts that do not connect to real infrastructure.
 - [x] Verify with `pnpm db:validate`, `pnpm db:generate`, `pnpm db:check-env`, `pnpm typecheck`, and `pnpm build`.
+
+## Phase 2 Checklist
+
+- [x] Create the `Auth-tenant-context` branch from the database foundation.
+- [x] Add Auth.js dependencies for Prisma adapter, credentials, Google, and Discord auth.
+- [x] Extend Prisma schema with Auth.js adapter models and user profile fields.
+- [x] Add password hashing and RBAC context helpers with focused Node tests.
+- [x] Add tenant bootstrap for new credential/OAuth users: tenant, branch, modules, Owner role, and permissions.
+- [x] Add Auth.js route handlers and typed session/JWT tenant context.
+- [x] Add registration API for custom email/password signup.
+- [x] Connect signin/signup screens to real credentials and OAuth providers.
+- [x] Protect dashboard routes with server-side Auth.js session validation.
+- [x] Add reusable branch/module/permission guards for individual module APIs and server actions.
+- [x] Add self-service onboarding flow through signup/OAuth tenant bootstrap.
 
 ## Mandatory Pause
 
@@ -52,3 +66,10 @@ Required flow:
 - `pnpm build` passed.
 - PostgreSQL schema was pushed to Supabase with `pnpm prisma db push --accept-data-loss` after confirming affected tables were empty.
 - Supabase `public` schema contains 45 tables from the Prisma schema.
+- Phase 2: `pnpm test:auth` passed with 5 Node tests.
+- Phase 2: `pnpm db:validate` passed after Auth.js schema changes.
+- Phase 2: `pnpm db:generate` passed after Auth.js schema changes.
+- Phase 2: Supabase Auth.js schema update was pushed with `pnpm prisma db push --accept-data-loss` after confirming `users` had 0 rows and 0 duplicate email groups.
+- Phase 2: `pnpm typecheck` passed.
+- Phase 2: `pnpm build` passed.
+- Phase 2: production server smoke test confirmed unauthenticated `GET /es/dashboard` redirects to `/es/signin` with HTTP 307.

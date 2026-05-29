@@ -2,7 +2,9 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useParams, useRouter } from "next/navigation";
+import type { Route } from "next";
 import { Eye, EyeOff, LogIn, Dumbbell, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { defaultLocale, getDictionary, isLocale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -59,16 +61,19 @@ function StrengthBar({ metCount }: { metCount: number }) {
 /* ─── Page ───────────────────────────────────────────────────────────── */
 export default function SignInPage() {
   const params = useParams();
+  const router = useRouter();
   const localeParam = (params?.locale as string) ?? defaultLocale;
   const locale = isLocale(localeParam) ? localeParam : defaultLocale;
   const dictionary = getDictionary(locale);
   const auth = dictionary.auth;
+  const callbackUrl = `/${locale}/dashboard` as Route;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [touched, setTouched] = useState({ email: false, password: false });
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   /* live validation */
   const emailError = touched.email && email.length > 0 && !validateEmail(email);
@@ -76,24 +81,40 @@ export default function SignInPage() {
 
   const metRules = rules.map((r) => ({ ...r, label: auth.passwordRules[r.id], met: r.test(password) }));
   const metCount = metRules.filter((r) => r.met).length;
-  const showChecklist = touched.password && password.length > 0;
-  const allRulesMet = metCount === rules.length;
-  const passwordError = touched.password && password.length > 0 && !allRulesMet;
+  const showChecklist = false;
+  const passwordError = touched.password && password.length === 0;
 
   const handleBlur = useCallback((field: keyof typeof touched) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
   }, []);
 
-  const isFormValid = validateEmail(email) && allRulesMet;
+  const isFormValid = validateEmail(email) && password.length > 0;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
     setTouched({ email: true, password: true });
     if (!isFormValid) return;
     setIsLoading(true);
-    /* TODO: connect auth provider */
-    await new Promise((r) => setTimeout(r, 1500));
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+      callbackUrl,
+    });
     setIsLoading(false);
+
+    if (result?.error) {
+      setFormError("Credenciales invalidas o usuario suspendido.");
+      return;
+    }
+
+    router.push(callbackUrl);
+    router.refresh();
+  }
+
+  async function handleOAuth(provider: "google" | "discord") {
+    await signIn(provider, { callbackUrl });
   }
 
   return (
@@ -226,7 +247,18 @@ export default function SignInPage() {
                     </ul>
                   </div>
                 )}
+                {passwordError && (
+                  <p className="flex items-center gap-1 text-xs text-destructive">
+                    <AlertCircle className="size-3" /> {auth.errors.passwordRequired}
+                  </p>
+                )}
               </div>
+
+              {formError && (
+                <p className="flex items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                  <AlertCircle className="size-3 shrink-0" /> {formError}
+                </p>
+              )}
 
               {/* Forgot password */}
               <div className="flex justify-end">
@@ -267,6 +299,23 @@ export default function SignInPage() {
                 )}
               </button>
             </form>
+
+            <div className="mt-5 grid gap-2">
+              <button
+                type="button"
+                onClick={() => handleOAuth("google")}
+                className="h-10 rounded-lg border border-input bg-background text-sm font-medium text-foreground transition-colors hover:bg-muted"
+              >
+                Continuar con Google
+              </button>
+              <button
+                type="button"
+                onClick={() => handleOAuth("discord")}
+                className="h-10 rounded-lg border border-input bg-background text-sm font-medium text-foreground transition-colors hover:bg-muted"
+              >
+                Continuar con Discord
+              </button>
+            </div>
           </div>
 
           {/* Divider footer */}
