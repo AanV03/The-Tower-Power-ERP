@@ -158,6 +158,40 @@ integrationEventLogSchema.index(
 );
 integrationEventLogSchema.index({ tenantId: 1, receivedAt: -1 });
 
+const maintenanceTicketSchema = new Schema(
+  {
+    tenantId: { type: String, required: true, index: true },
+    branchId: { type: String, required: true, index: true },
+    assetId: { type: String },
+    assetName: { type: String, required: true },
+    title: { type: String, required: true },
+    description: { type: String },
+    status: {
+      type: String,
+      required: true,
+      enum: ["OPEN", "IN_PROGRESS", "RESOLVED", "CANCELLED"],
+      default: "OPEN",
+    },
+    priority: {
+      type: String,
+      required: true,
+      enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+      default: "MEDIUM",
+    },
+    reportedByUserId: { type: String, required: true },
+    assignedToUserId: { type: String },
+    metadata: { type: Schema.Types.Mixed },
+    resolvedAt: { type: Date },
+    createdAt: { type: Date, default: Date.now, immutable: true },
+    updatedAt: { type: Date, default: Date.now },
+  },
+  { collection: "maintenance_tickets" },
+);
+
+maintenanceTicketSchema.index({ tenantId: 1, branchId: 1, status: 1, priority: 1 });
+maintenanceTicketSchema.index({ tenantId: 1, branchId: 1, createdAt: -1 });
+maintenanceTicketSchema.index({ tenantId: 1, assetId: 1, createdAt: -1 });
+
 export const AuditEvent =
   mongoose.models.AuditEvent ?? mongoose.model("AuditEvent", auditEventSchema);
 
@@ -179,3 +213,7 @@ export const AnalyticsSnapshot =
 export const IntegrationEventLog =
   mongoose.models.IntegrationEventLog ??
   mongoose.model("IntegrationEventLog", integrationEventLogSchema);
+
+export const MaintenanceTicket =
+  mongoose.models.MaintenanceTicket ??
+  mongoose.model("MaintenanceTicket", maintenanceTicketSchema);

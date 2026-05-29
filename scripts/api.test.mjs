@@ -18,6 +18,48 @@ test("resolves module ids to Prisma module keys and permissions", () => {
   assert.equal(resolveModuleAccess("unknown"), null);
 });
 
+test("resolves premium ERP module ids to Prisma module keys and permissions", () => {
+  assert.deepEqual(resolveModuleAccess("catalog"), {
+    moduleKey: "CATALOG",
+    permission: "catalog.manage",
+  });
+
+  assert.deepEqual(resolveModuleAccess("purchases"), {
+    moduleKey: "PURCHASES",
+    permission: "purchases.manage",
+  });
+
+  assert.deepEqual(resolveModuleAccess("warehouse"), {
+    moduleKey: "WAREHOUSE",
+    permission: "warehouse.manage",
+  });
+
+  assert.deepEqual(resolveModuleAccess("accounting"), {
+    moduleKey: "ACCOUNTING",
+    permission: "accounting.manage",
+  });
+
+  assert.deepEqual(resolveModuleAccess("payroll"), {
+    moduleKey: "PAYROLL",
+    permission: "payroll.manage",
+  });
+
+  assert.deepEqual(resolveModuleAccess("analytics"), {
+    moduleKey: "ANALYTICS",
+    permission: "analytics.manage",
+  });
+
+  assert.deepEqual(resolveModuleAccess("integrations"), {
+    moduleKey: "INTEGRATIONS",
+    permission: "integrations.manage",
+  });
+
+  assert.deepEqual(resolveModuleAccess("maintenance"), {
+    moduleKey: "MAINTENANCE",
+    permission: "maintenance.manage",
+  });
+});
+
 test("parses bounded API pagination from URL search params", () => {
   const params = new URLSearchParams({ page: "2", pageSize: "250" });
   assert.deepEqual(parsePagination(params), {

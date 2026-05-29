@@ -17,6 +17,14 @@ const MODULE_ACCESS: Record<ModuleId, ModuleAccess> = {
   marketing: { moduleKey: "MARKETING", permission: "marketing.manage" },
   specialists: { moduleKey: "SPECIALISTS", permission: "specialists.manage" },
   admin: { moduleKey: "ADMIN", permission: "admin.manage" },
+  catalog: { moduleKey: "CATALOG", permission: "catalog.manage" },
+  purchases: { moduleKey: "PURCHASES", permission: "purchases.manage" },
+  warehouse: { moduleKey: "WAREHOUSE", permission: "warehouse.manage" },
+  accounting: { moduleKey: "ACCOUNTING", permission: "accounting.manage" },
+  payroll: { moduleKey: "PAYROLL", permission: "payroll.manage" },
+  analytics: { moduleKey: "ANALYTICS", permission: "analytics.manage" },
+  integrations: { moduleKey: "INTEGRATIONS", permission: "integrations.manage" },
+  maintenance: { moduleKey: "MAINTENANCE", permission: "maintenance.manage" },
 };
 
 export function resolveModuleAccess(moduleId: string): ModuleAccess | null {

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { navigationItems } from "@/data/navigation";
+import { navigationGroups } from "@/data/navigation";
 import { defaultBrand } from "@/lib/branding";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -98,37 +98,50 @@ export function AppSidebar({ locale }: { locale: Locale }) {
             className={cn("sidebar-content w-full flex-1 space-y-1 overflow-y-auto p-3", collapsed ? "px-1" : "")}
             aria-label={dictionary.common.moduleNavigation}
           >
-            {navigationItems.map((item) => {
-              const href = `/${locale}${item.href}`;
-              const isActive = pathname === href || (item.href !== "/dashboard" && pathname.startsWith(href));
-              const Icon = item.icon;
+            {navigationGroups.map((group) => (
+              <div key={group.id} className={cn("space-y-1", collapsed ? "pt-2" : "pt-3 first:pt-0")}>
+                {!collapsed && (
+                  <p
+                    className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide"
+                    style={{ color: "var(--sidebar-text-secondary)" }}
+                  >
+                    {group.labels[locale]}
+                  </p>
+                )}
+                {group.items.map((item) => {
+                  const href = `/${locale}${item.href}`;
+                  const isActive = pathname === href || (item.href !== "/dashboard" && pathname.startsWith(href));
+                  const Icon = item.icon;
 
-              return (
-                <Link
-                  key={item.id}
-                  href={href as unknown as any}
-                  className={cn(
-                    "flex gap-3 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                    isActive ? "text-primary-foreground" : "hover:bg-[var(--sidebar-accent-hover)] transition-all",
-                    collapsed ? "justify-center" : "items-center",
-                  )}
-                  style={{
-                    ...(isActive
-                      ? { backgroundColor: "var(--sidebar-accent-active)" }
-                      : { color: "var(--sidebar-text-primary)" }),
-                  }}
-                  aria-current={isActive ? "page" : undefined}
-                  aria-label={collapsed ? item.labels[locale] : undefined}
-                >
-                  <Icon className={cn("size-4 shrink-0", collapsed ? "m-0" : "")} aria-hidden="true" />
-                  {!collapsed && (
-                    <span className="min-w-0">
-                      <span className="block font-medium">{item.labels[locale]}</span>
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
+                  return (
+                    <Link
+                      key={item.id}
+                      href={href as unknown as any}
+                      className={cn(
+                        "flex gap-3 rounded-md px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                        isActive ? "text-primary-foreground" : "hover:bg-[var(--sidebar-accent-hover)] transition-all",
+                        collapsed ? "justify-center" : "items-center",
+                      )}
+                      style={{
+                        ...(isActive
+                          ? { backgroundColor: "var(--sidebar-accent-active)" }
+                          : { color: "var(--sidebar-text-primary)" }),
+                      }}
+                      aria-current={isActive ? "page" : undefined}
+                      aria-label={collapsed ? `${group.labels[locale]}: ${item.labels[locale]}` : undefined}
+                      title={collapsed ? item.labels[locale] : undefined}
+                    >
+                      <Icon className={cn("size-4 shrink-0", collapsed ? "m-0" : "")} aria-hidden="true" />
+                      {!collapsed && (
+                        <span className="min-w-0">
+                          <span className="block font-medium">{item.labels[locale]}</span>
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
 
           <div className="w-full flex-none border-t border-[var(--sidebar-border-color)] px-3 py-3">

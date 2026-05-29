@@ -11,6 +11,19 @@ export class ApiError extends Error {
   }
 }
 
+type StructuredApiError = Error & {
+  status: number;
+  code: string;
+};
+
+function isStructuredApiError(error: unknown): error is StructuredApiError {
+  return (
+    error instanceof Error &&
+    typeof (error as { status?: unknown }).status === "number" &&
+    typeof (error as { code?: unknown }).code === "string"
+  );
+}
+
 export function ok<T>(data: T, init?: ResponseInit) {
   return NextResponse.json({ ok: true, data }, init);
 }
@@ -21,6 +34,13 @@ export function created<T>(data: T) {
 
 export function fail(error: unknown) {
   if (error instanceof ApiError) {
+    return NextResponse.json(
+      { ok: false, error: error.code, message: error.message },
+      { status: error.status },
+    );
+  }
+
+  if (isStructuredApiError(error)) {
     return NextResponse.json(
       { ok: false, error: error.code, message: error.message },
       { status: error.status },

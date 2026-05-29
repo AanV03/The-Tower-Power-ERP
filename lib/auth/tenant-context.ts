@@ -14,6 +14,14 @@ const DEFAULT_MODULES: ModuleKey[] = [
   ModuleKey.MARKETING,
   ModuleKey.SPECIALISTS,
   ModuleKey.ADMIN,
+  ModuleKey.CATALOG,
+  ModuleKey.PURCHASES,
+  ModuleKey.WAREHOUSE,
+  ModuleKey.ACCOUNTING,
+  ModuleKey.PAYROLL,
+  ModuleKey.ANALYTICS,
+  ModuleKey.INTEGRATIONS,
+  ModuleKey.MAINTENANCE,
 ];
 
 const DEFAULT_PERMISSIONS = [
@@ -27,6 +35,14 @@ const DEFAULT_PERMISSIONS = [
   "marketing.manage",
   "specialists.manage",
   "admin.manage",
+  "catalog.manage",
+  "purchases.manage",
+  "warehouse.manage",
+  "accounting.manage",
+  "payroll.manage",
+  "analytics.manage",
+  "integrations.manage",
+  "maintenance.manage",
 ];
 
 type PrismaTx = Prisma.TransactionClient;

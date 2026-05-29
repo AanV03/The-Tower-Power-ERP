@@ -1,5 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { connectMongo } from "@/lib/db/mongodb";
+import { MaintenanceTicket } from "@/lib/db/mongo-models";
 import { formatCurrency } from "@/lib/api/pagination";
 import type { TenantContext } from "@/lib/auth/rbac";
 import type { MetricTone, ModuleMetric, ModuleRow } from "@/data/modules";
@@ -304,6 +306,253 @@ async function adminSummary(context: TenantContext): Promise<ApiModuleSummary> {
   };
 }
 
+async function catalogSummary(context: TenantContext): Promise<ApiModuleSummary> {
+  const [products, categories, activeProducts, stockless] = await Promise.all([
+    prisma.product.count({ where: tenantWhere(context) }),
+    prisma.productCategory.count({ where: tenantWhere(context) }),
+    prisma.product.count({ where: { ...tenantWhere(context), status: "ACTIVE" } }),
+    prisma.product.count({ where: { ...tenantWhere(context), inventoryItems: { none: {} } } }),
+  ]);
+
+  return {
+    moduleId: "catalog",
+    metrics: [
+      metric("products", "Products", String(products), "Catalog"),
+      metric("categories", "Categories", String(categories), "Catalog"),
+      metric("active", "Active products", String(activeProducts), "Current", "success"),
+      metric("stockless", "SKUs without stock", String(stockless), "Review", stockless > 0 ? "warning" : "success"),
+    ],
+    chart: [
+      { label: "Products", value: products },
+      { label: "Categories", value: categories },
+      { label: "Active", value: activeProducts },
+    ],
+    rows: [
+      row("Master product catalog", "Tenant", "active", `${products} SKUs`, "Catalog"),
+      row("Categories", "Tenant", "active", String(categories), "Catalog"),
+    ],
+  };
+}
+
+async function purchasesSummary(context: TenantContext): Promise<ApiModuleSummary> {
+  const [suppliers, payable, openInvoices, purchasesToday] = await Promise.all([
+    prisma.supplier.count({ where: { ...tenantWhere(context), status: "ACTIVE" } }),
+    prisma.invoice.aggregate({ where: { ...branchWhere(context), type: "PAYABLE" }, _sum: { total: true } }),
+    prisma.invoice.count({ where: { ...branchWhere(context), type: "PAYABLE", status: { in: ["DRAFT", "ISSUED", "OVERDUE"] } } }),
+    prisma.inventoryMovement.count({ where: { ...tenantWhere(context), type: "PURCHASE", createdAt: { gte: startOfToday() } } }),
+  ]);
+
+  return {
+    moduleId: "purchases",
+    metrics: [
+      metric("payable", "Payable", formatCurrency(sumDecimal(payable._sum.total)), "Open", "warning"),
+      metric("suppliers", "Active suppliers", String(suppliers), "Current"),
+      metric("openInvoices", "Open purchase invoices", String(openInvoices), "Review", openInvoices > 0 ? "warning" : "success"),
+      metric("receivedToday", "Purchases received today", String(purchasesToday), "Today", "success"),
+    ],
+    chart: [
+      { label: "Suppliers", value: suppliers },
+      { label: "Invoices", value: openInvoices },
+      { label: "Received", value: purchasesToday },
+    ],
+    rows: [
+      row("Open supplier invoices", context.branchId ?? "Consolidated", openInvoices > 0 ? "warning" : "active", String(openInvoices), "Purchases"),
+      row("Stock receipts today", "Tenant", "active", String(purchasesToday), "Warehouse"),
+    ],
+  };
+}
+
+async function warehouseSummary(context: TenantContext): Promise<ApiModuleSummary> {
+  const [warehouses, lowStock, movementsToday, transfersToday] = await Promise.all([
+    prisma.warehouse.count({ where: branchWhere(context) }),
+    prisma.inventoryItem.count({
+      where: {
+        tenantId: context.tenantId,
+        quantityOnHand: { lte: prisma.inventoryItem.fields.reorderPoint },
+      },
+    }),
+    prisma.inventoryMovement.count({ where: { ...tenantWhere(context), createdAt: { gte: startOfToday() } } }),
+    prisma.inventoryMovement.count({
+      where: { ...tenantWhere(context), type: { in: ["TRANSFER_IN", "TRANSFER_OUT"] }, createdAt: { gte: startOfToday() } },
+    }),
+  ]);
+
+  return {
+    moduleId: "warehouse",
+    metrics: [
+      metric("warehouses", "Warehouses", String(warehouses), "Branch scope"),
+      metric("lowStock", "Critical stock", String(lowStock), "Reorder", lowStock > 0 ? "warning" : "success"),
+      metric("movements", "Movements today", String(movementsToday), "Today"),
+      metric("transfers", "Transfers today", String(transfersToday), "Today"),
+    ],
+    chart: [
+      { label: "Warehouses", value: warehouses },
+      { label: "Critical", value: lowStock },
+      { label: "Transfers", value: transfersToday },
+    ],
+    rows: [
+      row("Critical stock", context.branchId ?? "Consolidated", lowStock > 0 ? "warning" : "active", String(lowStock), "Warehouse"),
+    ],
+  };
+}
+
+async function accountingSummary(context: TenantContext): Promise<ApiModuleSummary> {
+  const [accounts, draftEntries, postedEntries, lines] = await Promise.all([
+    prisma.chartAccount.count({ where: tenantWhere(context) }),
+    prisma.journalEntry.count({ where: { ...tenantWhere(context), status: "DRAFT" } }),
+    prisma.journalEntry.count({ where: { ...tenantWhere(context), status: "POSTED" } }),
+    prisma.journalEntryLine.count({ where: tenantWhere(context) }),
+  ]);
+
+  return {
+    moduleId: "accounting",
+    metrics: [
+      metric("accounts", "Accounts", String(accounts), "Chart"),
+      metric("draftEntries", "Draft entries", String(draftEntries), "Review", draftEntries > 0 ? "warning" : "success"),
+      metric("postedEntries", "Posted entries", String(postedEntries), "Ledger", "success"),
+      metric("lines", "Journal lines", String(lines), "Debit/credit"),
+    ],
+    chart: [
+      { label: "Accounts", value: accounts },
+      { label: "Draft", value: draftEntries },
+      { label: "Posted", value: postedEntries },
+    ],
+    rows: [
+      row("Draft journal entries", "Tenant", draftEntries > 0 ? "warning" : "active", String(draftEntries), "Accounting"),
+    ],
+  };
+}
+
+async function payrollSummary(context: TenantContext): Promise<ApiModuleSummary> {
+  const [draftPeriods, employees, attendanceToday, netPay] = await Promise.all([
+    prisma.payrollPeriod.count({ where: { ...tenantWhere(context), status: "DRAFT" } }),
+    prisma.employee.count({ where: { ...branchWhere(context), status: "ACTIVE" } }),
+    prisma.attendanceRecord.count({ where: { ...branchWhere(context), clockIn: { gte: startOfToday() } } }),
+    prisma.payrollItem.aggregate({ where: tenantWhere(context), _sum: { netAmount: true } }),
+  ]);
+
+  return {
+    moduleId: "payroll",
+    metrics: [
+      metric("draftPeriods", "Draft periods", String(draftPeriods), "Review", draftPeriods > 0 ? "warning" : "success"),
+      metric("employees", "Active employees", String(employees), "Current"),
+      metric("attendance", "Attendance today", String(attendanceToday), "Today", "success"),
+      metric("netPay", "Net payroll", formatCurrency(sumDecimal(netPay._sum.netAmount)), "Pending"),
+    ],
+    chart: [
+      { label: "Periods", value: draftPeriods },
+      { label: "Employees", value: employees },
+      { label: "Attendance", value: attendanceToday },
+    ],
+    rows: [
+      row("Draft payroll periods", "Tenant", draftPeriods > 0 ? "warning" : "active", String(draftPeriods), "Payroll"),
+    ],
+  };
+}
+
+async function analyticsSummary(context: TenantContext): Promise<ApiModuleSummary> {
+  const [branches, members, activeSubscriptions, cancelledSubscriptions] = await Promise.all([
+    prisma.branch.count({ where: tenantWhere(context) }),
+    prisma.member.count({ where: branchWhere(context) }),
+    prisma.subscription.count({ where: { ...tenantWhere(context), status: "ACTIVE" } }),
+    prisma.subscription.count({ where: { ...tenantWhere(context), status: "CANCELLED" } }),
+  ]);
+  const denominator = activeSubscriptions + cancelledSubscriptions;
+  const churnRate = denominator > 0 ? Math.round((cancelledSubscriptions / denominator) * 100) : 0;
+  const retentionRate = denominator > 0 ? 100 - churnRate : 0;
+
+  return {
+    moduleId: "analytics",
+    metrics: [
+      metric("branches", "Branches", String(branches), "Compare"),
+      metric("audience", "Audience", String(members), "Members"),
+      metric("retention", "Retention", `${retentionRate}%`, "Current", "success"),
+      metric("churn", "Churn", `${churnRate}%`, "Risk", churnRate > 0 ? "warning" : "success"),
+    ],
+    chart: [
+      { label: "Members", value: members },
+      { label: "Retention", value: retentionRate },
+      { label: "Churn", value: churnRate },
+    ],
+    rows: [
+      row("Retention baseline", context.branchId ?? "Consolidated", "active", `${retentionRate}%`, "Analytics"),
+      row("Churn risk baseline", context.branchId ?? "Consolidated", churnRate > 0 ? "warning" : "active", `${churnRate}%`, "Analytics"),
+    ],
+  };
+}
+
+async function integrationsSummary(context: TenantContext): Promise<ApiModuleSummary> {
+  const [gatewayEvents, pendingOutbox, failedOutbox, processedOutbox] = await Promise.all([
+    prisma.paymentGatewayEvent.count({ where: tenantWhere(context) }),
+    prisma.outboxEvent.count({ where: { ...tenantWhere(context), status: "PENDING" } }),
+    prisma.outboxEvent.count({ where: { ...tenantWhere(context), status: "FAILED" } }),
+    prisma.outboxEvent.count({ where: { ...tenantWhere(context), status: "PROCESSED" } }),
+  ]);
+
+  return {
+    moduleId: "integrations",
+    metrics: [
+      metric("gatewayEvents", "Gateway events", String(gatewayEvents), "Received"),
+      metric("pendingOutbox", "Pending outbox", String(pendingOutbox), "Queue", pendingOutbox > 0 ? "warning" : "success"),
+      metric("failedOutbox", "Failed outbox", String(failedOutbox), "Retry", failedOutbox > 0 ? "danger" : "success"),
+      metric("processedOutbox", "Processed", String(processedOutbox), "Done", "success"),
+    ],
+    chart: [
+      { label: "Gateway", value: gatewayEvents },
+      { label: "Pending", value: pendingOutbox },
+      { label: "Failed", value: failedOutbox },
+    ],
+    rows: [
+      row("Failed outbox events", "Tenant", failedOutbox > 0 ? "critical" : "active", String(failedOutbox), "Integrations"),
+      row("Pending outbox events", "Tenant", pendingOutbox > 0 ? "warning" : "active", String(pendingOutbox), "Outbox"),
+    ],
+  };
+}
+
+async function maintenanceCounts(context: TenantContext) {
+  if (!process.env.MONGODB_URI) {
+    return { open: 0, critical: 0, inProgress: 0, resolved: 0 };
+  }
+
+  try {
+    await connectMongo();
+    const base = { tenantId: context.tenantId, ...(context.branchId ? { branchId: context.branchId } : {}) };
+    const [open, critical, inProgress, resolved] = await Promise.all([
+      MaintenanceTicket.countDocuments({ ...base, status: "OPEN" }),
+      MaintenanceTicket.countDocuments({ ...base, priority: "CRITICAL", status: { $ne: "RESOLVED" } }),
+      MaintenanceTicket.countDocuments({ ...base, status: "IN_PROGRESS" }),
+      MaintenanceTicket.countDocuments({ ...base, status: "RESOLVED" }),
+    ]);
+
+    return { open, critical, inProgress, resolved };
+  } catch {
+    return { open: 0, critical: 0, inProgress: 0, resolved: 0 };
+  }
+}
+
+async function maintenanceSummary(context: TenantContext): Promise<ApiModuleSummary> {
+  const counts = await maintenanceCounts(context);
+
+  return {
+    moduleId: "maintenance",
+    metrics: [
+      metric("open", "Open tickets", String(counts.open), "Active", counts.open > 0 ? "warning" : "success"),
+      metric("critical", "Critical", String(counts.critical), "Priority", counts.critical > 0 ? "danger" : "success"),
+      metric("inProgress", "In progress", String(counts.inProgress), "Team"),
+      metric("resolved", "Resolved", String(counts.resolved), "Closed", "success"),
+    ],
+    chart: [
+      { label: "Open", value: counts.open },
+      { label: "Critical", value: counts.critical },
+      { label: "Resolved", value: counts.resolved },
+    ],
+    rows: [
+      row("Open maintenance tickets", context.branchId ?? "Consolidated", counts.open > 0 ? "warning" : "active", String(counts.open), "Operations"),
+      row("Critical maintenance tickets", context.branchId ?? "Consolidated", counts.critical > 0 ? "critical" : "active", String(counts.critical), "Facilities"),
+    ],
+  };
+}
+
 export async function getModuleSummary(moduleId: string, context: TenantContext): Promise<ApiModuleSummary> {
   switch (moduleId) {
     case "dashboard":
@@ -326,6 +575,22 @@ export async function getModuleSummary(moduleId: string, context: TenantContext)
       return specialistsSummary(context);
     case "admin":
       return adminSummary(context);
+    case "catalog":
+      return catalogSummary(context);
+    case "purchases":
+      return purchasesSummary(context);
+    case "warehouse":
+      return warehouseSummary(context);
+    case "accounting":
+      return accountingSummary(context);
+    case "payroll":
+      return payrollSummary(context);
+    case "analytics":
+      return analyticsSummary(context);
+    case "integrations":
+      return integrationsSummary(context);
+    case "maintenance":
+      return maintenanceSummary(context);
     default:
       throw new Error("MODULE_NOT_FOUND");
   }
