@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
-import { navigationItems } from "@/data/navigation";
+import { navigationGroups, navigationItems } from "@/data/navigation";
 import { defaultBrand } from "@/lib/branding";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -79,29 +79,41 @@ function MobileDrawer({
 
       <nav className="flex-1 overflow-y-auto px-4 py-4" aria-label={dictionary.common.moduleNavigation}>
         <ul className="flex flex-col gap-1">
-          {navigationItems.map((item) => {
-            const href = `/${locale}${item.href}`;
-            const isActive = pathname === href || (item.href !== "/dashboard" && pathname.startsWith(href));
-            const Icon = item.icon;
+          {navigationGroups.map((group) => (
+            <li key={group.id} className="pt-3 first:pt-0">
+              <p
+                className="px-4 pb-1 text-xs font-semibold uppercase tracking-wide"
+                style={{ color: "var(--sidebar-text-secondary)" }}
+              >
+                {group.labels[locale]}
+              </p>
+              <ul className="flex flex-col gap-1">
+                {group.items.map((item) => {
+                  const href = `/${locale}${item.href}`;
+                  const isActive = pathname === href || (item.href !== "/dashboard" && pathname.startsWith(href));
+                  const Icon = item.icon;
 
-            return (
-              <li key={item.id}>
-                <Link
-                  href={href as unknown as any}
-                  onClick={onClose}
-                  aria-current={isActive ? "page" : undefined}
-                  className={cn(
-                    "flex w-full items-center gap-4 rounded-md px-4 py-3.5 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    isActive ? "bg-primary text-primary-foreground" : "hover:bg-[var(--glass-control-hover)]",
-                  )}
-                  style={!isActive ? { color: "var(--sidebar-text-primary)" } : undefined}
-                >
-                  <Icon className="size-5 shrink-0" aria-hidden="true" />
-                  <span>{item.labels[locale]}</span>
-                </Link>
-              </li>
-            );
-          })}
+                  return (
+                    <li key={item.id}>
+                      <Link
+                        href={href as unknown as any}
+                        onClick={onClose}
+                        aria-current={isActive ? "page" : undefined}
+                        className={cn(
+                          "flex w-full items-center gap-4 rounded-md px-4 py-3.5 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          isActive ? "bg-primary text-primary-foreground" : "hover:bg-[var(--glass-control-hover)]",
+                        )}
+                        style={!isActive ? { color: "var(--sidebar-text-primary)" } : undefined}
+                      >
+                        <Icon className="size-5 shrink-0" aria-hidden="true" />
+                        <span>{item.labels[locale]}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </li>
+          ))}
         </ul>
       </nav>
 

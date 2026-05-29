@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { Search, Globe, Menu } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -49,13 +50,8 @@ export function Topbar({ locale }: { locale: Locale }) {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [languageOpen, accountOpen]);
 
-  const handleLogout = () => {
-    try {
-      localStorage.removeItem("token");
-    } catch (e) {
-      /* ignore */
-    }
-    router.push("/");
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: `/${locale}/signin` });
   };
 
   return (

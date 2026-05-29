@@ -348,4 +348,196 @@ export const moduleConfigs: Record<ModuleId, ModuleConfig> = {
       { name: "Titan Wellness", branch: "Tenant", status: "active", amount: "Enterprise", owner: "Dominio custom" },
     ],
   },
+  catalog: {
+    id: "catalog",
+    title: { es: "Catalogo de productos", en: "Product catalog", fr: "Catalogue produits" },
+    subtitle: {
+      es: "Diccionario maestro de productos, categorias, SKU, costos, precios e impuestos.",
+      en: "Master product dictionary for categories, SKUs, costs, prices, and taxes.",
+      fr: "Dictionnaire maitre des produits, categories, SKU, couts, prix et taxes.",
+    },
+    primaryAction: { es: "Nuevo producto", en: "New product", fr: "Nouveau produit" },
+    metrics: [
+      { label: { es: "Productos activos", en: "Active products", fr: "Produits actifs" }, value: "0", change: "Actual", tone: "default" },
+      { label: { es: "Categorias", en: "Categories", fr: "Categories" }, value: "0", change: "Catalogo", tone: "default" },
+      { label: { es: "SKUs sin stock", en: "SKUs without stock", fr: "SKU sans stock" }, value: "0", change: "Revisar", tone: "warning" },
+      { label: { es: "Precio promedio", en: "Average price", fr: "Prix moyen" }, value: "$0", change: "MXN", tone: "default" },
+    ],
+    chart: [
+      { label: "Productos", value: 0 },
+      { label: "Categorias", value: 0 },
+      { label: "Activos", value: 0 },
+    ],
+    rows: [
+      { name: "Catalogo listo para productos", branch: "Tenant", status: "active", amount: "0 SKUs", owner: "Catalogo" },
+    ],
+  },
+  purchases: {
+    id: "purchases",
+    title: { es: "Compras a proveedores", en: "Supplier purchases", fr: "Achats fournisseurs" },
+    subtitle: {
+      es: "Abastecimiento B2B, facturas por pagar y entradas de mercancia a almacenes.",
+      en: "B2B procurement, payable invoices, and warehouse stock receipts.",
+      fr: "Approvisionnement B2B, factures a payer et receptions en entrepot.",
+    },
+    primaryAction: { es: "Registrar compra", en: "Register purchase", fr: "Enregistrer achat" },
+    metrics: [
+      { label: { es: "Facturas por pagar", en: "Payable invoices", fr: "Factures a payer" }, value: "$0", change: "Abiertas", tone: "warning" },
+      { label: { es: "Proveedores", en: "Suppliers", fr: "Fournisseurs" }, value: "0", change: "Activos", tone: "default" },
+      { label: { es: "Compras recibidas", en: "Received purchases", fr: "Achats recus" }, value: "0", change: "Hoy", tone: "success" },
+      { label: { es: "Pendientes", en: "Pending", fr: "En attente" }, value: "0", change: "Recepcion", tone: "default" },
+    ],
+    chart: [
+      { label: "CxP", value: 0 },
+      { label: "Recibido", value: 0 },
+      { label: "Proveedores", value: 0 },
+    ],
+    rows: [
+      { name: "Flujo de compras listo", branch: "Tenant", status: "active", amount: "$0", owner: "Compras" },
+    ],
+  },
+  warehouse: {
+    id: "warehouse",
+    title: { es: "Gestion de almacenes", en: "Warehouse management", fr: "Gestion entrepots" },
+    subtitle: {
+      es: "Stock por sucursal, puntos de reorden, traspasos y movimientos de inventario.",
+      en: "Branch stock, reorder points, transfers, and inventory movements.",
+      fr: "Stock par succursale, seuils, transferts et mouvements.",
+    },
+    primaryAction: { es: "Nuevo movimiento", en: "New movement", fr: "Nouveau mouvement" },
+    metrics: [
+      { label: { es: "Almacenes", en: "Warehouses", fr: "Entrepots" }, value: "0", change: "Activos", tone: "default" },
+      { label: { es: "Stock critico", en: "Critical stock", fr: "Stock critique" }, value: "0", change: "Reorden", tone: "warning" },
+      { label: { es: "Movimientos hoy", en: "Movements today", fr: "Mouvements jour" }, value: "0", change: "Hoy", tone: "default" },
+      { label: { es: "Traspasos", en: "Transfers", fr: "Transferts" }, value: "0", change: "En curso", tone: "default" },
+    ],
+    chart: [
+      { label: "Almacenes", value: 0 },
+      { label: "Critico", value: 0 },
+      { label: "Movs", value: 0 },
+    ],
+    rows: [
+      { name: "Control de almacenes listo", branch: "Consolidado", status: "active", amount: "0 items", owner: "Warehouse" },
+    ],
+  },
+  accounting: {
+    id: "accounting",
+    title: { es: "Contabilidad", en: "Accounting", fr: "Comptabilite" },
+    subtitle: {
+      es: "Catalogo de cuentas, polizas contables, cargos, abonos y cuadre financiero.",
+      en: "Chart of accounts, journal entries, debits, credits, and balancing.",
+      fr: "Plan comptable, ecritures, debits, credits et equilibre.",
+    },
+    primaryAction: { es: "Nueva poliza", en: "New journal entry", fr: "Nouvelle ecriture" },
+    metrics: [
+      { label: { es: "Cuentas", en: "Accounts", fr: "Comptes" }, value: "0", change: "Catalogo", tone: "default" },
+      { label: { es: "Polizas borrador", en: "Draft entries", fr: "Ecritures brouillon" }, value: "0", change: "Revisar", tone: "warning" },
+      { label: { es: "Polizas posteadas", en: "Posted entries", fr: "Ecritures validees" }, value: "0", change: "Mes", tone: "success" },
+      { label: { es: "Balance", en: "Balance", fr: "Balance" }, value: "$0", change: "Debito/credito", tone: "default" },
+    ],
+    chart: [
+      { label: "Cuentas", value: 0 },
+      { label: "Borrador", value: 0 },
+      { label: "Posteado", value: 0 },
+    ],
+    rows: [
+      { name: "Contabilidad lista para polizas", branch: "Tenant", status: "active", amount: "0", owner: "Contador" },
+    ],
+  },
+  payroll: {
+    id: "payroll",
+    title: { es: "Nomina y comisiones", en: "Payroll and commissions", fr: "Paie et commissions" },
+    subtitle: {
+      es: "Periodos de nomina, contratos, asistencias, horas extra, deducciones y netos.",
+      en: "Payroll periods, contracts, attendance, overtime, deductions, and net pay.",
+      fr: "Periodes de paie, contrats, presences, heures extra, deductions et net.",
+    },
+    primaryAction: { es: "Crear periodo", en: "Create period", fr: "Creer periode" },
+    metrics: [
+      { label: { es: "Periodos borrador", en: "Draft periods", fr: "Periodes brouillon" }, value: "0", change: "Revisar", tone: "warning" },
+      { label: { es: "Empleados activos", en: "Active employees", fr: "Employes actifs" }, value: "0", change: "Actual", tone: "default" },
+      { label: { es: "Asistencias hoy", en: "Attendance today", fr: "Presences jour" }, value: "0", change: "Hoy", tone: "success" },
+      { label: { es: "Neto pendiente", en: "Pending net pay", fr: "Net en attente" }, value: "$0", change: "Nomina", tone: "default" },
+    ],
+    chart: [
+      { label: "Periodos", value: 0 },
+      { label: "Personal", value: 0 },
+      { label: "Asistencia", value: 0 },
+    ],
+    rows: [
+      { name: "Nomina lista para periodos", branch: "Tenant", status: "active", amount: "$0", owner: "RH" },
+    ],
+  },
+  analytics: {
+    id: "analytics",
+    title: { es: "Analytics e inteligencia", en: "Analytics and intelligence", fr: "Analytics et intelligence" },
+    subtitle: {
+      es: "BI para flujo de caja, retencion, churn y rentabilidad entre sucursales.",
+      en: "BI for cash flow, retention, churn, and branch profitability.",
+      fr: "BI pour flux de caisse, retention, churn et rentabilite.",
+    },
+    primaryAction: { es: "Generar reporte", en: "Generate report", fr: "Generer rapport" },
+    metrics: [
+      { label: { es: "Snapshots", en: "Snapshots", fr: "Snapshots" }, value: "0", change: "Mongo", tone: "default" },
+      { label: { es: "Retencion", en: "Retention", fr: "Retention" }, value: "0%", change: "Actual", tone: "success" },
+      { label: { es: "Churn", en: "Churn", fr: "Churn" }, value: "0%", change: "Riesgo", tone: "warning" },
+      { label: { es: "Sucursales", en: "Branches", fr: "Succursales" }, value: "0", change: "Comparativo", tone: "default" },
+    ],
+    chart: [
+      { label: "Retencion", value: 0 },
+      { label: "Churn", value: 0 },
+      { label: "Sucursales", value: 0 },
+    ],
+    rows: [
+      { name: "Analytics listo para snapshots", branch: "Consolidado", status: "active", amount: "0", owner: "BI" },
+    ],
+  },
+  integrations: {
+    id: "integrations",
+    title: { es: "Integraciones y webhooks", en: "Integrations and webhooks", fr: "Integrations et webhooks" },
+    subtitle: {
+      es: "Eventos de pasarelas, outbox, reintentos y auditoria tecnica por tenant.",
+      en: "Gateway events, outbox, retries, and tenant technical audit.",
+      fr: "Evenements passerelle, outbox, reprises et audit technique.",
+    },
+    primaryAction: { es: "Revisar eventos", en: "Review events", fr: "Reviser evenements" },
+    metrics: [
+      { label: { es: "Eventos gateway", en: "Gateway events", fr: "Evenements passerelle" }, value: "0", change: "Recibidos", tone: "default" },
+      { label: { es: "Outbox pendiente", en: "Pending outbox", fr: "Outbox attente" }, value: "0", change: "Cola", tone: "warning" },
+      { label: { es: "Fallidos", en: "Failed", fr: "Echecs" }, value: "0", change: "Reintentar", tone: "danger" },
+      { label: { es: "Procesados", en: "Processed", fr: "Traites" }, value: "0", change: "OK", tone: "success" },
+    ],
+    chart: [
+      { label: "Gateway", value: 0 },
+      { label: "Outbox", value: 0 },
+      { label: "Fallos", value: 0 },
+    ],
+    rows: [
+      { name: "Centro tecnico listo", branch: "Tenant", status: "active", amount: "0 eventos", owner: "Integraciones" },
+    ],
+  },
+  maintenance: {
+    id: "maintenance",
+    title: { es: "Mantenimiento de instalaciones", en: "Facility maintenance", fr: "Maintenance installations" },
+    subtitle: {
+      es: "Tickets de servicio para maquinas, equipo, prioridades y resolucion operativa.",
+      en: "Service tickets for machines, equipment, priorities, and operations.",
+      fr: "Tickets pour machines, equipement, priorites et operations.",
+    },
+    primaryAction: { es: "Nuevo ticket", en: "New ticket", fr: "Nouveau ticket" },
+    metrics: [
+      { label: { es: "Tickets abiertos", en: "Open tickets", fr: "Tickets ouverts" }, value: "0", change: "Activos", tone: "warning" },
+      { label: { es: "Criticos", en: "Critical", fr: "Critiques" }, value: "0", change: "Prioridad", tone: "danger" },
+      { label: { es: "En progreso", en: "In progress", fr: "En cours" }, value: "0", change: "Equipo", tone: "default" },
+      { label: { es: "Resueltos", en: "Resolved", fr: "Resolus" }, value: "0", change: "Mes", tone: "success" },
+    ],
+    chart: [
+      { label: "Abiertos", value: 0 },
+      { label: "Criticos", value: 0 },
+      { label: "Resueltos", value: 0 },
+    ],
+    rows: [
+      { name: "Mantenimiento listo para tickets", branch: "Sucursal", status: "active", amount: "0", owner: "Operaciones" },
+    ],
+  },
 };
