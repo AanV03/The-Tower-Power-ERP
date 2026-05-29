@@ -2,10 +2,10 @@
 
 ## Current Phase
 
-- Phase: 2 - Auth + Tenant Context
-- Branch: `Auth-tenant-context`
+- Phase: 3 - Module APIs
+- Branch: `Module-apis`
 - Status: Implemented
-- Goal: implement Auth.js authentication, secure tenant resolution, RBAC context, module access context, and dashboard protection.
+- Goal: build authenticated, tenant-scoped APIs for dashboard summaries and core operational modules.
 
 ## Phase 1 Checklist
 
@@ -30,6 +30,20 @@
 - [x] Protect dashboard routes with server-side Auth.js session validation.
 - [x] Add reusable branch/module/permission guards for individual module APIs and server actions.
 - [x] Add self-service onboarding flow through signup/OAuth tenant bootstrap.
+
+## Phase 3 Checklist
+
+- [x] Create the `Module-apis` branch from the Auth foundation.
+- [x] Add shared API context for Auth.js session, tenant, branch, module and permission guards.
+- [x] Add standardized JSON success/error responses.
+- [x] Add dashboard/module summary API shaped for the existing frontend metrics, chart and table components.
+- [x] Add SaaS Admin tenant/branch/module APIs.
+- [x] Add memberships APIs for members and membership plans.
+- [x] Add first finance/POS/inventory/RH/specialists read APIs with tenant scoping.
+- [x] Add operational GET/POST endpoints for access devices, finance invoices/payments, inventory products/warehouses, POS registers/sales, HR employees, and specialists.
+- [x] Add focused tests for API context, module summary shaping and validation.
+- [x] Verify with `pnpm test:auth`, API tests, `pnpm typecheck`, and `pnpm build`.
+- [x] Connect dashboard module pages to tenant-scoped module summary data instead of static metric/table/chart mocks.
 
 ## Mandatory Pause
 
@@ -73,3 +87,12 @@ Required flow:
 - Phase 2: `pnpm typecheck` passed.
 - Phase 2: `pnpm build` passed.
 - Phase 2: production server smoke test confirmed unauthenticated `GET /es/dashboard` redirects to `/es/signin` with HTTP 307.
+- Phase 3: `pnpm test:api` passed with 3 Node tests.
+- Phase 3: `pnpm test:auth` passed with 7 Node tests.
+- Phase 3: `pnpm test:db-env` passed with 5 Node tests.
+- Phase 3: `pnpm db:validate`, `pnpm db:generate`, and `pnpm db:check-env` passed.
+- Phase 3: `pnpm typecheck` passed.
+- Phase 3: `pnpm build` passed and includes API routes for admin tenant, branches, memberships, and module summaries.
+- Phase 3: dashboard module pages now render tenant-scoped summary service data through `ModulePage`; `pnpm test:api`, `pnpm test:auth`, `pnpm typecheck`, and `pnpm build` passed after the integration.
+- Phase 3: expanded module APIs with tenant-scoped GET/POST routes across Access, Finance, Inventory, POS, HR, and Specialists; `pnpm typecheck` passed after the endpoint expansion.
+- Phase 3: verification passed after endpoint expansion: `pnpm test:api`, `pnpm test:auth`, `pnpm test:db-env`, `pnpm db:validate`, `pnpm db:generate`, `pnpm db:check-env`, `pnpm typecheck`, and `pnpm build`.

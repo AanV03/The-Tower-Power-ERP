@@ -11,6 +11,7 @@
     "db:check-env": "node scripts/check-env.mjs",
     "test:db-env": "node --test scripts/check-env.test.mjs",
     "test:auth": "node --experimental-strip-types --test scripts/auth-password.test.mjs scripts/rbac.test.mjs",
+    "test:api": "node --experimental-strip-types --test scripts/api.test.mjs",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "check:accessibility": "pa11y http://localhost:3000",
