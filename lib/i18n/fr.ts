@@ -203,4 +203,38 @@ export const fr = {
       },
     },
   },
+  analytics: {
+    filters: {
+      range: "Période",
+      branch: "Succursale",
+      today: "Aujourd'hui",
+      last7Days: "7 derniers jours",
+      last30Days: "30 derniers jours",
+      last90Days: "90 derniers jours",
+      allTime: "Tout le temps",
+    },
+    export: {
+      button: "Exporter le rapport",
+      title: "Configurer l'exportation",
+      description: "Choisissez le format et les options pour télécharger le rapport d'analyse.",
+      format: "Format",
+      pdf: "Document PDF (.pdf)",
+      csv: "Valeurs séparées par des virgules (.csv)",
+      includeCharts: "Inclure les graphiques",
+      includeMetadata: "Inclure les métadonnées d'audit",
+      success: "Rapport exporté avec succès.",
+      cancel: "Annuler",
+      submit: "Exporter",
+    },
+    metrics: {
+      retentionTrend: "Tendance de rétention",
+      churnRiskTrend: "Tendance du risque de désabonnement",
+    },
+    charts: {
+      mainTitle: "Intelligence d'Affaires & Flux",
+      mainDesc: "Vue combinée de la rétention des membres par rapport au taux de désabonnement historique.",
+      retentionLine: "Taux de Rétention",
+      churnLine: "Taux de Churn",
+    },
+  },
 } as const;

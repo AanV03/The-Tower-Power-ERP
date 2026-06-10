@@ -203,4 +203,38 @@ export const es = {
       },
     },
   },
+  analytics: {
+    filters: {
+      range: "Rango de fecha",
+      branch: "Sucursal",
+      today: "Hoy",
+      last7Days: "Últimos 7 días",
+      last30Days: "Últimos 30 días",
+      last90Days: "Últimos 90 días",
+      allTime: "Todo el tiempo",
+    },
+    export: {
+      button: "Exportar reporte",
+      title: "Configurar exportación",
+      description: "Elige el formato y las opciones para descargar el reporte de analytics.",
+      format: "Formato",
+      pdf: "Documento PDF (.pdf)",
+      csv: "Valores separados por coma (.csv)",
+      includeCharts: "Incluir gráficos",
+      includeMetadata: "Incluir metadatos de auditoría",
+      success: "Reporte exportado con éxito.",
+      cancel: "Cancelar",
+      submit: "Exportar",
+    },
+    metrics: {
+      retentionTrend: "Tendencia de retención",
+      churnRiskTrend: "Tendencia de riesgo de churn",
+    },
+    charts: {
+      mainTitle: "Inteligencia de Negocio y Flujo",
+      mainDesc: "Visualización combinada de retención de miembros vs tasa de abandono (churn) histórica.",
+      retentionLine: "Tasa de Retención",
+      churnLine: "Tasa de Churn",
+    },
+  },
 } as const;

@@ -203,4 +203,38 @@ export const en = {
       },
     },
   },
+  analytics: {
+    filters: {
+      range: "Date Range",
+      branch: "Branch",
+      today: "Today",
+      last7Days: "Last 7 Days",
+      last30Days: "Last 30 Days",
+      last90Days: "Last 90 Days",
+      allTime: "All Time",
+    },
+    export: {
+      button: "Export Report",
+      title: "Configure Export",
+      description: "Choose the format and options to download the analytics report.",
+      format: "Format",
+      pdf: "PDF Document (.pdf)",
+      csv: "Comma-Separated Values (.csv)",
+      includeCharts: "Include charts",
+      includeMetadata: "Include audit metadata",
+      success: "Report exported successfully.",
+      cancel: "Cancel",
+      submit: "Export",
+    },
+    metrics: {
+      retentionTrend: "Retention trend",
+      churnRiskTrend: "Churn risk trend",
+    },
+    charts: {
+      mainTitle: "Business Intelligence & Flow",
+      mainDesc: "Combined view of member retention vs historical churn rate.",
+      retentionLine: "Retention Rate",
+      churnLine: "Churn Rate",
+    },
+  },
 } as const;
