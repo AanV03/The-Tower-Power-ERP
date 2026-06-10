@@ -1,41 +1,32 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { createUserWithTenant } from "@/lib/auth/tenant-context";
-import { isPasswordValid, normalizeEmail } from "@/lib/auth/password";
+import { NextRequest, NextResponse } from 'next/server';
+import { registerSchema } from '@/modules/auth/schemas/auth.schema';
+import { AuthService } from '@/modules/auth/services/auth.service';
 
-const RegisterSchema = z.object({
-  name: z.string().trim().min(2).max(120),
-  email: z.string().email().transform(normalizeEmail),
-  password: z.string().refine(isPasswordValid, "Password does not meet requirements."),
-});
-
-export const runtime = "nodejs";
-
-export async function POST(request: Request) {
-  const body = await request.json().catch(() => null);
-  const parsed = RegisterSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return NextResponse.json(
-      { ok: false, error: "INVALID_INPUT" },
-      { status: 400 },
-    );
-  }
-
+export async function POST(req: NextRequest) {
   try {
-    await createUserWithTenant(parsed.data);
-    return NextResponse.json({ ok: true }, { status: 201 });
-  } catch (error) {
-    if (error instanceof Error && error.message === "USER_ALREADY_EXISTS") {
-      return NextResponse.json(
-        { ok: false, error: "USER_ALREADY_EXISTS" },
-        { status: 409 },
-      );
+    const body = await req.json();
+    
+    // 1. Validamos los datos con Zod
+    const validatedData = registerSchema.parse(body);
+
+    // 2. Ejecutamos el Bootstrap
+    const result = await AuthService.registerNewTenant(validatedData);
+
+    return NextResponse.json(
+      { message: 'Gimnasio y cuenta creados exitosamente', data: result },
+      { status: 201 }
+    );
+
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Datos inválidos', details: error.errors }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { ok: false, error: "REGISTER_FAILED" },
-      { status: 500 },
-    );
+    if (error.message === 'EMAIL_IN_USE') {
+      return NextResponse.json({ error: 'Este correo electrónico ya está registrado.' }, { status: 409 });
+    }
+
+    console.error('[REGISTER_ERROR]', error);
+    return NextResponse.json({ error: 'Error interno del servidor.' }, { status: 500 });
   }
 }
