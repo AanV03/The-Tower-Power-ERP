@@ -203,4 +203,87 @@ export const fr = {
       },
     },
   },
+  marketing: {
+    funnel: {
+      title: "Entonnoir de Conversion",
+      description: "Taux de conversion par étape du pipeline",
+      stages: {
+        leads: "Leads",
+        tours: "Visites",
+        trials: "Essais",
+        paid: "Payés"
+      },
+      conversionRate: "Taux de conversion",
+      dropoff: "Perte"
+    },
+    campaigns: {
+      title: "Campagnes Actives",
+      description: "Suivi des performances par canal",
+      newCampaign: "Nouvelle campagne",
+      status: {
+        active: "Active",
+        draft: "Brouillon",
+        scheduled: "Planifiée",
+        paused: "Suspendue"
+      },
+      metrics: {
+        sent: "Envoyés",
+        openRate: "Ouverture",
+        clickRate: "Clics",
+        conversion: "Conv."
+      },
+      actions: {
+        pause: "Suspendre",
+        resume: "Reprendre",
+        viewDetails: "Détails"
+      }
+    },
+    segments: {
+      title: "Segments d'Audience",
+      description: "Groupes de clients cibles",
+      members: "membres",
+      actions: {
+        send: "Envoyer campagne"
+      },
+      names: {
+        churn: "Risque de Churn",
+        spenders: "Dépenses Élevées",
+        inactive: "Inactifs 14j",
+        newSignups: "Nouveaux Inscrits"
+      }
+    },
+    automations: {
+      title: "Flux d'Automatisation",
+      description: "Séquences actives déclenchées par des événements",
+      steps: {
+        trigger: "Déclencheur : Inscription",
+        delay: "Attendre 1 jour",
+        email: "Envoyer Email de Bienvenue",
+        condition: "App Utilisée ?",
+        yes: "Oui : Email Pro",
+        no: "Non : Rappel"
+      },
+      stats: {
+        activeUsers: "utilisateurs actifs"
+      }
+    },
+    modal: {
+      title: "Créer une Nouvelle Campagne",
+      subtitle: "Configurez le canal de diffusion, le segment cible et le contenu du message.",
+      fields: {
+        name: "Nom de la campagne",
+        namePlaceholder: "ex : Remise d'été 2026",
+        channel: "Canal de diffusion",
+        segment: "Segment cible",
+        content: "Contenu du message",
+        contentPlaceholder: "Écrivez le texte ou le modèle à envoyer..."
+      },
+      actions: {
+        cancel: "Annuler",
+        submit: "Lancer la Campagne"
+      },
+      success: "Campagne créée avec succès !"
+    }
+  }
 } as const;
+

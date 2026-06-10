@@ -203,4 +203,87 @@ export const en = {
       },
     },
   },
+  marketing: {
+    funnel: {
+      title: "Conversion Funnel",
+      description: "Conversion rate per pipeline stage",
+      stages: {
+        leads: "Leads",
+        tours: "Tours",
+        trials: "Trials",
+        paid: "Paid"
+      },
+      conversionRate: "Conversion Rate",
+      dropoff: "Dropoff"
+    },
+    campaigns: {
+      title: "Active Campaigns",
+      description: "Performance monitoring by channel",
+      newCampaign: "New campaign",
+      status: {
+        active: "Active",
+        draft: "Draft",
+        scheduled: "Scheduled",
+        paused: "Paused"
+      },
+      metrics: {
+        sent: "Sent",
+        openRate: "Open Rate",
+        clickRate: "Clicks",
+        conversion: "Conv."
+      },
+      actions: {
+        pause: "Pause",
+        resume: "Resume",
+        viewDetails: "Details"
+      }
+    },
+    segments: {
+      title: "Audience Segments",
+      description: "Targeted customer groups",
+      members: "members",
+      actions: {
+        send: "Send campaign"
+      },
+      names: {
+        churn: "At Churn Risk",
+        spenders: "High Spenders",
+        inactive: "Inactive 14d",
+        newSignups: "New Signups"
+      }
+    },
+    automations: {
+      title: "Automation Flows",
+      description: "Active sequences triggered by events",
+      steps: {
+        trigger: "Trigger: Signup",
+        delay: "Wait 1 day",
+        email: "Send Welcome Email",
+        condition: "App Used?",
+        yes: "Yes: Pro Email",
+        no: "No: Reminder"
+      },
+      stats: {
+        activeUsers: "active users"
+      }
+    },
+    modal: {
+      title: "Create New Campaign",
+      subtitle: "Configure delivery channel, target segment, and message content.",
+      fields: {
+        name: "Campaign Name",
+        namePlaceholder: "e.g., Summer Discount 2026",
+        channel: "Delivery Channel",
+        segment: "Target Segment",
+        content: "Message Content",
+        contentPlaceholder: "Write the text or template to send..."
+      },
+      actions: {
+        cancel: "Cancel",
+        submit: "Launch Campaign"
+      },
+      success: "Campaign successfully created!"
+    }
+  }
 } as const;
+
