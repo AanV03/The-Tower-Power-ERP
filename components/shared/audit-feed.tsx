@@ -15,7 +15,7 @@ export function AuditFeed({
 
   if (isLoading) {
     return (
-      <Card className="min-h-[342px]">
+      <Card className="min-h-[400px]">
         <CardHeader>
           <CardTitle>{labels.title}</CardTitle>
           <CardDescription>{labels.description}</CardDescription>
@@ -29,7 +29,7 @@ export function AuditFeed({
 
   if (!auditTrail || auditTrail.length === 0) {
     return (
-      <Card className="min-h-[342px]">
+      <Card className="min-h-[400px]">
         <CardHeader>
           <CardTitle>{labels.title}</CardTitle>
           <CardDescription>{labels.description}</CardDescription>
@@ -42,7 +42,7 @@ export function AuditFeed({
   }
 
   return (
-    <Card className="min-h-[342px]">
+    <Card className="min-h-[400px]">
       <CardHeader>
         <CardTitle>{labels.title}</CardTitle>
         <CardDescription>{labels.description}</CardDescription>
