@@ -26,7 +26,8 @@
         "http://localhost:3000/es/RH",
         "http://localhost:3000/en/RH",
         "http://localhost:3000/es/specialists",
-        "http://localhost:3000/en/specialists"
+        "http://localhost:3000/es/integrations",
+        "http://localhost:3000/en/integrations"
       ],
       "numberOfRuns": 1
     },
