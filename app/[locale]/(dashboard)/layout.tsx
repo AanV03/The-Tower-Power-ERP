@@ -6,6 +6,7 @@ import { Topbar } from "@/components/layout/topbar";
 import { MobileModuleNav } from "@/components/layout/mobile-module-nav";
 import { BrandColorApplier } from "@/components/branding/brand-color-applier";
 import { BrandColorScript } from "@/components/branding/brand-color-script";
+import { getTenantContextFromCookies } from "@/lib/auth/server-session";
 import type { Locale } from "@/lib/i18n";
 
 export const runtime = "nodejs";
@@ -20,9 +21,10 @@ export default async function DashboardLayout({
 }) {
   noStore();
   const { locale } = await params;
-  const session = await auth();
+  const customContext = await getTenantContextFromCookies().catch(() => null);
+  const session = customContext ? null : await auth();
 
-  if (!session?.user?.tenantId) {
+  if (!customContext?.tenantId && !session?.user?.tenantId) {
     redirect(`/${locale}/signin`);
   }
 
