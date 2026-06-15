@@ -1,7 +1,6 @@
 "use client";
 
 import type { ComponentProps, ComponentType, PropsWithChildren } from "react";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
@@ -12,9 +11,8 @@ const ThemeProvider = NextThemesProvider as ComponentType<
 >;
 
 export function Providers({ children, ...props }: React.ComponentProps<typeof NextThemesProvider> & { children: React.ReactNode }) {
-  const Provider = NextThemesProvider as any;
   return (
-    <Provider
+    <ThemeProvider
       attribute="class"
       defaultTheme="light"
       enableSystem
@@ -23,6 +21,6 @@ export function Providers({ children, ...props }: React.ComponentProps<typeof Ne
     >
       {children}
       <Toaster />
-    </Provider>
+    </ThemeProvider>
   );
 }
