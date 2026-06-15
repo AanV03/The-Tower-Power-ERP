@@ -1,10 +1,15 @@
+import { redirect } from "next/navigation";
+import { unstable_noStore as noStore } from "next/cache";
+import { auth } from "@/auth";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { MobileModuleNav } from "@/components/layout/mobile-module-nav";
 import { BrandColorApplier } from "@/components/branding/brand-color-applier";
 import { BrandColorScript } from "@/components/branding/brand-color-script";
-import { cn } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export default async function DashboardLayout({
   children,
@@ -13,7 +18,13 @@ export default async function DashboardLayout({
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
+  noStore();
   const { locale } = await params;
+  const session = await auth();
+
+  if (!session?.user?.tenantId) {
+    redirect(`/${locale}/signin`);
+  }
 
   return (
     <div className="h-screen overflow-hidden flex bg-background">

@@ -3,14 +3,22 @@ import {
   BarChart3,
   Boxes,
   Building2,
+  Calculator,
+  ChartNoAxesCombined,
   ClipboardList,
   CreditCard,
   Dumbbell,
   KeyRound,
   Megaphone,
+  Package,
+  ReceiptText,
   ShieldCheck,
   ShoppingCart,
+  Truck,
   UsersRound,
+  Warehouse,
+  Webhook,
+  Wrench,
 } from "lucide-react";
 import type { ElementType } from "react";
 
@@ -26,7 +34,15 @@ export type ModuleId =
   | "hr"
   | "marketing"
   | "specialists"
-  | "admin";
+  | "admin"
+  | "catalog"
+  | "purchases"
+  | "warehouse"
+  | "accounting"
+  | "payroll"
+  | "analytics"
+  | "integrations"
+  | "maintenance";
 
 export type NavItem = {
   id: ModuleId;
@@ -34,6 +50,12 @@ export type NavItem = {
   icon: ElementType;
   labels: Record<Locale, string>;
   description: Record<Locale, string>;
+};
+
+export type NavGroup = {
+  id: "operations" | "logistics" | "finance" | "people" | "growth" | "platform";
+  labels: Record<Locale, string>;
+  items: NavItem[];
 };
 
 export const navigationItems: NavItem[] = [
@@ -104,6 +126,39 @@ export const navigationItems: NavItem[] = [
     },
   },
   {
+    id: "catalog",
+    href: "/catalog",
+    icon: Package,
+    labels: { es: "Catalogo", en: "Catalog", fr: "Catalogue" },
+    description: {
+      es: "Productos, categorias, SKU, costos e impuestos.",
+      en: "Products, categories, SKUs, costs, and taxes.",
+      fr: "Produits, categories, SKU, couts et taxes.",
+    },
+  },
+  {
+    id: "purchases",
+    href: "/purchases",
+    icon: Truck,
+    labels: { es: "Compras", en: "Purchases", fr: "Achats" },
+    description: {
+      es: "Proveedores, facturas por pagar y entradas de stock.",
+      en: "Suppliers, payable invoices, and stock receipts.",
+      fr: "Fournisseurs, factures a payer et entrees de stock.",
+    },
+  },
+  {
+    id: "warehouse",
+    href: "/warehouse",
+    icon: Warehouse,
+    labels: { es: "Almacenes", en: "Warehouse", fr: "Entrepots" },
+    description: {
+      es: "Stock critico, almacenes y transferencias.",
+      en: "Critical stock, warehouses, and transfers.",
+      fr: "Stock critique, entrepots et transferts.",
+    },
+  },
+  {
     id: "hr",
     href: "/hr",
     icon: UsersRound,
@@ -112,6 +167,17 @@ export const navigationItems: NavItem[] = [
       es: "Expedientes, asistencias y comisiones.",
       en: "Records, attendance, and commissions.",
       fr: "Dossiers, présences et commissions.",
+    },
+  },
+  {
+    id: "payroll",
+    href: "/payroll",
+    icon: ReceiptText,
+    labels: { es: "Nomina", en: "Payroll", fr: "Paie" },
+    description: {
+      es: "Periodos, contratos, asistencias y pagos netos.",
+      en: "Periods, contracts, attendance, and net payouts.",
+      fr: "Periodes, contrats, presences et paiements nets.",
     },
   },
   {
@@ -126,6 +192,17 @@ export const navigationItems: NavItem[] = [
     },
   },
   {
+    id: "analytics",
+    href: "/analytics",
+    icon: ChartNoAxesCombined,
+    labels: { es: "Analytics", en: "Analytics", fr: "Analytics" },
+    description: {
+      es: "BI, retencion, rentabilidad y comparativos.",
+      en: "BI, retention, profitability, and comparisons.",
+      fr: "BI, retention, rentabilite et comparatifs.",
+    },
+  },
+  {
     id: "specialists",
     href: "/specialists",
     icon: Dumbbell,
@@ -134,6 +211,17 @@ export const navigationItems: NavItem[] = [
       es: "Rentas, comisiones y liquidaciones.",
       en: "Rent, commissions, and settlements.",
       fr: "Loyers, commissions et règlements.",
+    },
+  },
+  {
+    id: "accounting",
+    href: "/accounting",
+    icon: Calculator,
+    labels: { es: "Contabilidad", en: "Accounting", fr: "Comptabilite" },
+    description: {
+      es: "Catalogo de cuentas, polizas y partida doble.",
+      en: "Chart of accounts, journal entries, and double entry.",
+      fr: "Plan comptable, ecritures et partie double.",
     },
   },
   {
@@ -146,6 +234,67 @@ export const navigationItems: NavItem[] = [
       en: "Tenants, licenses, modules, and white-label.",
       fr: "Tenants, licences, modules et blanc-label.",
     },
+  },
+  {
+    id: "integrations",
+    href: "/integrations",
+    icon: Webhook,
+    labels: { es: "Integraciones", en: "Integrations", fr: "Integrations" },
+    description: {
+      es: "Eventos de pasarela, outbox y auditoria tecnica.",
+      en: "Gateway events, outbox, and technical audit.",
+      fr: "Evenements passerelle, outbox et audit technique.",
+    },
+  },
+  {
+    id: "maintenance",
+    href: "/maintenance",
+    icon: Wrench,
+    labels: { es: "Mantenimiento", en: "Maintenance", fr: "Maintenance" },
+    description: {
+      es: "Tickets de servicio para equipo e instalaciones.",
+      en: "Service tickets for equipment and facilities.",
+      fr: "Tickets de service pour equipement et installations.",
+    },
+  },
+];
+
+function navItem(id: ModuleId) {
+  const item = navigationItems.find((entry) => entry.id === id);
+  if (!item) throw new Error(`Navigation item not found: ${id}`);
+  return item;
+}
+
+export const navigationGroups: NavGroup[] = [
+  {
+    id: "operations",
+    labels: { es: "Operacion", en: "Operations", fr: "Operations" },
+    items: [navItem("dashboard"), navItem("pos"), navItem("access")],
+  },
+  {
+    id: "logistics",
+    labels: { es: "Logistica", en: "Logistics", fr: "Logistique" },
+    items: [navItem("catalog"), navItem("purchases"), navItem("warehouse"), navItem("inventory")],
+  },
+  {
+    id: "finance",
+    labels: { es: "Finanzas", en: "Finance", fr: "Finances" },
+    items: [navItem("finance"), navItem("accounting")],
+  },
+  {
+    id: "people",
+    labels: { es: "Personas", en: "People", fr: "Personnes" },
+    items: [navItem("hr"), navItem("payroll"), navItem("specialists")],
+  },
+  {
+    id: "growth",
+    labels: { es: "Crecimiento", en: "Growth", fr: "Croissance" },
+    items: [navItem("marketing"), navItem("analytics")],
+  },
+  {
+    id: "platform",
+    labels: { es: "Plataforma", en: "Platform", fr: "Plateforme" },
+    items: [navItem("admin"), navItem("integrations"), navItem("maintenance")],
   },
 ];
 

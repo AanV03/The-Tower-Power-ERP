@@ -2,7 +2,9 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useParams, useRouter } from "next/navigation";
+import type { Route } from "next";
 import {
   Eye,
   EyeOff,
@@ -162,11 +164,13 @@ function InputField({
 /* ─── Page ───────────────────────────────────────────────────────────── */
 export default function SignUpPage() {
   const params = useParams();
+  const router = useRouter();
   const localeParam = (params?.locale as string) ?? defaultLocale;
   const locale = isLocale(localeParam) ? localeParam : defaultLocale;
   const dictionary = getDictionary(locale);
   const auth = dictionary.auth;
   const strengthLabels = ["", auth.strength.weak, auth.strength.fair, auth.strength.good, auth.strength.strong];
+  const callbackUrl = `/${locale}/dashboard` as Route;
 
   /* Fields */
   const [name, setName] = useState("");
@@ -176,6 +180,7 @@ export default function SignUpPage() {
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   /* Touch tracking */
   const [touched, setTouched] = useState({
@@ -227,12 +232,47 @@ export default function SignUpPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
     setTouched({ name: true, email: true, password: true, confirm: true });
     if (!isFormValid) return;
     setIsLoading(true);
-    /* TODO: connect auth provider */
-    await new Promise((r) => setTimeout(r, 1800));
+    const response = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      setFormError(
+        payload?.error === "USER_ALREADY_EXISTS"
+          ? "Ya existe una cuenta con este correo."
+          : "No se pudo crear la cuenta. Intenta de nuevo.",
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+      callbackUrl,
+    });
+
     setIsLoading(false);
+
+    if (result?.error) {
+      setFormError("La cuenta se creo, pero no se pudo iniciar sesion automaticamente.");
+      return;
+    }
+
+    router.push(callbackUrl);
+    router.refresh();
+  }
+
+  async function handleOAuth(provider: "google" | "discord") {
+    await signIn(provider, { callbackUrl });
   }
 
   return (
@@ -422,6 +462,12 @@ export default function SignUpPage() {
                 )}
               </div>
 
+              {formError && (
+                <p className="flex items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                  <AlertCircle className="size-3 shrink-0" /> {formError}
+                </p>
+              )}
+
               {/* Submit */}
               <button
                 id="signup-submit"
@@ -451,6 +497,23 @@ export default function SignUpPage() {
                 )}
               </button>
             </form>
+
+            <div className="mt-5 grid gap-2">
+              <button
+                type="button"
+                onClick={() => handleOAuth("google")}
+                className="h-10 rounded-lg border border-input bg-background text-sm font-medium text-foreground transition-colors hover:bg-muted"
+              >
+                Registrarse con Google
+              </button>
+              <button
+                type="button"
+                onClick={() => handleOAuth("discord")}
+                className="h-10 rounded-lg border border-input bg-background text-sm font-medium text-foreground transition-colors hover:bg-muted"
+              >
+                Registrarse con Discord
+              </button>
+            </div>
           </div>
 
           {/* Footer */}

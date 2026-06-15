@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentType } from "react";
 import {
   Area as RechartsArea,
   AreaChart as RechartsAreaChart,
@@ -26,6 +27,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ChartSkeleton } from "@/components/skeletons";
 import { NoDataEmpty } from "@/components/empty-state";
 import { getDictionary, type Locale } from "@/lib/i18n";
+
+const ChartArea = Area as unknown as ComponentType<any>;
+const ChartBar = Bar as unknown as ComponentType<any>;
+const ChartTooltip = Tooltip as unknown as ComponentType<any>;
+const ChartXAxis = XAxis as unknown as ComponentType<any>;
+const ChartYAxis = YAxis as unknown as ComponentType<any>;
 
 export function ModuleChart({
   title,
@@ -89,9 +96,9 @@ export function ModuleChart({
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
-                <YAxis tickLine={false} axisLine={false} fontSize={12} />
-                <Tooltip
+                <ChartXAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
+                <ChartYAxis tickLine={false} axisLine={false} fontSize={12} />
+                <ChartTooltip
                   cursor={{ stroke: "var(--brand-orange)", strokeWidth: 1 }}
                   contentStyle={{
                     background: "hsl(var(--card))",
@@ -100,7 +107,7 @@ export function ModuleChart({
                     color: "hsl(var(--foreground))",
                   }}
                 />
-                <Area
+                <ChartArea
                   type="monotone"
                   dataKey="value"
                   stroke="var(--brand-orange)"
@@ -111,9 +118,9 @@ export function ModuleChart({
             ) : (
               <BarChart data={data} margin={{ left: -24, right: 4, top: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
-                <YAxis tickLine={false} axisLine={false} fontSize={12} />
-                <Tooltip
+                <ChartXAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
+                <ChartYAxis tickLine={false} axisLine={false} fontSize={12} />
+                <ChartTooltip
                   contentStyle={{
                     background: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
@@ -121,7 +128,7 @@ export function ModuleChart({
                     color: "hsl(var(--foreground))",
                   }}
                 />
-                <Bar dataKey="value" fill="var(--brand-green)" radius={[6, 6, 0, 0]} />
+                <ChartBar dataKey="value" fill="var(--brand-green)" radius={[6, 6, 0, 0]} />
               </BarChart>
             )}
           </ResponsiveContainer>
