@@ -1,4 +1,4 @@
-import { ModulePage } from "@/components/shared/module-page";
+import { HrDashboard } from "@/components/modules/hr/hr-dashboard";
 import type { Locale } from "@/lib/i18n";
 
 export default async function HrPage({
@@ -7,5 +7,5 @@ export default async function HrPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  return <ModulePage moduleId="hr" locale={locale as Locale} />;
+  return <HrDashboard locale={locale as Locale} />;
 }
