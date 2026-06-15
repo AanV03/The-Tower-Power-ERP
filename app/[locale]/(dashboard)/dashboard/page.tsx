@@ -9,7 +9,7 @@ import { ModuleTable } from "@/components/shared/module-table";
 import DashboardClient from "@/components/dashboard/DashboardClient";
 
 function mergeMetrics(moduleId: string, locale: Locale, summary: Awaited<ReturnType<typeof getModuleSummary>>) {
-  const config = moduleConfigs[moduleId as any];
+  const config = moduleConfigs[moduleId as keyof typeof moduleConfigs];
 
   return config.metrics.map((fallbackMetric: any, index: number) => {
     const apiMetric = summary.metrics[index];
