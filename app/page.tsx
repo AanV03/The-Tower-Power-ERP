@@ -12,7 +12,7 @@ export default function Home() {
       <section className="relative w-full py-24 px-4 max-w-7xl mx-auto">
         <div className="mb-12 px-4">
           <span className="text-amber-500 font-mono text-sm tracking-widest uppercase block mb-2">
-            // CHOOSE YOUR DISCIPLINE
+            {"// CHOOSE YOUR DISCIPLINE"}
           </span>
           <h2 className="text-white text-5xl md:text-6xl font-black uppercase tracking-tighter">
             TRAINING ZONES

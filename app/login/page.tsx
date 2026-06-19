@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { gsap } from "gsap";
 import BackgroundGrid from "@/components/BackgroundGrid";
 import DumbbellMonitor from "@/components/DumbbellMonitor";
@@ -266,9 +267,9 @@ export default function LoginPage() {
 
           <p className="text-center text-zinc-500 mt-6 text-sm">
             Need an account?{" "}
-            <a href="/register" className="text-amber-500 hover:underline">
+            <Link href="/register" className="text-amber-500 hover:underline">
               Register now
-            </a>
+            </Link>
           </p>
         </div>
       </div>

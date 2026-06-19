@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import BackgroundGrid from "@/components/BackgroundGrid";
 
 type RegisterField = "gymName" | "name" | "email" | "password";
@@ -212,7 +213,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-zinc-500 mt-6">
           Already have an account?{" "}
-          <a href="/login" className="text-amber-500 hover:underline">Log in</a>
+          <Link href="/login" className="text-amber-500 hover:underline">Log in</Link>
         </p>
       </div>
     </main>
