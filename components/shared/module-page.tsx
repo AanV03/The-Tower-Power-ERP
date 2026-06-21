@@ -44,16 +44,21 @@ export async function ModulePage({
 
   return (
     <section className="erp-section space-y-6" role="main" aria-label={config.title[locale]}>
-      <div className="space-y-1">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-3xl font-semibold tracking-normal text-foreground">
-            {config.title[locale]}
-          </h1>
+      <div className="erp-module-hero">
+        <div className="min-w-0 space-y-3">
+          <p className="erp-eyebrow">{dictionary.common.productCategory}</p>
+          <div className="space-y-2">
+            <h1 className="text-[clamp(2rem,5vw,3.75rem)] font-black uppercase leading-none tracking-normal text-white">
+              {config.title[locale]}
+            </h1>
+            <p className="max-w-3xl text-sm leading-6 text-zinc-300 sm:text-base">
+              {config.subtitle[locale]}
+            </p>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center">
           <QuickActions primaryLabel={config.primaryAction[locale]} locale={locale} />
         </div>
-        <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-          {config.subtitle[locale]}
-        </p>
       </div>
 
       <div className="erp-page-grid" aria-label={dictionary.common.metricsAriaLabel}>

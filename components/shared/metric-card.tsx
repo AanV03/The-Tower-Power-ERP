@@ -7,10 +7,10 @@ import { cn } from "@/lib/utils";
 type MetricTone = "default" | "success" | "warning" | "danger";
 
 const toneStyles: Record<MetricTone, string> = {
-  default: "bg-secondary text-secondary-foreground",
-  success: "bg-accent text-accent-foreground",
-  warning: "bg-brand-yellow text-brand-ink",
-  danger: "bg-destructive text-destructive-foreground",
+  default: "border-zinc-700 bg-zinc-800/80 text-zinc-200",
+  success: "border-emerald-400/30 bg-emerald-400/12 text-emerald-200",
+  warning: "border-amber-400/40 bg-amber-400/15 text-amber-100",
+  danger: "border-red-400/35 bg-red-400/15 text-red-100",
 };
 
 export function MetricCard({
@@ -31,20 +31,20 @@ export function MetricCard({
     tone === "success" ? ArrowUpRight : tone === "danger" ? ArrowDownRight : Minus;
 
   return (
-    <Card className="glass-effect">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+    <Card className="erp-card erp-metric-card">
+      <CardHeader className="pb-0">
+        <CardTitle className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
           {label}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex items-end justify-between gap-3">
-          <p className="text-2xl font-semibold tracking-normal text-foreground">
+          <p className="text-3xl font-black tracking-normal text-white">
             {value}
           </p>
           <span
             className={cn(
-              "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium focus-visible:ring-2 focus-visible:ring-offset-2",
+              "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-offset-2",
               toneStyles[tone],
             )}
             aria-label={formatMessage(dictionary.metricCard.changeLabel, { change })}

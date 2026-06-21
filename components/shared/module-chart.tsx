@@ -53,7 +53,7 @@ export function ModuleChart({
 
   if (isLoading) {
     return (
-      <Card className="min-h-[342px]">
+      <Card className="erp-card min-h-[342px]">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
@@ -67,7 +67,7 @@ export function ModuleChart({
 
   if (!data || data.length === 0) {
     return (
-      <Card className="min-h-[342px]">
+      <Card className="erp-card min-h-[342px]">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
@@ -79,10 +79,10 @@ export function ModuleChart({
     );
   }
   return (
-    <Card className="min-h-[342px]">
+    <Card className="erp-card min-h-[342px]">
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <CardTitle className="text-white">{title}</CardTitle>
+        <CardDescription className="text-zinc-400">{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-56 w-full" role="img" aria-label={title}>
@@ -95,16 +95,16 @@ export function ModuleChart({
                     <stop offset="95%" stopColor="var(--brand-orange)" stopOpacity={0.04} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <ChartXAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
-                <ChartYAxis tickLine={false} axisLine={false} fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                <ChartXAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} stroke="#a1a1aa" />
+                <ChartYAxis tickLine={false} axisLine={false} fontSize={12} stroke="#a1a1aa" />
                 <ChartTooltip
                   cursor={{ stroke: "var(--brand-orange)", strokeWidth: 1 }}
                   contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    background: "#18181b",
+                    border: "1px solid rgba(255,255,255,0.12)",
                     borderRadius: "8px",
-                    color: "hsl(var(--foreground))",
+                    color: "#fafafa",
                   }}
                 />
                 <ChartArea
@@ -117,15 +117,15 @@ export function ModuleChart({
               </AreaChart>
             ) : (
               <BarChart data={data} margin={{ left: -24, right: 4, top: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <ChartXAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
-                <ChartYAxis tickLine={false} axisLine={false} fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                <ChartXAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} stroke="#a1a1aa" />
+                <ChartYAxis tickLine={false} axisLine={false} fontSize={12} stroke="#a1a1aa" />
                 <ChartTooltip
                   contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    background: "#18181b",
+                    border: "1px solid rgba(255,255,255,0.12)",
                     borderRadius: "8px",
-                    color: "hsl(var(--foreground))",
+                    color: "#fafafa",
                   }}
                 />
                 <ChartBar dataKey="value" fill="var(--brand-green)" radius={[6, 6, 0, 0]} />

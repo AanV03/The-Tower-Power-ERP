@@ -3,6 +3,20 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --brand-orange: #f59e0b;
+  --brand-yellow: #fbbf24;
+  --brand-green: #00bc7d;
+  --brand-ink: #09090b;
+  --sidebar-bg: #09090b;
+  --topbar-bg: #09090b;
+  --sidebar-accent-active: #f59e0b;
+  --sidebar-accent-hover: rgba(245, 158, 11, 0.1);
+  --sidebar-text-primary: rgba(255, 255, 255, 0.86);
+  --sidebar-text-secondary: rgba(255, 255, 255, 0.58);
+  --sidebar-border-color: rgba(255, 255, 255, 0.1);
+  --glass-control-bg: rgba(255, 255, 255, 0.06);
+  --glass-control-hover: rgba(255, 255, 255, 0.11);
+  --glass-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
 }
 
 @theme inline {
@@ -24,11 +38,215 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.erp-app-shell {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(245, 158, 11, 0.18), transparent 34rem),
+    radial-gradient(circle at 86% 18%, rgba(0, 188, 125, 0.1), transparent 30rem),
+    linear-gradient(135deg, #09090b 0%, #18181b 48%, #09090b 100%);
+  color: #fafafa;
+}
+
+.erp-app-shell::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
+}
+
+.erp-main-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 158, 11, 0.45) transparent;
+}
+
+.erp-main-scroll::-webkit-scrollbar,
+.gerpy-sidebar *::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.erp-main-scroll::-webkit-scrollbar-thumb,
+.gerpy-sidebar *::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.36);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+
+.erp-section {
+  width: 100%;
+  padding: 1rem;
+}
+
+.erp-page-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.erp-module-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  justify-content: space-between;
+  padding: 1.25rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.025)),
+    radial-gradient(circle at 100% 0%, rgba(245, 158, 11, 0.18), transparent 22rem);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(18px) saturate(150%);
+}
+
+.erp-eyebrow {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #f59e0b;
+}
+
+.erp-card,
+.glass-panel,
+.glass-menu {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.025)),
+    rgba(24, 24, 27, 0.78);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(16px) saturate(150%);
+}
+
+.erp-card {
+  border-radius: 8px;
+}
+
+.erp-metric-card {
+  min-height: 9rem;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.erp-metric-card:hover {
+  border-color: rgba(245, 158, 11, 0.35);
+  transform: translateY(-2px);
+}
+
+.glass-topbar,
+.glass-sidebar {
+  background:
+    linear-gradient(180deg, rgba(24, 24, 27, 0.96), rgba(9, 9, 11, 0.9)),
+    var(--sidebar-bg);
+}
+
+.glass-control {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--glass-control-bg);
+  color: var(--sidebar-text-primary);
+  backdrop-filter: blur(12px);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.glass-control:hover,
+.topbar-icon-button:hover {
+  border-color: rgba(245, 158, 11, 0.28);
+  background: var(--glass-control-hover);
+  color: #ffffff;
+}
+
+.topbar-icon-button {
+  color: var(--sidebar-text-primary);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.erp-app-shell [data-slot="card"] {
+  color: #f4f4f5;
+}
+
+.erp-app-shell [data-slot="table"] {
+  color: #e4e4e7;
+}
+
+.erp-app-shell [data-slot="table-row"] {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.erp-app-shell [data-slot="table-row"]:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.erp-app-shell [data-slot="table-head"] {
+  color: #a1a1aa;
+}
+
+.erp-app-shell [data-slot="table-cell"] {
+  color: #e4e4e7;
+}
+
+@media (min-width: 640px) {
+  .erp-section {
+    padding: 1.5rem;
+  }
+
+  .erp-page-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .erp-module-hero {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .erp-section {
+    padding: 2rem;
+  }
+
+  .erp-page-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .erp-module-hero {
+    flex-direction: row;
+    align-items: flex-end;
+    padding: 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .erp-metric-card {
+    transition: none;
+  }
+
+  .erp-metric-card:hover {
+    transform: none;
+  }
+}
 .grid-dot {
   width: 5px;
   height: 5px;
   background: #f59e0b;
   border-radius: 9999px;
+  opacity: 0.15;
   justify-self: center;
   align-self: center;
   transition:
@@ -123,5 +341,41 @@ body {
 
   100% {
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .grid-dot {
+    width: 4px;
+    height: 4px;
+  }
+
+  .aurora {
+    filter: blur(96px);
+    opacity: 0.14;
+  }
+
+  .aurora-1 {
+    width: 420px;
+    height: 420px;
+  }
+
+  .aurora-2 {
+    width: 460px;
+    height: 460px;
+  }
+
+  .aurora-3 {
+    width: 340px;
+    height: 340px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grid-dot,
+  .aurora {
+    transition: none;
+    animation: none;
+    will-change: auto;
   }
 }

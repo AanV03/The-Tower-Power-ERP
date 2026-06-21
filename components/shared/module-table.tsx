@@ -26,7 +26,7 @@ export function ModuleTable({
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="erp-card">
         <CardHeader>
           <CardTitle>{labels.title}</CardTitle>
           <CardDescription>{labels.description}</CardDescription>
@@ -40,7 +40,7 @@ export function ModuleTable({
 
   if (!rows || rows.length === 0) {
     return (
-      <Card>
+      <Card className="erp-card">
         <CardHeader>
           <CardTitle>{labels.title}</CardTitle>
           <CardDescription>{labels.description}</CardDescription>
@@ -53,13 +53,13 @@ export function ModuleTable({
   }
 
   return (
-    <Card>
+    <Card className="erp-card">
       <CardHeader>
-        <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>{labels.description}</CardDescription>
+        <CardTitle className="text-white">{labels.title}</CardTitle>
+        <CardDescription className="text-zinc-400">{labels.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-lg border border-white/10">
           <Table>
             <TableHeader>
               <TableRow>

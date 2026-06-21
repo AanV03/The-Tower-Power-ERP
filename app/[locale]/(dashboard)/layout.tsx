@@ -29,23 +29,19 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="h-screen overflow-hidden flex bg-background">
+    <div className="erp-app-shell flex h-screen overflow-hidden">
       <BrandColorScript />
-      {/* Applies persisted brand colors from localStorage to :root */}
       <BrandColorApplier />
-      {/* Sidebar - Left Panel, full height */}
       <AppSidebar locale={locale as Locale} />
 
-      {/* Right Container - Topbar + Content Column */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Topbar */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar locale={locale as Locale} />
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <MobileModuleNav locale={locale as Locale} />
-          {/* ONLY THIS SCROLLS */}
-          <main className="flex-1 overflow-y-auto overscroll-contain">{children}</main>
+          <main className="erp-main-scroll flex-1 overflow-y-auto overscroll-contain">
+            {children}
+          </main>
         </div>
       </div>
     </div>

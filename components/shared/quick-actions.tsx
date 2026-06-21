@@ -37,7 +37,7 @@ export function QuickActions({
     <div className="flex shrink-0 items-center gap-2" role="group" aria-label={dictionary.quickActions.groupLabel}>
       <Button
         onClick={handlePrimaryAction}
-        className="focus-visible:ring-2 focus-visible:ring-offset-2"
+        className="bg-amber-500 font-bold text-black hover:bg-amber-400 focus-visible:ring-2 focus-visible:ring-offset-2"
         aria-label={primaryLabel}
       >
         <Plus className="mr-2" aria-hidden="true" />
@@ -49,7 +49,7 @@ export function QuickActions({
         onClick={handleRefresh}
         aria-label={dictionary.common.refresh}
         title={dictionary.common.refresh}
-        className="focus-visible:ring-2 focus-visible:ring-offset-2"
+        className="border-white/15 bg-white/5 text-zinc-100 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-offset-2"
       >
         <RefreshCw className="size-4" aria-hidden="true" />
       </Button>

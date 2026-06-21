@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { gsap } from "gsap";
@@ -24,6 +24,8 @@ function safeRedirect(value: string | null) {
 
 export default function LoginPage() {
   const router = useRouter();
+  const pageRef = useRef<HTMLElement>(null);
+  const leftPanelRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [redirectTo, setRedirectTo] = useState("/es/dashboard");
   const [email, setEmail] = useState("");
@@ -33,24 +35,29 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setRedirectTo(safeRedirect(new URLSearchParams(window.location.search).get("next")));
 
-    const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
+    const context = gsap.context(() => {
+      const timeline = gsap.timeline({
+        defaults: { duration: 1, ease: "power4.out" },
+      });
 
-    tl.from(".left-panel", {
-      x: -50,
-      opacity: 0,
-      duration: 1,
-    }).from(
-      ".login-card",
-      {
-        x: 50,
-        opacity: 0,
-        duration: 1,
-      },
-      "-=0.7",
-    );
+      timeline
+        .fromTo(
+          leftPanelRef.current,
+          { x: -50, opacity: 0 },
+          { x: 0, opacity: 1 },
+        )
+        .fromTo(
+          cardRef.current,
+          { x: 50, opacity: 0 },
+          { x: 0, opacity: 1 },
+          "-=0.7",
+        );
+    }, pageRef);
+
+    return () => context.revert();
   }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -130,13 +137,13 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-screen bg-zinc-950 flex items-center justify-center overflow-hidden">
+    <main ref={pageRef} className="relative min-h-screen bg-zinc-950 flex items-center justify-center overflow-hidden">
       <BackgroundGrid />
 
       <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-zinc-950 z-[1]" />
 
       <div className="relative z-10 w-full max-w-6xl flex flex-col lg:flex-row items-center justify-between px-6 lg:px-20 gap-12">
-        <div className="left-panel flex flex-col items-center lg:items-start w-full lg:w-1/2 text-center lg:text-left">
+        <div ref={leftPanelRef} className="flex flex-col items-center lg:items-start w-full lg:w-1/2 text-center lg:text-left">
           <DumbbellMonitor />
 
           <h1 className="text-6xl font-black text-white mt-8">
@@ -157,7 +164,7 @@ export default function LoginPage() {
           ref={cardRef}
           onMouseMove={handleMouseMove}
           onMouseLeave={resetTilt}
-          className="login-card w-full max-w-md p-8 rounded-3xl bg-zinc-900/50 backdrop-blur-xl border border-white/10 shadow-2xl transition-transform duration-300"
+          className="w-full max-w-md p-8 rounded-3xl bg-zinc-900/50 backdrop-blur-xl border border-white/10 shadow-2xl transition-transform duration-300"
         >
           <h2 className="text-3xl font-bold text-white mb-2">
             {twoFactorRequired ? "Verify Access" : "Welcome Back"}

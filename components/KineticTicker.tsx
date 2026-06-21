@@ -1,51 +1,73 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export default function KineticTicker() {
   const sectionRef = useRef<HTMLElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
 
-    const ctx = gsap.context(() => {
-      // Calculate the travel distance
-      const textElement = textRef.current;
-      if (!textElement) return;
+    let cleanup: (() => void) | undefined;
+    let active = true;
 
-      const travelDistance = textElement.scrollWidth - window.innerWidth;
+    Promise.all([import("gsap"), import("gsap/ScrollTrigger")]).then(
+      ([{ gsap }, { ScrollTrigger }]) => {
+        if (!active || !sectionRef.current || !textRef.current) return;
 
-      gsap.to(textElement, {
-        x: -travelDistance,
-        ease: "none", // Linear movement, no easing applied to the scroll itself
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom", // Animation starts when section top hits viewport bottom
-          end: "bottom top",   // Animation ends when section bottom hits viewport top
-          scrub: 1,            // The '1' adds a 1-second lag for a smoother, heavier feel
-        },
-      });
-    }, sectionRef);
+        gsap.registerPlugin(ScrollTrigger);
+        const ctx = gsap.context(() => {
+          const textElement = textRef.current;
+          if (!textElement) return;
 
-    return () => ctx.revert(); // Cleanup on unmount
+          gsap.to(textElement, {
+            x: () => -Math.max(0, textElement.scrollWidth - window.innerWidth),
+            ease: "none",
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top bottom",
+              end: "bottom top",
+              invalidateOnRefresh: true,
+              scrub: 1,
+            },
+          });
+        }, sectionRef);
+
+        cleanup = () => ctx.revert();
+      }
+    );
+
+    return () => {
+      active = false;
+      cleanup?.();
+    };
   }, []);
 
   return (
     <section
       ref={sectionRef}
-      className="relative w-full overflow-hidden bg-amber-500 py-12 md:py-24 flex items-center"
+      className="relative flex w-full items-center overflow-hidden bg-amber-500 py-10 sm:py-14 md:py-24"
     >
       <div
         ref={textRef}
-        className="whitespace-nowrap text-[12vw] md:text-[10vw] font-black uppercase tracking-tighter text-zinc-950 will-change-transform flex gap-8 md:gap-16 px-4"
+        className="flex gap-8 whitespace-nowrap px-4 text-[clamp(3.5rem,12vw,9rem)] font-black uppercase tracking-normal text-zinc-950 will-change-transform md:gap-16"
       >
-        {/* Repeat the text enough times so it never runs out of runway */}
         <span>No Pain. No Gain.</span>
-        <span className="text-transparent" style={{ WebkitTextStroke: "2px #09090b" }}>No Pain. No Gain.</span>
+        <span
+          className="text-transparent"
+          style={{ WebkitTextStroke: "2px #09090b" }}
+        >
+          No Pain. No Gain.
+        </span>
         <span>No Pain. No Gain.</span>
-        <span className="text-transparent" style={{ WebkitTextStroke: "2px #09090b" }}>No Pain. No Gain.</span>
+        <span
+          className="text-transparent"
+          style={{ WebkitTextStroke: "2px #09090b" }}
+        >
+          No Pain. No Gain.
+        </span>
         <span>No Pain. No Gain.</span>
       </div>
     </section>
