@@ -212,6 +212,88 @@ export const es = {
       },
     },
   },
+  marketing: {
+    funnel: {
+      title: "Embudo de Conversión",
+      description: "Tasa de conversión por etapa del pipeline",
+      stages: {
+        leads: "Leads",
+        tours: "Tours",
+        trials: "Pruebas",
+        paid: "Pagos"
+      },
+      conversionRate: "Tasa de conversión",
+      dropoff: "Pérdida"
+    },
+    campaigns: {
+      title: "Campañas Activas",
+      description: "Monitoreo de rendimiento por canal",
+      newCampaign: "Nueva campaña",
+      status: {
+        active: "Activa",
+        draft: "Borrador",
+        scheduled: "Programada",
+        paused: "Pausada"
+      },
+      metrics: {
+        sent: "Enviados",
+        openRate: "Apertura",
+        clickRate: "Clics",
+        conversion: "Conv."
+      },
+      actions: {
+        pause: "Pausar",
+        resume: "Reanudar",
+        viewDetails: "Detalles"
+      }
+    },
+    segments: {
+      title: "Segmentos de Audiencia",
+      description: "Grupos de clientes dirigidos",
+      members: "miembros",
+      actions: {
+        send: "Enviar campaña"
+      },
+      names: {
+        churn: "Riesgo de Churn",
+        spenders: "Alto Consumo",
+        inactive: "Inactivos 14d",
+        newSignups: "Nuevos Registros"
+      }
+    },
+    automations: {
+      title: "Flujos de Automatización",
+      description: "Secuencias activas gatilladas por eventos",
+      steps: {
+        trigger: "Disparador: Registro",
+        delay: "Esperar 1 día",
+        email: "Enviar Email de Bienvenida",
+        condition: "Uso de App?",
+        yes: "Sí: Email Pro",
+        no: "No: Recordatorio"
+      },
+      stats: {
+        activeUsers: "usuarios activos"
+      }
+    },
+    modal: {
+      title: "Crear Nueva Campaña",
+      subtitle: "Configura el canal, el segmento y el contenido del mensaje.",
+      fields: {
+        name: "Nombre de la campaña",
+        namePlaceholder: "Ej. Descuento de Verano 2026",
+        channel: "Canal de envío",
+        segment: "Segmento objetivo",
+        content: "Contenido del mensaje",
+        contentPlaceholder: "Escribe el texto o plantilla a enviar..."
+      },
+      actions: {
+        cancel: "Cancelar",
+        submit: "Lanzar Campaña"
+      },
+      success: "¡Campaña creada con éxito!"
+    }
+  }
   adminSaas: {
     tenantsTab: "Tenants y Licencias",
     brandingTab: "Diseño y Marca",
@@ -272,3 +354,4 @@ export const es = {
     },
   },
 } as const;
+
