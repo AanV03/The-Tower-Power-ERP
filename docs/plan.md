@@ -7,6 +7,25 @@
 - Status: Planned / deferred
 - Goal: document premium integration work for a future branch without implementing external service calls yet.
 
+## Workplan 2.0 Sprint 1 Local Closeout
+
+- Status: locally closed; CI/CD deferred by project decision.
+- Evidence document: `docs/workplan2/sprint-1-foundation-evidence.md`.
+- Scope: document the existing Next.js 15 localized shell, dashboard navigation, backend/API foundation, Prisma/Supabase foundation, MongoDB/Mongoose foundation, and local quality scripts.
+- CI/CD note: `.github/workflows/ci.yml` is intentionally not implemented in this cycle. A future CI workflow should mirror the local verification gate.
+- Local verification gate:
+  - `pnpm test:db-env`
+  - `pnpm test:auth`
+  - `pnpm test:api`
+  - `pnpm typecheck`
+  - `pnpm build`
+- Verification result:
+  - `pnpm test:db-env` passed with 5 tests.
+  - `pnpm test:auth` passed with 7 tests.
+  - `pnpm test:api` passed with 9 tests.
+  - `pnpm typecheck` passed after rerunning independently from `pnpm build`.
+  - `pnpm build` passed.
+
 ## Phase 1 Checklist
 
 - [x] Create this progress plan.
@@ -208,3 +227,4 @@ Required flow:
 - Phase 3: dashboard module pages now render tenant-scoped summary service data through `ModulePage`; `pnpm test:api`, `pnpm test:auth`, `pnpm typecheck`, and `pnpm build` passed after the integration.
 - Phase 3: expanded module APIs with tenant-scoped GET/POST routes across Access, Finance, Inventory, POS, HR, and Specialists; `pnpm typecheck` passed after the endpoint expansion.
 - Phase 3: verification passed after endpoint expansion: `pnpm test:api`, `pnpm test:auth`, `pnpm test:db-env`, `pnpm db:validate`, `pnpm db:generate`, `pnpm db:check-env`, `pnpm typecheck`, and `pnpm build`.
+- Workplan 2.0 Sprint 1 local closeout: created `docs/workplan2/sprint-1-foundation-evidence.md`, documented CI/CD as deferred, corrected QA audit routes from `/RH` to `/hr`, and passed `pnpm test:db-env`, `pnpm test:auth`, `pnpm test:api`, `pnpm typecheck`, and `pnpm build`.
