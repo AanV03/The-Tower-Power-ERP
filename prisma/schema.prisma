@@ -332,6 +332,8 @@ model User {
   emailVerified DateTime?
   image        String?
   passwordHash String?
+  twoFactorSecret  String?
+  twoFactorEnabled Boolean    @default(false)
   employeeId   String?    @unique
   employee     Employee?  @relation(fields: [employeeId], references: [id])
   status       UserStatus @default(INVITED)

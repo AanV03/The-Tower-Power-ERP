@@ -18,6 +18,8 @@ export type BrandColors = {
   accentColor: string;  // --brand-yellow — warning badges, secondary highlights
   sidebarText: string;  // rgba — kept for future UI
   radius: string;       // rem  — kept for future UI
+  contrast?: "normal" | "medium" | "high";
+  font?: "default" | "serif" | "mono" | "elegant";
 };
 
 export const DEFAULT_BRAND_COLORS: BrandColors = {
@@ -27,6 +29,8 @@ export const DEFAULT_BRAND_COLORS: BrandColors = {
   accentColor: "#edc531",
   sidebarText: "rgba(255,255,255,0.8)",
   radius: "0.625rem",
+  contrast: "normal",
+  font: "default",
 };
 
 export function normalizeBrandColors(colors: Partial<BrandColors> | null | undefined): BrandColors {
@@ -113,6 +117,24 @@ export function applyBrandColors(colors: Partial<BrandColors>) {
     setBrandProperty("--primary", hsl);       // used by shadcn Button (hsl(var(--primary)))
     setBrandProperty("--ring", hsl);           // focus ring matches primary
   }
+
+  if (typeof document !== "undefined") {
+    if (colors.contrast !== undefined) {
+      document.documentElement.setAttribute("data-contrast", colors.contrast);
+    }
+    if (colors.font !== undefined) {
+      document.documentElement.setAttribute("data-font", colors.font);
+      if (colors.font === "default") {
+        document.documentElement.style.removeProperty("--font-family-override");
+      } else if (colors.font === "serif") {
+        document.documentElement.style.setProperty("--font-family-override", "Georgia, Cambria, serif");
+      } else if (colors.font === "mono") {
+        document.documentElement.style.setProperty("--font-family-override", "ui-monospace, Consolas, monospace");
+      } else if (colors.font === "elegant") {
+        document.documentElement.style.setProperty("--font-family-override", "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif");
+      }
+    }
+  }
 }
 
 export function resetBrandColors() {
@@ -128,6 +150,12 @@ export function resetBrandColors() {
     "--ring",
   ];
   for (const p of props) removeBrandProperty(p);
+
+  if (typeof document !== "undefined") {
+    document.documentElement.removeAttribute("data-contrast");
+    document.documentElement.removeAttribute("data-font");
+    document.documentElement.style.removeProperty("--font-family-override");
+  }
 }
 
 // ─── Layout Component (mounts once in dashboard layout) ───────────────────────
