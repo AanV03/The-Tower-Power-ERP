@@ -187,6 +187,15 @@ export const es = {
     colorPicker: "Selector de color para {label}",
     colorHex: "Valor hexadecimal de {label}",
     changeColorTitle: "Click para cambiar color",
+    contrastLabel: "Nivel de Contraste",
+    contrastNormal: "Normal",
+    contrastMedium: "Contraste Medio",
+    contrastHigh: "Alto Contraste (Accesibilidad)",
+    fontLabel: "Tipografía del Sistema",
+    fontDefault: "Predeterminada (Sans)",
+    fontSerif: "Serif (Clásica)",
+    fontMono: "Monospace (Código)",
+    fontElegant: "Elegant (Moderna)",
     fields: {
       sidebarBg: {
         label: "Sidebar",
@@ -206,4 +215,146 @@ export const es = {
       },
     },
   },
+  marketing: {
+    funnel: {
+      title: "Embudo de Conversión",
+      description: "Tasa de conversión por etapa del pipeline",
+      stages: {
+        leads: "Leads",
+        tours: "Tours",
+        trials: "Pruebas",
+        paid: "Pagos"
+      },
+      conversionRate: "Tasa de conversión",
+      dropoff: "Pérdida"
+    },
+    campaigns: {
+      title: "Campañas Activas",
+      description: "Monitoreo de rendimiento por canal",
+      newCampaign: "Nueva campaña",
+      status: {
+        active: "Activa",
+        draft: "Borrador",
+        scheduled: "Programada",
+        paused: "Pausada"
+      },
+      metrics: {
+        sent: "Enviados",
+        openRate: "Apertura",
+        clickRate: "Clics",
+        conversion: "Conv."
+      },
+      actions: {
+        pause: "Pausar",
+        resume: "Reanudar",
+        viewDetails: "Detalles"
+      }
+    },
+    segments: {
+      title: "Segmentos de Audiencia",
+      description: "Grupos de clientes dirigidos",
+      members: "miembros",
+      actions: {
+        send: "Enviar campaña"
+      },
+      names: {
+        churn: "Riesgo de Churn",
+        spenders: "Alto Consumo",
+        inactive: "Inactivos 14d",
+        newSignups: "Nuevos Registros"
+      }
+    },
+    automations: {
+      title: "Flujos de Automatización",
+      description: "Secuencias activas gatilladas por eventos",
+      steps: {
+        trigger: "Disparador: Registro",
+        delay: "Esperar 1 día",
+        email: "Enviar Email de Bienvenida",
+        condition: "Uso de App?",
+        yes: "Sí: Email Pro",
+        no: "No: Recordatorio"
+      },
+      stats: {
+        activeUsers: "usuarios activos"
+      }
+    },
+    modal: {
+      title: "Crear Nueva Campaña",
+      subtitle: "Configura el canal, el segmento y el contenido del mensaje.",
+      fields: {
+        name: "Nombre de la campaña",
+        namePlaceholder: "Ej. Descuento de Verano 2026",
+        channel: "Canal de envío",
+        segment: "Segmento objetivo",
+        content: "Contenido del mensaje",
+        contentPlaceholder: "Escribe el texto o plantilla a enviar..."
+      },
+      actions: {
+        cancel: "Cancelar",
+        submit: "Lanzar Campaña"
+      },
+      success: "¡Campaña creada con éxito!"
+    }
+  }
+  adminSaas: {
+    tenantsTab: "Tenants y Licencias",
+    brandingTab: "Diseño y Marca",
+    logsTab: "Consola de Logs",
+    searchTenant: "Buscar tenant...",
+    addTenant: "Añadir Tenant",
+    editTenant: "Editar Tenant",
+    statusActive: "Activo",
+    statusSuspended: "Suspendido",
+    statusTrial: "Prueba",
+    plan: "Plan",
+    modules: "Módulos Habilitados",
+    saveChanges: "Guardar Cambios",
+    consoleTitle: "Bitácora de Telemetría SaaS",
+    consoleDesc: "Eventos técnicos de acceso, auditoría y outbox.",
+    clearLogs: "Limpiar Consola",
+    actions: "Acciones",
+    tenantName: "Nombre del Tenant",
+    subdomain: "Subdominio",
+    creationDate: "Fecha de Creación",
+    status: "Estado",
+    modulesConfig: "Configuración de Módulos",
+    close: "Cerrar",
+    saveSuccess: "Tenant guardado correctamente.",
+  },
+  analytics: {
+    filters: {
+      range: "Rango de fecha",
+      branch: "Sucursal",
+      today: "Hoy",
+      last7Days: "Últimos 7 días",
+      last30Days: "Últimos 30 días",
+      last90Days: "Últimos 90 días",
+      allTime: "Todo el tiempo",
+    },
+    export: {
+      button: "Exportar reporte",
+      title: "Configurar exportación",
+      description: "Elige el formato y las opciones para descargar el reporte de analytics.",
+      format: "Formato",
+      pdf: "Documento PDF (.pdf)",
+      csv: "Valores separados por coma (.csv)",
+      includeCharts: "Incluir gráficos",
+      includeMetadata: "Incluir metadatos de auditoría",
+      success: "Reporte exportado con éxito.",
+      cancel: "Cancelar",
+      submit: "Exportar",
+    },
+    metrics: {
+      retentionTrend: "Tendencia de retención",
+      churnRiskTrend: "Tendencia de riesgo de churn",
+    },
+    charts: {
+      mainTitle: "Inteligencia de Negocio y Flujo",
+      mainDesc: "Visualización combinada de retención de miembros vs tasa de abandono (churn) histórica.",
+      retentionLine: "Tasa de Retención",
+      churnLine: "Tasa de Churn",
+    },
+  },
 } as const;
+

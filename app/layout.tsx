@@ -1,26 +1,27 @@
 import type { Metadata } from "next";
-
-import "@/styles/globals.css";
-import { Providers } from "@/app/providers";
-import { Inter } from "next/font/google";
-import { cn } from "@/lib/utils";
-
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+import "./globals.css";
+import SmoothScroll from "@/components/SmoothScroll"; // Your Lenis wrapper
 
 export const metadata: Metadata = {
-  title: "Gerpy ERP",
-  description: "ERP frontend foundation for multi-branch gym operations.",
+  title: "Forge Your Legacy | Elite Gym",
+  description: "High-performance training facility.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="es" suppressHydrationWarning className={cn("font-sans", inter.variable)}>
-      <body className="overscroll-none">
-        <Providers>{children}</Providers>
+    <html lang="en">
+      {/* antialiased makes text render much sharper on dark backgrounds */}
+      <body className="bg-zinc-950 text-white antialiased">
+        
+        {/* We wrap the children here so every page gets smooth scrolling! */}
+        <SmoothScroll>
+          {children}
+        </SmoothScroll>
+        
       </body>
     </html>
   );

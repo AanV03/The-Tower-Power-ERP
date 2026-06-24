@@ -187,6 +187,15 @@ export const fr = {
     colorPicker: "Sélecteur de couleur pour {label}",
     colorHex: "Valeur hexadécimale de {label}",
     changeColorTitle: "Cliquer pour changer la couleur",
+    contrastLabel: "Niveau de Contraste",
+    contrastNormal: "Normal",
+    contrastMedium: "Contraste Moyen",
+    contrastHigh: "Contraste Élevé (Accessibilité)",
+    fontLabel: "Typographie du Système",
+    fontDefault: "Par défaut (Sans)",
+    fontSerif: "Serif (Classique)",
+    fontMono: "Monospace (Code)",
+    fontElegant: "Elegant (Moderne)",
     fields: {
       sidebarBg: {
         label: "Sidebar",
@@ -206,4 +215,146 @@ export const fr = {
       },
     },
   },
+  marketing: {
+    funnel: {
+      title: "Entonnoir de Conversion",
+      description: "Taux de conversion par étape du pipeline",
+      stages: {
+        leads: "Leads",
+        tours: "Visites",
+        trials: "Essais",
+        paid: "Payés"
+      },
+      conversionRate: "Taux de conversion",
+      dropoff: "Perte"
+    },
+    campaigns: {
+      title: "Campagnes Actives",
+      description: "Suivi des performances par canal",
+      newCampaign: "Nouvelle campagne",
+      status: {
+        active: "Active",
+        draft: "Brouillon",
+        scheduled: "Planifiée",
+        paused: "Suspendue"
+      },
+      metrics: {
+        sent: "Envoyés",
+        openRate: "Ouverture",
+        clickRate: "Clics",
+        conversion: "Conv."
+      },
+      actions: {
+        pause: "Suspendre",
+        resume: "Reprendre",
+        viewDetails: "Détails"
+      }
+    },
+    segments: {
+      title: "Segments d'Audience",
+      description: "Groupes de clients cibles",
+      members: "membres",
+      actions: {
+        send: "Envoyer campagne"
+      },
+      names: {
+        churn: "Risque de Churn",
+        spenders: "Dépenses Élevées",
+        inactive: "Inactifs 14j",
+        newSignups: "Nouveaux Inscrits"
+      }
+    },
+    automations: {
+      title: "Flux d'Automatisation",
+      description: "Séquences actives déclenchées par des événements",
+      steps: {
+        trigger: "Déclencheur : Inscription",
+        delay: "Attendre 1 jour",
+        email: "Envoyer Email de Bienvenue",
+        condition: "App Utilisée ?",
+        yes: "Oui : Email Pro",
+        no: "Non : Rappel"
+      },
+      stats: {
+        activeUsers: "utilisateurs actifs"
+      }
+    },
+    modal: {
+      title: "Créer une Nouvelle Campagne",
+      subtitle: "Configurez le canal de diffusion, le segment cible et le contenu du message.",
+      fields: {
+        name: "Nom de la campagne",
+        namePlaceholder: "ex : Remise d'été 2026",
+        channel: "Canal de diffusion",
+        segment: "Segment cible",
+        content: "Contenu du message",
+        contentPlaceholder: "Écrivez le texte ou le modèle à envoyer..."
+      },
+      actions: {
+        cancel: "Annuler",
+        submit: "Lancer la Campagne"
+      },
+      success: "Campagne créée avec succès !"
+    }
+  }
+  adminSaas: {
+    tenantsTab: "Tenants & Licences",
+    brandingTab: "Branding & Couleurs",
+    logsTab: "Console de Logs",
+    searchTenant: "Rechercher un tenant...",
+    addTenant: "Ajouter Tenant",
+    editTenant: "Modifier Tenant",
+    statusActive: "Actif",
+    statusSuspended: "Suspendu",
+    statusTrial: "Essai",
+    plan: "Plan",
+    modules: "Modules Activés",
+    saveChanges: "Enregistrer les modifications",
+    consoleTitle: "Journal de Télémétrie SaaS",
+    consoleDesc: "Événements techniques d'accès, d'audit et d'outbox.",
+    clearLogs: "Effacer la console",
+    actions: "Actions",
+    tenantName: "Nom du Tenant",
+    subdomain: "Sous-domaine",
+    creationDate: "Date de Création",
+    status: "Statut",
+    modulesConfig: "Configuration des Modules",
+    close: "Fermer",
+    saveSuccess: "Tenant enregistré avec succès.",
+  },
+  analytics: {
+    filters: {
+      range: "Période",
+      branch: "Succursale",
+      today: "Aujourd'hui",
+      last7Days: "7 derniers jours",
+      last30Days: "30 derniers jours",
+      last90Days: "90 derniers jours",
+      allTime: "Tout le temps",
+    },
+    export: {
+      button: "Exporter le rapport",
+      title: "Configurer l'exportation",
+      description: "Choisissez le format et les options pour télécharger le rapport d'analyse.",
+      format: "Format",
+      pdf: "Document PDF (.pdf)",
+      csv: "Valeurs séparées par des virgules (.csv)",
+      includeCharts: "Inclure les graphiques",
+      includeMetadata: "Inclure les métadonnées d'audit",
+      success: "Rapport exporté avec succès.",
+      cancel: "Annuler",
+      submit: "Exporter",
+    },
+    metrics: {
+      retentionTrend: "Tendance de rétention",
+      churnRiskTrend: "Tendance du risque de désabonnement",
+    },
+    charts: {
+      mainTitle: "Intelligence d'Affaires & Flux",
+      mainDesc: "Vue combinée de la rétention des membres par rapport au taux de désabonnement historique.",
+      retentionLine: "Taux de Rétention",
+      churnLine: "Taux de Churn",
+    },
+  },
 } as const;
+
