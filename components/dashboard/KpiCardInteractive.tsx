@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 "use client";
 
 import { useState } from "react";
@@ -6,10 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown, ChevronRight } from "lucide-react";
 import { getDictionary, type Locale } from "@/lib/i18n";
-=======
 import * as React from "react"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card"
->>>>>>> 03eb7cdf037d36dffd3674f9e60ab8c35539afd7
 
 export default function KpiCardInteractive({
   label,
@@ -18,7 +15,6 @@ export default function KpiCardInteractive({
   tone,
   locale,
 }: {
-<<<<<<< HEAD
   label: string;
   value: string | number;
   change?: number;
@@ -60,12 +56,11 @@ export default function KpiCardInteractive({
       </CardContent>
     </Card>
   );
-=======
   label: string
   value: string | number
-  change?: string | number
-  tone?: "neutral" | "positive" | "negative"
-  locale?: string
+  change ?: string | number
+  tone ?: "neutral" | "positive" | "negative"
+  locale ?: string
 }) {
   const toneClass = tone === "positive" ? "text-green-500" : tone === "negative" ? "text-red-500" : "text-foreground"
 
@@ -84,5 +79,4 @@ export default function KpiCardInteractive({
       </CardContent>
     </Card>
   )
->>>>>>> 03eb7cdf037d36dffd3674f9e60ab8c35539afd7
 }
