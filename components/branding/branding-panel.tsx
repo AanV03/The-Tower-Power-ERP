@@ -28,10 +28,10 @@ function toColorInputValue(value: string) {
 
 function hasCompletePalette(colors: BrandColors) {
   return (
-    toColorInputValue(colors.sidebarBg) === colors.sidebarBg.toLowerCase() &&
-    toColorInputValue(colors.topbarBg) === colors.topbarBg.toLowerCase() &&
-    toColorInputValue(colors.primaryColor) === colors.primaryColor.toLowerCase() &&
-    toColorInputValue(colors.accentColor) === colors.accentColor.toLowerCase()
+    !!colors.sidebarBg &&
+    !!colors.topbarBg &&
+    !!colors.primaryColor &&
+    !!colors.accentColor
   );
 }
 
@@ -187,6 +187,28 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
     });
   }, []);
 
+  const handleContrastChange = (contrast: "normal" | "medium" | "high") => {
+    setColors((prev) => {
+      const next = { ...prev, contrast };
+      try {
+        persistColors(next);
+        document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
+      } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+  const handleFontChange = (font: "default" | "serif" | "mono" | "elegant") => {
+    setColors((prev) => {
+      const next = { ...prev, font };
+      try {
+        persistColors(next);
+        document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
+      } catch { /* ignore */ }
+      return next;
+    });
+  };
+
   const handleSave = () => {
     try {
       persistColors(colors);
@@ -210,7 +232,7 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
   return (
     <section
       aria-label={t.title}
-      className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm"
+      className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm w-full"
     >
       {/* ── Header ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/40 px-6 py-5">
@@ -252,8 +274,8 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
         </span>
       </div>
 
-      {/* ── Grid 2×2 en desktop, 1 col en mobile ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6">
+      {/* ── Grid 1 col en mobile, 2 en sm, 4 en lg ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-6 w-full">
         {COLOR_FIELDS.map((f) => (
           <ColorCard
             key={f.key}
@@ -267,6 +289,62 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
             changeColorTitle={t.changeColorTitle}
           />
         ))}
+      </div>
+
+      {/* ── Contraste y Fuentes ── */}
+      <div className="border-t border-border bg-muted/20 px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-3">
+          <label className="text-sm font-semibold leading-none text-card-foreground block">
+            {t.contrastLabel}
+          </label>
+          <div className="flex gap-2">
+            {[
+              { id: "normal", label: t.contrastNormal },
+              { id: "medium", label: t.contrastMedium },
+              { id: "high", label: t.contrastHigh },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => handleContrastChange(opt.id as any)}
+                className={`flex-1 px-4 py-2.5 rounded-lg border text-xs font-semibold transition-all ${
+                  colors.contrast === opt.id
+                    ? "border-[var(--sidebar-accent-active)] bg-[var(--sidebar-accent-active)]/5 text-foreground"
+                    : "border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-sm font-semibold leading-none text-card-foreground block">
+            {t.fontLabel}
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { id: "default", label: t.fontDefault },
+              { id: "serif", label: t.fontSerif },
+              { id: "mono", label: t.fontMono },
+              { id: "elegant", label: t.fontElegant },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => handleFontChange(opt.id as any)}
+                className={`px-3 py-2 rounded-lg border text-xs font-semibold transition-all ${
+                  colors.font === opt.id
+                    ? "border-[var(--sidebar-accent-active)] bg-[var(--sidebar-accent-active)]/5 text-foreground"
+                    : "border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* ── Footer ── */}

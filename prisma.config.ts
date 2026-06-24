@@ -1,10 +1,5 @@
 import "dotenv/config";
-import { defineConfig } from "prisma/config";
-
-const databaseUrl =
-  process.env.DIRECT_URL ??
-  process.env.DATABASE_URL ??
-  "postgresql://user:password@localhost:5432/gerpy";
+import { defineConfig } from "prisma/config"; 
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -12,6 +7,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: databaseUrl,
+    url: process.env.DIRECT_URL,
   },
 });

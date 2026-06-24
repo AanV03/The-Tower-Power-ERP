@@ -1,0 +1,103 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+import { loginSchema } from '@/modules/auth/schemas/auth.schema';
+import { AuthService } from '@/modules/auth/services/auth.service';
+import {
+  createAuthToken,
+  GERPY_SESSION_COOKIE,
+  GERPY_TWO_FACTOR_COOKIE,
+  SESSION_MAX_AGE_SECONDS,
+  TWO_FACTOR_CHALLENGE_MAX_AGE_SECONDS,
+} from '@/lib/auth/session';
+
+const secureCookie = process.env.NODE_ENV === 'production';
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const credentials = loginSchema.parse(body);
+    const result = await AuthService.login(credentials);
+
+    if (result.status === 'TWO_FACTOR_REQUIRED') {
+      const challengeToken = await createAuthToken(
+        result.payload,
+        TWO_FACTOR_CHALLENGE_MAX_AGE_SECONDS,
+      );
+      const response = NextResponse.json(
+        {
+          ok: true,
+          twoFactorRequired: true,
+          message: 'Codigo 2FA requerido.',
+        },
+        { status: 200 },
+      );
+
+      response.cookies.delete(GERPY_SESSION_COOKIE);
+      response.cookies.set(GERPY_TWO_FACTOR_COOKIE, challengeToken, {
+        httpOnly: true,
+        secure: secureCookie,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: TWO_FACTOR_CHALLENGE_MAX_AGE_SECONDS,
+      });
+
+      return response;
+    }
+
+    const sessionToken = await createAuthToken(result.payload, SESSION_MAX_AGE_SECONDS);
+    const response = NextResponse.json(
+      {
+        ok: true,
+        twoFactorRequired: false,
+        user: result.user,
+        session: {
+          userId: result.payload.userId,
+          tenantId: result.payload.tenantId,
+          role: result.payload.role,
+        },
+      },
+      { status: 200 },
+    );
+
+    response.cookies.delete(GERPY_TWO_FACTOR_COOKIE);
+    response.cookies.set(GERPY_SESSION_COOKIE, sessionToken, {
+      httpOnly: true,
+      secure: secureCookie,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: SESSION_MAX_AGE_SECONDS,
+    });
+
+    return response;
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return NextResponse.json(
+        { ok: false, error: 'VALIDATION_ERROR', details: error.issues ?? error.errors },
+        { status: 400 },
+      );
+    }
+
+    if (error.message === 'INVALID_CREDENTIALS') {
+      return NextResponse.json(
+        { ok: false, error: 'INVALID_CREDENTIALS', message: 'Credenciales invalidas.' },
+        { status: 401 },
+      );
+    }
+
+    if (
+      error.message === 'TENANT_CONTEXT_MISSING' ||
+      error.message === 'TWO_FACTOR_NOT_CONFIGURED'
+    ) {
+      return NextResponse.json(
+        { ok: false, error: error.message, message: 'La cuenta no esta lista para iniciar sesion.' },
+        { status: 403 },
+      );
+    }
+
+    console.error('[LOGIN_ERROR]', error);
+    return NextResponse.json(
+      { ok: false, error: 'INTERNAL_ERROR', message: 'Error interno del servidor.' },
+      { status: 500 },
+    );
+  }
+}
