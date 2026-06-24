@@ -184,6 +184,15 @@ export const en = {
     colorPicker: "Color picker for {label}",
     colorHex: "{label} hex value",
     changeColorTitle: "Click to change color",
+    contrastLabel: "Contrast Level",
+    contrastNormal: "Normal",
+    contrastMedium: "Medium Contrast",
+    contrastHigh: "High Contrast (Accessibility)",
+    fontLabel: "System Typography",
+    fontDefault: "Default (Sans)",
+    fontSerif: "Serif (Classic)",
+    fontMono: "Monospace (Code)",
+    fontElegant: "Elegant (Modern)",
     fields: {
       sidebarBg: {
         label: "Sidebar",
@@ -203,4 +212,146 @@ export const en = {
       },
     },
   },
+  marketing: {
+    funnel: {
+      title: "Conversion Funnel",
+      description: "Conversion rate per pipeline stage",
+      stages: {
+        leads: "Leads",
+        tours: "Tours",
+        trials: "Trials",
+        paid: "Paid"
+      },
+      conversionRate: "Conversion Rate",
+      dropoff: "Dropoff"
+    },
+    campaigns: {
+      title: "Active Campaigns",
+      description: "Performance monitoring by channel",
+      newCampaign: "New campaign",
+      status: {
+        active: "Active",
+        draft: "Draft",
+        scheduled: "Scheduled",
+        paused: "Paused"
+      },
+      metrics: {
+        sent: "Sent",
+        openRate: "Open Rate",
+        clickRate: "Clicks",
+        conversion: "Conv."
+      },
+      actions: {
+        pause: "Pause",
+        resume: "Resume",
+        viewDetails: "Details"
+      }
+    },
+    segments: {
+      title: "Audience Segments",
+      description: "Targeted customer groups",
+      members: "members",
+      actions: {
+        send: "Send campaign"
+      },
+      names: {
+        churn: "At Churn Risk",
+        spenders: "High Spenders",
+        inactive: "Inactive 14d",
+        newSignups: "New Signups"
+      }
+    },
+    automations: {
+      title: "Automation Flows",
+      description: "Active sequences triggered by events",
+      steps: {
+        trigger: "Trigger: Signup",
+        delay: "Wait 1 day",
+        email: "Send Welcome Email",
+        condition: "App Used?",
+        yes: "Yes: Pro Email",
+        no: "No: Reminder"
+      },
+      stats: {
+        activeUsers: "active users"
+      }
+    },
+    modal: {
+      title: "Create New Campaign",
+      subtitle: "Configure delivery channel, target segment, and message content.",
+      fields: {
+        name: "Campaign Name",
+        namePlaceholder: "e.g., Summer Discount 2026",
+        channel: "Delivery Channel",
+        segment: "Target Segment",
+        content: "Message Content",
+        contentPlaceholder: "Write the text or template to send..."
+      },
+      actions: {
+        cancel: "Cancel",
+        submit: "Launch Campaign"
+      },
+      success: "Campaign successfully created!"
+    }
+  }
+  adminSaas: {
+    tenantsTab: "Tenants & Licenses",
+    brandingTab: "Branding & Colors",
+    logsTab: "Logs Console",
+    searchTenant: "Search tenant...",
+    addTenant: "Add Tenant",
+    editTenant: "Edit Tenant",
+    statusActive: "Active",
+    statusSuspended: "Suspended",
+    statusTrial: "Trial",
+    plan: "Plan",
+    modules: "Enabled Modules",
+    saveChanges: "Save Changes",
+    consoleTitle: "SaaS Telemetry Log",
+    consoleDesc: "Technical access, audit, and outbox events.",
+    clearLogs: "Clear Console",
+    actions: "Actions",
+    tenantName: "Tenant Name",
+    subdomain: "Subdomain",
+    creationDate: "Creation Date",
+    status: "Status",
+    modulesConfig: "Modules Configuration",
+    close: "Close",
+    saveSuccess: "Tenant saved successfully.",
+  },
+  analytics: {
+    filters: {
+      range: "Date Range",
+      branch: "Branch",
+      today: "Today",
+      last7Days: "Last 7 Days",
+      last30Days: "Last 30 Days",
+      last90Days: "Last 90 Days",
+      allTime: "All Time",
+    },
+    export: {
+      button: "Export Report",
+      title: "Configure Export",
+      description: "Choose the format and options to download the analytics report.",
+      format: "Format",
+      pdf: "PDF Document (.pdf)",
+      csv: "Comma-Separated Values (.csv)",
+      includeCharts: "Include charts",
+      includeMetadata: "Include audit metadata",
+      success: "Report exported successfully.",
+      cancel: "Cancel",
+      submit: "Export",
+    },
+    metrics: {
+      retentionTrend: "Retention trend",
+      churnRiskTrend: "Churn risk trend",
+    },
+    charts: {
+      mainTitle: "Business Intelligence & Flow",
+      mainDesc: "Combined view of member retention vs historical churn rate.",
+      retentionLine: "Retention Rate",
+      churnLine: "Churn Rate",
+    },
+  },
 } as const;
+
