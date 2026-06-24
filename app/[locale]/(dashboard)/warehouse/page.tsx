@@ -7,7 +7,7 @@ import { moduleConfigs } from "@/data/modules";
 import { Fragment } from "react";
 
 function mergeMetrics(moduleId: string, locale: Locale, summary: Awaited<ReturnType<typeof getModuleSummary>>) {
-  const config = moduleConfigs[moduleId as any];
+  const config = moduleConfigs[moduleId as keyof typeof moduleConfigs];
 
   return config.metrics.map((fallbackMetric: any, index: number) => {
     const apiMetric = summary.metrics[index];
@@ -46,8 +46,8 @@ export default async function WarehousePage({ params }: { params: Promise<{ loca
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <label className="text-sm text-muted">Sucursal</label>
-            <select className="glass-control px-2 py-1 rounded-md">
+            <label htmlFor="sucursal-select" className="text-sm text-muted">Sucursal</label>
+            <select id="sucursal-select" className="glass-control px-2 py-1 rounded-md">
               <option>Principal</option>
             </select>
           </div>
@@ -70,7 +70,7 @@ export default async function WarehousePage({ params }: { params: Promise<{ loca
               <button className="glass-control px-3 py-1 rounded-md">Traspaso</button>
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <label className="text-sm text-muted">Densidad</label>
+              <span className="text-sm text-muted">Densidad</span>
               <div className="inline-flex gap-1">
                 <button className="glass-control px-2 py-1 rounded-md">Compact</button>
                 <button className="glass-control px-2 py-1 rounded-md">Detalle</button>

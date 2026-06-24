@@ -11,9 +11,9 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     function update(time: number) {
-      lenisRef.current?.lenis?.raf(time * 1000);
+      lenisRef.current?.lenis?.raf(time * 2000);
     }
-    
+
     gsap.ticker.add(update);
     return () => gsap.ticker.remove(update);
   }, []);

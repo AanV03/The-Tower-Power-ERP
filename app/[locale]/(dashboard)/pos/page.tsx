@@ -14,9 +14,9 @@ export default async function PosPage({ params }: { params: Promise<{ locale: st
           </svg>
         </summary>
         <ul className="glass-menu absolute left-0 mt-2 w-48 shadow-md p-2 rounded" role="listbox">
-          <li className="p-2 rounded hover:bg-[var(--sidebar-accent-hover)]" role="option">Cajero 1 — Sucursal A</li>
-          <li className="p-2 rounded hover:bg-[var(--sidebar-accent-hover)]" role="option">Cajero 2 — Sucursal A</li>
-          <li className="p-2 rounded hover:bg-[var(--sidebar-accent-hover)]" role="option">Cajero 3 — Sucursal B</li>
+          <li className="p-2 rounded hover:bg-[var(--sidebar-accent-hover)]" role="option" aria-selected={false}>Cajero 1 — Sucursal A</li>
+          <li className="p-2 rounded hover:bg-[var(--sidebar-accent-hover)]" role="option" aria-selected={false}>Cajero 2 — Sucursal A</li>
+          <li className="p-2 rounded hover:bg-[var(--sidebar-accent-hover)]" role="option" aria-selected={false}>Cajero 3 — Sucursal B</li>
         </ul>
       </details>
     );
@@ -24,7 +24,7 @@ export default async function PosPage({ params }: { params: Promise<{ locale: st
 
   function ProductCard({ name, price, stock }: { name: string; price: string; stock: string }) {
     return (
-      <article className="glass-panel flex flex-col gap-2 p-3 rounded-md border focus-within:ring-2" tabIndex={0} role="article" aria-label={name}>
+      <article className="glass-panel flex flex-col gap-2 p-3 rounded-md border focus-within:ring-2" aria-label={name}>
         <div className="h-20 bg-[var(--card)] rounded flex items-center justify-center text-xs text-[var(--text-muted)]">Imagen</div>
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium text-[var(--card-foreground)] truncate">{name}</div>
@@ -135,14 +135,14 @@ export default async function PosPage({ params }: { params: Promise<{ locale: st
               <div className="text-xs text-[var(--text-muted)]">Items: 0</div>
             </div>
           </div>
-          <ul className="flex-1 overflow-auto divide-y" role="list">
+          <ul className="flex-1 overflow-auto divide-y">
             <CartRow sku="SKU-001" name="Batido Proteico" qty={2} price="$24.00" stockState="En stock" />
             <CartRow sku="SKU-002" name="Toalla" qty={1} price="$5.00" stockState="En stock" />
             <CartRow sku="SKU-003" name="Botella" qty={1} price="$8.00" stockState="Bajo stock" />
           </ul>
           <div className="p-3 border-t">
-            <label className="text-xs text-gray-500">Nota rápida</label>
-            <input className="w-full mt-2 px-3 py-2 border rounded" placeholder="Ej: paquete regalo, factura" />
+            <label htmlFor="nota-rapida" className="text-xs text-gray-500">Nota rápida</label>
+            <input id="nota-rapida" className="w-full mt-2 px-3 py-2 border rounded" placeholder="Ej: paquete regalo, factura" />
           </div>
         </section>
 
