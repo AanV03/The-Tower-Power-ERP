@@ -1,4 +1,4 @@
-import { ModulePage } from "@/components/shared/module-page";
+import { PurchasesWorkflow } from "@/components/modules/purchases/purchases-workflow";
 import type { Locale } from "@/lib/i18n";
 
 export default async function PurchasesPage({
@@ -7,5 +7,5 @@ export default async function PurchasesPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  return <ModulePage moduleId="purchases" locale={locale as Locale} chartType="bar" />;
+  return <PurchasesWorkflow locale={locale as Locale} />;
 }
