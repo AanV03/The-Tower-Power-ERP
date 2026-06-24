@@ -61,6 +61,21 @@ const script = `
       setProperty("--primary", hsl);
       setProperty("--ring", hsl);
     }
+
+    if (colors.contrast) {
+      document.documentElement.setAttribute("data-contrast", colors.contrast);
+    }
+
+    if (colors.font) {
+      document.documentElement.setAttribute("data-font", colors.font);
+      if (colors.font === "serif") {
+        document.documentElement.style.setProperty("--font-family-override", "Georgia, Cambria, serif");
+      } else if (colors.font === "mono") {
+        document.documentElement.style.setProperty("--font-family-override", "ui-monospace, Consolas, monospace");
+      } else if (colors.font === "elegant") {
+        document.documentElement.style.setProperty("--font-family-override", "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif");
+      }
+    }
   } catch {
     // Ignore invalid localStorage payloads.
   }
