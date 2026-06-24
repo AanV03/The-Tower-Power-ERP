@@ -24,7 +24,8 @@
         "http://localhost:3000/es/pos",
         "http://localhost:3000/en/pos",
         "http://localhost:3000/es/specialists",
-        "http://localhost:3000/en/specialists"
+        "http://localhost:3000/es/integrations",
+        "http://localhost:3000/en/integrations"
       ],
       "numberOfRuns": 1
     },
