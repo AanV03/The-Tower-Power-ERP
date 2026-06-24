@@ -43,6 +43,9 @@ export const fr = {
       en: "English",
       fr: "Français",
     },
+    last7Days: "Les 7 derniers jours",
+    collapse: "Réduire",
+    drillDown: "Détailler",
   },
   modules: {
     dashboard: "Tableau de bord opérationnel",
