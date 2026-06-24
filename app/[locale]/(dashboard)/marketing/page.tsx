@@ -1,5 +1,9 @@
-import { ModulePage } from "@/components/shared/module-page";
 import type { Locale } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n";
+import { moduleConfigs } from "@/data/modules";
+import { requireApiContext } from "@/lib/api/context";
+import { getModuleSummary } from "@/lib/api/module-summary";
+import { MarketingDashboard } from "./components/marketing-dashboard";
 
 export default async function MarketingPage({
   params,
@@ -7,5 +11,36 @@ export default async function MarketingPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  return <ModulePage moduleId="marketing" locale={locale as Locale} />;
+  const typedLocale = locale as Locale;
+
+  const config = moduleConfigs["marketing"];
+  const dictionary = getDictionary(typedLocale);
+  const context = await requireApiContext({ moduleId: "marketing" });
+  const summary = await getModuleSummary("marketing", context);
+
+  // Merge backend metrics with hardcoded config
+  const metrics = config.metrics.map((fallbackMetric, index) => {
+    const apiMetric = summary.metrics[index];
+    return {
+      label: fallbackMetric.label[typedLocale],
+      value: apiMetric?.value ?? fallbackMetric.value,
+      change: apiMetric?.change ?? fallbackMetric.change,
+      tone: (apiMetric?.tone ?? fallbackMetric.tone) as "default" | "success" | "warning" | "danger",
+    };
+  });
+
+  const marketingTranslations = dictionary.marketing;
+
+  return (
+    <section className="erp-section space-y-6" role="main" aria-label={config.title[typedLocale]}>
+      <MarketingDashboard
+        locale={typedLocale}
+        metrics={metrics}
+        title={config.title[typedLocale]}
+        subtitle={config.subtitle[typedLocale]}
+        primaryActionLabel={config.primaryAction[typedLocale]}
+        translations={marketingTranslations}
+      />
+    </section>
+  );
 }

@@ -1,5 +1,6 @@
-import { ModulePage } from "@/components/shared/module-page";
-import type { Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
+import { requireApiContext } from "@/lib/api/context";
+import { IntegrationsConsole } from "@/components/integrations/integrations-console";
 
 export default async function IntegrationsPage({
   params,
@@ -7,5 +8,30 @@ export default async function IntegrationsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  return <ModulePage moduleId="integrations" locale={locale as Locale} chartType="bar" />;
+  const l = locale as Locale;
+  
+  // Enforce session check and RBAC validation for integrations module
+  await requireApiContext({ moduleId: "integrations" });
+  
+  const dictionary = getDictionary(l);
+  const t = dictionary.integrations;
+
+  return (
+    <section 
+      className="erp-section space-y-6" 
+      role="main" 
+      aria-label={t.title}
+    >
+      <div className="space-y-1">
+        <h1 className="text-3xl font-semibold tracking-normal text-foreground">
+          {t.title}
+        </h1>
+        <p className="text-sm leading-6 text-muted-foreground sm:text-base">
+          {t.subtitle}
+        </p>
+      </div>
+
+      <IntegrationsConsole locale={l} dictionary={dictionary} />
+    </section>
+  );
 }
