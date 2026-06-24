@@ -2,16 +2,26 @@
 
 import type { ComponentType } from "react";
 import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
+  Area as RechartsArea,
+  AreaChart as RechartsAreaChart,
+  Bar as RechartsBar,
+  BarChart as RechartsBarChart,
+  CartesianGrid as RechartsCartesianGrid,
+  ResponsiveContainer as RechartsResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis as RechartsXAxis,
+  YAxis as RechartsYAxis,
 } from "recharts";
+
+const Area = RechartsArea as any;
+const AreaChart = RechartsAreaChart as any;
+const Bar = RechartsBar as any;
+const BarChart = RechartsBarChart as any;
+const CartesianGrid = RechartsCartesianGrid as any;
+const ResponsiveContainer = RechartsResponsiveContainer as any;
+const Tooltip = RechartsTooltip as any;
+const XAxis = RechartsXAxis as any;
+const YAxis = RechartsYAxis as any;
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSkeleton } from "@/components/skeletons";
