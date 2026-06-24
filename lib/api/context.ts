@@ -1,5 +1,6 @@
 import type { Session } from "next-auth";
 import { auth } from "@/auth";
+import { getTenantContextFromCookies } from "@/lib/auth/server-session";
 import { requireBranchAccess, requireModuleAccess, requirePermission } from "@/lib/auth/rbac";
 import type { TenantContext } from "@/lib/auth/rbac";
 import { ApiError } from "@/lib/api/response";
@@ -42,13 +43,22 @@ function translateGuardError(error: unknown): never {
   throw error;
 }
 
+async function getCustomTenantContext() {
+  try {
+    return await getTenantContextFromCookies();
+  } catch {
+    return null;
+  }
+}
+
 export async function requireApiContext(options?: {
   moduleId?: string;
   permission?: string;
   branchId?: string | null;
 }) {
-  const session = await auth();
-  const context = sessionToTenantContext(session);
+  const customContext = await getCustomTenantContext();
+  const session = customContext ? null : await auth();
+  const context = customContext ?? sessionToTenantContext(session);
 
   if (!context) {
     throw new ApiError("Authentication is required.", 401, "AUTH_REQUIRED");
