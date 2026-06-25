@@ -1,4 +1,4 @@
-import { BranchStatus } from "@prisma/client";
+import { BranchStatus, EmploymentContractType, Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { resolveWritableBranchId, scopedBranchWhere } from "@/lib/api/branch";
@@ -11,11 +11,24 @@ const CreateEmployeeSchema = z.object({
   branchId: z.string().optional(),
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
-  email: z.string().email().transform(normalizeEmail).optional(),
-  phone: z.string().trim().max(40).optional(),
+  email: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().email().transform(normalizeEmail).optional(),
+  ),
+  phone: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().trim().max(40).optional(),
+  ),
   positionId: z.string().optional(),
+  positionName: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().trim().min(2).max(120).optional(),
+  ),
   status: z.enum(BranchStatus).default(BranchStatus.ACTIVE),
   hireDate: z.string().datetime().optional(),
+  contractType: z.enum(EmploymentContractType).optional(),
+  salary: z.coerce.number().nonnegative().optional(),
+  hourlyRate: z.coerce.number().nonnegative().optional(),
 });
 
 export const runtime = "nodejs";
@@ -53,18 +66,58 @@ export async function POST(request: Request) {
     const data = CreateEmployeeSchema.parse(await request.json());
     const branchId = await resolveWritableBranchId(context, data.branchId);
 
-    const employee = await prisma.employee.create({
-      data: {
-        tenantId: context.tenantId,
-        branchId,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        positionId: data.positionId,
-        status: data.status,
-        hireDate: data.hireDate ? new Date(data.hireDate) : undefined,
-      },
+    const employee = await prisma.$transaction(async (tx) => {
+      const positionId =
+        data.positionId ??
+        (data.positionName
+          ? (
+              await tx.position.upsert({
+                where: {
+                  tenantId_name: {
+                    tenantId: context.tenantId,
+                    name: data.positionName,
+                  },
+                },
+                create: {
+                  tenantId: context.tenantId,
+                  name: data.positionName,
+                },
+                update: {},
+              })
+            ).id
+          : undefined);
+
+      const createdEmployee = await tx.employee.create({
+        data: {
+          tenantId: context.tenantId,
+          branchId,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+          positionId,
+          status: data.status,
+          hireDate: data.hireDate ? new Date(data.hireDate) : undefined,
+        },
+      });
+
+      if (data.contractType) {
+        await tx.employeeContract.create({
+          data: {
+            tenantId: context.tenantId,
+            employeeId: createdEmployee.id,
+            type: data.contractType,
+            salary: data.salary === undefined ? undefined : new Prisma.Decimal(data.salary),
+            hourlyRate: data.hourlyRate === undefined ? undefined : new Prisma.Decimal(data.hourlyRate),
+            startDate: data.hireDate ? new Date(data.hireDate) : new Date(),
+          },
+        });
+      }
+
+      return tx.employee.findUniqueOrThrow({
+        where: { id: createdEmployee.id },
+        include: { branch: true, position: true, contracts: true },
+      });
     });
 
     return created(employee);

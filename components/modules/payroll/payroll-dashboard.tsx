@@ -114,7 +114,7 @@ export async function PayrollDashboard({ locale }: { locale: Locale }) {
         status: "ACTIVE",
       },
     }),
-    prisma.attendanceRecord.count({
+    prisma.timeClock.count({
       where: {
         tenantId: context.tenantId,
         ...(context.branchId ? { branchId: context.branchId } : {}),

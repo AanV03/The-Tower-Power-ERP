@@ -217,7 +217,7 @@ async function inventorySummary(context: TenantContext): Promise<ApiModuleSummar
 async function hrSummary(context: TenantContext): Promise<ApiModuleSummary> {
   const [employees, attendanceToday, payrollPeriods] = await Promise.all([
     prisma.employee.count({ where: { ...branchWhere(context), status: "ACTIVE" } }),
-    prisma.attendanceRecord.count({ where: { ...branchWhere(context), clockIn: { gte: startOfToday() } } }),
+    prisma.timeClock.count({ where: { ...branchWhere(context), clockIn: { gte: startOfToday() } } }),
     prisma.payrollPeriod.count({ where: { ...tenantWhere(context), status: "DRAFT" } }),
   ]);
 
@@ -427,7 +427,7 @@ async function payrollSummary(context: TenantContext): Promise<ApiModuleSummary>
   const [draftPeriods, employees, attendanceToday, netPay] = await Promise.all([
     prisma.payrollPeriod.count({ where: { ...tenantWhere(context), status: "DRAFT" } }),
     prisma.employee.count({ where: { ...branchWhere(context), status: "ACTIVE" } }),
-    prisma.attendanceRecord.count({ where: { ...branchWhere(context), clockIn: { gte: startOfToday() } } }),
+    prisma.timeClock.count({ where: { ...branchWhere(context), clockIn: { gte: startOfToday() } } }),
     prisma.payrollItem.aggregate({ where: tenantWhere(context), _sum: { netAmount: true } }),
   ]);
 

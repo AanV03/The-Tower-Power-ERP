@@ -4,6 +4,7 @@ import { AttendancePanel, type HrAttendanceRow } from "@/components/modules/hr/a
 import { ContractSummary, type HrContractRow } from "@/components/modules/hr/contract-summary";
 import { EmployeeFormDialog } from "@/components/modules/hr/employee-form-dialog";
 import { EmployeeTable, type HrEmployeeRow } from "@/components/modules/hr/employee-table";
+import { TimeClockDialog, type TimeClockEmployeeOption } from "@/components/modules/hr/time-clock-dialog";
 import { BranchScopeSelector } from "@/components/shared/branch-scope-selector";
 import { MetricCard } from "@/components/shared/metric-card";
 import { Button } from "@/components/ui/button";
@@ -48,27 +49,27 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [employees, attendanceRecords, activeEmployees, attendanceToday, openAttendance] = await Promise.all([
+  const [employees, timeClocks, activeEmployees, attendanceToday, openAttendance] = await Promise.all([
     prisma.employee.findMany({
       where: branchScopedWhere,
       include: {
         branch: true,
         position: true,
         contracts: { orderBy: { startDate: "desc" }, take: 1 },
-        attendanceRecords: { orderBy: { clockIn: "desc" }, take: 1 },
+        timeClocks: { orderBy: { clockIn: "desc" }, take: 1 },
       },
       orderBy: { createdAt: "desc" },
       take: 12,
     }),
-    prisma.attendanceRecord.findMany({
+    prisma.timeClock.findMany({
       where: { ...branchScopedWhere, clockIn: { gte: today } },
       include: { employee: true, branch: true },
       orderBy: { clockIn: "desc" },
       take: 8,
     }),
     prisma.employee.count({ where: { ...branchScopedWhere, status: "ACTIVE" } }),
-    prisma.attendanceRecord.count({ where: { ...branchScopedWhere, clockIn: { gte: today } } }),
-    prisma.attendanceRecord.count({ where: { ...branchScopedWhere, clockOut: null } }),
+    prisma.timeClock.count({ where: { ...branchScopedWhere, clockIn: { gte: today } } }),
+    prisma.timeClock.count({ where: { ...branchScopedWhere, clockOut: null } }),
   ]);
 
   const employeeRows: HrEmployeeRow[] = employees.map((employee) => {
@@ -82,11 +83,11 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
       branch: employee.branch.name,
       contract: contract ? contract.type.replaceAll("_", " ") : "Sin contrato",
       status: employee.status,
-      lastAttendance: formatDateTime(employee.attendanceRecords[0]?.clockIn, locale),
+      lastAttendance: formatDateTime(employee.timeClocks[0]?.clockIn, locale),
     };
   });
 
-  const attendanceRows: HrAttendanceRow[] = attendanceRecords.map((record) => ({
+  const attendanceRows: HrAttendanceRow[] = timeClocks.map((record) => ({
     id: record.id,
     employee: `${record.employee.firstName} ${record.employee.lastName}`,
     branch: record.branch.name,
@@ -94,6 +95,13 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
     clockOut: record.clockOut ? formatDateTime(record.clockOut, locale) : "Abierta",
     source: record.source,
     status: record.clockOut ? "CLOSED" : "OPEN",
+  }));
+
+  const timeClockEmployees: TimeClockEmployeeOption[] = employees.map((employee) => ({
+    id: employee.id,
+    label: `${employee.firstName} ${employee.lastName}`,
+    branchId: employee.branchId,
+    branchLabel: employee.branch.name,
   }));
 
   const contractRows: HrContractRow[] = employees.map((employee) => {
@@ -130,7 +138,15 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
                 </Button>
               }
             />
-            <Button size="sm" variant="outline"><Clock /> Registrar</Button>
+            <TimeClockDialog
+              employees={timeClockEmployees}
+              trigger={
+                <Button size="sm" variant="outline">
+                  <Clock />
+                  Registrar
+                </Button>
+              }
+            />
             <Button size="icon-sm" variant="outline" aria-label="Exportar RH"><Download /></Button>
           </div>
         </div>
