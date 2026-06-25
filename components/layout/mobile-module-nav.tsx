@@ -101,9 +101,13 @@ function MobileDrawer({
                         aria-current={isActive ? "page" : undefined}
                         className={cn(
                           "flex w-full items-center gap-4 rounded-md px-4 py-3.5 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                          isActive ? "bg-primary text-primary-foreground" : "hover:bg-[var(--glass-control-hover)]",
+                          isActive ? "" : "hover:bg-[var(--glass-control-hover)]",
                         )}
-                        style={!isActive ? { color: "var(--sidebar-text-primary)" } : undefined}
+                        style={
+                          isActive
+                            ? { backgroundColor: "var(--sidebar-accent-active)", color: "#0f172a" }
+                            : { color: "var(--sidebar-text-primary)" }
+                        }
                       >
                         <Icon className="size-5 shrink-0" aria-hidden="true" />
                         <span>{item.labels[locale]}</span>
@@ -145,8 +149,13 @@ function DesktopModuleBar({ locale, pathname }: { locale: Locale; pathname: stri
             href={href as unknown as any}
             className={cn(
               "inline-flex h-9 shrink-0 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              isActive ? "bg-primary text-primary-foreground" : "glass-control",
+              isActive ? "" : "glass-control",
             )}
+            style={
+              isActive
+                ? { backgroundColor: "var(--sidebar-accent-active)", color: "#0f172a" }
+                : undefined
+            }
             aria-current={isActive ? "page" : undefined}
           >
             <Icon className="size-4" aria-hidden="true" />

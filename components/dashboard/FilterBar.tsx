@@ -2,22 +2,28 @@ import React from "react";
 
 export default function FilterBar() {
   return (
-    <div className="fixed top-16 left-0 right-0 z-40">{/* fixed under Topbar (h-16) */}
-      <div className="container mx-auto px-4 lg:px-6">
-        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-3 rounded-md shadow-sm flex items-center gap-3">
+    <div className="w-full z-10 relative">
+      <div className="bg-card text-card-foreground p-3 rounded-xl border border-border shadow-xs flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <label htmlFor="rango-select" className="text-sm text-slate-500" aria-hidden>Rango</label>
-          <select id="rango-select" className="text-sm bg-transparent">
-            <option>Últimos 7 días</option>
-            <option>Últimos 30 días</option>
-            <option>Este año</option>
+          <label htmlFor="rango-select" className="text-sm text-muted-foreground" aria-hidden>
+            Rango
+          </label>
+          <select
+            id="rango-select"
+            className="text-sm bg-transparent border-none outline-none focus:ring-0 cursor-pointer font-medium text-foreground"
+          >
+            <option className="bg-card text-foreground">Últimos 7 días</option>
+            <option className="bg-card text-foreground">Últimos 30 días</option>
+            <option className="bg-card text-foreground">Este año</option>
           </select>
         </div>
-        <div className="flex-1" />
-        <div className="flex items-center gap-2">
-          <button className="text-sm text-slate-500">Exportar</button>
-          <button className="text-sm text-indigo-600">Guardar vista</button>
-        </div>
+        <div className="flex items-center gap-4">
+          <button className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium cursor-pointer">
+            Exportar
+          </button>
+          <button className="text-sm text-primary hover:brightness-110 font-semibold transition-all cursor-pointer">
+            Guardar vista
+          </button>
         </div>
       </div>
     </div>

@@ -37,11 +37,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   const metrics = mergeMetrics("dashboard", locale as Locale, summary);
 
   return (
-    <div className="container mx-auto px-4 lg:px-6">
+    <div className="container mx-auto px-4 lg:px-6 pt-4">
       <FilterBar />
-      <div className="h-12" />
 
-      <main className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start mt-4">
+      <main className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start mt-6">
         <div className="lg:col-span-2 h-full">
           <HeroKPI
             title={moduleConfigs.dashboard.title[locale as Locale]}
@@ -66,30 +65,30 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
 
       <section className="mt-6">
         <OperationalGrid>
-          <article className="h-full w-full bg-white dark:bg-slate-800 rounded-md shadow-sm p-4 flex flex-col min-h-[240px]">
-            <h5 className="text-sm font-medium">Miembros</h5>
+          <article className="h-full w-full bg-card text-card-foreground p-5 rounded-xl border border-border shadow-xs flex flex-col min-h-[240px]">
+            <h5 className="text-sm font-semibold text-foreground">Miembros</h5>
             <div className="mt-3 flex-1">
               <ModuleTable rows={summary.rows} locale={locale as Locale} />
             </div>
           </article>
 
-          <article className="h-full w-full bg-white dark:bg-slate-800 rounded-md shadow-sm p-4 flex flex-col min-h-[240px]">
-            <h5 className="text-sm font-medium">Suscripciones</h5>
+          <article className="h-full w-full bg-card text-card-foreground p-5 rounded-xl border border-border shadow-xs flex flex-col min-h-[240px]">
+            <h5 className="text-sm font-semibold text-foreground">Suscripciones</h5>
             <div className="mt-3 flex-1">
               <AuditFeed locale={locale as Locale} />
             </div>
           </article>
 
-          <article className="h-full w-full bg-white dark:bg-slate-800 rounded-md shadow-sm p-4 flex flex-col min-h-[240px]">
-            <h5 className="text-sm font-medium">Stock crítico</h5>
-            <div className="mt-3 flex-1 text-sm text-slate-500">{(summary.rows || []).slice(0,3).map((r:any)=> (<div key={r.id}>{r.name}</div>))}</div>
+          <article className="h-full w-full bg-card text-card-foreground p-5 rounded-xl border border-border shadow-xs flex flex-col min-h-[240px]">
+            <h5 className="text-sm font-semibold text-foreground">Stock crítico</h5>
+            <div className="mt-3 flex-1 text-sm text-muted-foreground">{(summary.rows || []).slice(0,3).map((r:any)=> (<div key={r.id}>{r.name}</div>))}</div>
           </article>
         </OperationalGrid>
       </section>
 
       <section className="mt-8">
-        <div className="bg-white dark:bg-slate-800 rounded-md shadow-sm p-4">
-          <h5 className="text-sm font-medium">Actividad reciente</h5>
+        <div className="bg-card text-card-foreground p-5 rounded-xl border border-border shadow-xs">
+          <h5 className="text-sm font-semibold text-foreground">Actividad reciente</h5>
           <div className="mt-3">
             <ModuleTable rows={summary.rows} locale={locale as Locale} />
           </div>

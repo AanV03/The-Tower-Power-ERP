@@ -95,16 +95,16 @@ export function ModuleChart({
                     <stop offset="95%" stopColor="var(--brand-orange)" stopOpacity={0.04} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <ChartXAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
                 <ChartYAxis tickLine={false} axisLine={false} fontSize={12} />
                 <ChartTooltip
                   cursor={{ stroke: "var(--brand-orange)", strokeWidth: 1 }}
                   contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
                     borderRadius: "8px",
-                    color: "hsl(var(--foreground))",
+                    color: "var(--foreground)",
                   }}
                 />
                 <ChartArea
@@ -117,15 +117,15 @@ export function ModuleChart({
               </AreaChart>
             ) : (
               <BarChart data={data} margin={{ left: -24, right: 4, top: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <ChartXAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
                 <ChartYAxis tickLine={false} axisLine={false} fontSize={12} />
                 <ChartTooltip
                   contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
                     borderRadius: "8px",
-                    color: "hsl(var(--foreground))",
+                    color: "var(--foreground)",
                   }}
                 />
                 <ChartBar dataKey="value" fill="var(--brand-green)" radius={[6, 6, 0, 0]} />

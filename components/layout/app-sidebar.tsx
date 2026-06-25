@@ -124,7 +124,7 @@ export function AppSidebar({ locale }: { locale: Locale }) {
                       )}
                       style={{
                         ...(isActive
-                          ? { backgroundColor: "var(--sidebar-accent-active)" }
+                          ? { backgroundColor: "var(--sidebar-accent-active)", color: "#0f172a" }
                           : { color: "var(--sidebar-text-primary)" }),
                       }}
                       aria-current={isActive ? "page" : undefined}
