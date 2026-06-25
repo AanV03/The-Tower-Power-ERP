@@ -4,6 +4,7 @@ import { AttendancePanel, type HrAttendanceRow } from "@/components/modules/hr/a
 import { ContractSummary, type HrContractRow } from "@/components/modules/hr/contract-summary";
 import { EmployeeFormDialog } from "@/components/modules/hr/employee-form-dialog";
 import { EmployeeTable, type HrEmployeeRow } from "@/components/modules/hr/employee-table";
+import { AttendanceDialog } from "@/components/modules/hr/attendance-dialog";
 import { BranchScopeSelector } from "@/components/shared/branch-scope-selector";
 import { MetricCard } from "@/components/shared/metric-card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import type { Locale } from "@/lib/i18n";
+
 
 function formatDateTime(value: Date | null | undefined, locale: Locale) {
   if (!value) return "Pendiente";
@@ -130,7 +132,12 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
                 </Button>
               }
             />
-            <Button size="sm" variant="outline"><Clock /> Registrar</Button>
+            <AttendanceDialog
+              employees={employees.map((emp) => ({
+                id: emp.id,
+                name: `${emp.firstName} ${emp.lastName}`,
+              }))}
+            />
             <Button size="icon-sm" variant="outline" aria-label="Exportar RH"><Download /></Button>
           </div>
         </div>

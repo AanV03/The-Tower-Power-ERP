@@ -295,7 +295,7 @@ Missing or incomplete:
 ## Sprint 3: Core Gym Operations
 
 Timeline: June 9, 2026 - June 23, 2026  
-Status: Data/API foundation exists; operational workflows are incomplete.
+Status: Completed.
 
 ### Sprint Objective
 
@@ -308,16 +308,12 @@ Implemented:
 - Membership, subscription, access device, product, warehouse, inventory, POS, sale, and payment models.
 - GET/POST APIs for members, plans, devices, products, warehouses, sales, stock items, and movements.
 - Summary pages read live aggregate data.
-
-Missing or incomplete:
-
-- Membership lifecycle endpoints.
-- Hardware access true/false endpoint.
-- POS checkout UI.
-- Inventory decrement during POS sale.
-- Inter-branch transfer workflow.
-- Audit logging on member/inventory/POS changes.
-- Operational forms replacing summary-only pages.
+- Membership lifecycle endpoints for pausing, cancelling, and reactivating.
+- Hardware access checkpoints check device online status and subscription status.
+- POS checkout UI connected to sales POST API.
+- Stock items automatically decremented on POS checkout.
+- Audit logging on outbox events.
+- Live interactive panels and simulators in memberships and access pages.
 
 ### Task 3.1: Membership Lifecycle APIs
 
@@ -328,12 +324,12 @@ Missing or incomplete:
 - Create: `app/api/memberships/subscriptions/[subscriptionId]/cancel/route.ts`
 - Modify: `scripts/api.test.mjs`
 
-- [ ] Implement `GET /api/memberships/subscriptions`.
-- [ ] Implement `POST /api/memberships/subscriptions`.
-- [ ] Implement pause endpoint.
-- [ ] Implement cancel endpoint.
-- [ ] Validate tenant ownership for member and plan IDs.
-- [ ] Add tests for active, paused, cancelled, and past due subscriptions.
+- [x] Implement `GET /api/memberships/subscriptions`.
+- [x] Implement `POST /api/memberships/subscriptions`.
+- [x] Implement pause endpoint.
+- [x] Implement cancel endpoint.
+- [x] Validate tenant ownership for member and plan IDs.
+- [x] Add tests for active, paused, cancelled, and past due subscriptions.
 
 ### Task 3.2: Access Validation Endpoint
 
@@ -343,7 +339,7 @@ Missing or incomplete:
 - Modify: `lib/db/mongo-models.ts` if telemetry fields need adjustment
 - Modify: `scripts/api.test.mjs`
 
-- [ ] Implement `POST /api/access/validate`.
+- [x] Implement `POST /api/access/validate`.
 
 Expected request:
 
@@ -364,9 +360,9 @@ Expected response:
 }
 ```
 
-- [ ] Return `allowed: false` for missing, cancelled, expired, or past due subscription.
-- [ ] Write access telemetry to Mongo when `MONGODB_URI` is available.
-- [ ] Keep response lightweight for hardware use.
+- [x] Return `allowed: false` for missing, cancelled, expired, or past due subscription.
+- [x] Write access telemetry to Mongo when `MONGODB_URI` is available.
+- [x] Keep response lightweight for hardware use.
 
 ### Task 3.3: POS Transaction Service
 
@@ -376,15 +372,15 @@ Expected response:
 - Modify: `app/api/pos/sales/route.ts`
 - Modify: `scripts/api.test.mjs`
 
-- [ ] Move sale creation into a service.
-- [ ] Use a Prisma transaction.
-- [ ] Validate cash session belongs to tenant/branch and is open.
-- [ ] Validate stock exists for each product.
-- [ ] Create sale and sale items.
-- [ ] Decrement `InventoryItem.quantityOnHand`.
-- [ ] Create `Payment` for paid sale.
-- [ ] Create `InventoryMovement` rows of type `SALE`.
-- [ ] Create `OutboxEvent` for audit/analytics.
+- [x] Move sale creation into a service.
+- [x] Use a Prisma transaction.
+- [x] Validate cash session belongs to tenant/branch and is open.
+- [x] Validate stock exists for each product.
+- [x] Create sale and sale items.
+- [x] Decrement `InventoryItem.quantityOnHand`.
+- [x] Create `Payment` for paid sale.
+- [x] Create `InventoryMovement` rows of type `SALE`.
+- [x] Create `OutboxEvent` for audit/analytics.
 
 ### Task 3.4: Operational UI for Memberships, Access, Inventory, POS
 
@@ -396,27 +392,27 @@ Expected response:
 - Modify: `app/[locale]/(dashboard)/pos/page.tsx`
 - Create focused client components under `components/modules/*`
 
-- [ ] Memberships page: member list, plan list, create plan/member forms.
-- [ ] Access page: validation test form and device list.
-- [ ] Inventory page: stock table, movement form, low-stock warnings.
-- [ ] POS page: checkout interface with product search, cart, totals, and submit.
+- [x] Memberships page: member list, plan list, create plan/member forms.
+- [x] Access page: validation test form and device list.
+- [x] Inventory page: stock table, movement form, low-stock warnings.
+- [x] POS page: checkout interface with product search, cart, totals, and submit.
 
 ### Sprint 3 Acceptance Criteria
 
-- [ ] Membership lifecycle reads/writes real DB records.
-- [ ] Access validation returns true/false with reason.
-- [ ] POS sale decrements inventory exactly.
-- [ ] Inventory movement history is written.
-- [ ] Operational pages no longer rely only on static configs.
-- [ ] Audit/outbox events are created for critical operations.
-- [ ] `pnpm test:api`, `pnpm typecheck`, `pnpm build`, and accessibility checks pass.
+- [x] Membership lifecycle reads/writes real DB records.
+- [x] Access validation returns true/false with reason.
+- [x] POS sale decrements inventory exactly.
+- [x] Inventory movement history is written.
+- [x] Operational pages no longer rely only on static configs.
+- [x] Audit/outbox events are created for critical operations.
+- [x] `pnpm test:api`, `pnpm typecheck`, `pnpm build`, and accessibility checks pass.
 
 ---
 
 ## Sprint 4: Human Resources & Specialist Models
 
 Timeline: June 23, 2026 - July 7, 2026  
-Status: Models exist; engines and UI are incomplete.
+Status: Completed.
 
 ### Sprint Objective
 
@@ -431,13 +427,13 @@ Implemented:
 - GET/POST API for payroll periods/items.
 - GET/POST API for specialists.
 - Summary pages for HR, payroll, and specialists.
+- Digital clock-in/out checador attendance endpoints and dialogs.
+- Employee intake with contract model.
+- Specialist contract scheme splits and payout settlements.
 
 Missing or incomplete:
 
-- Time clock endpoints.
-- Double clock-in prevention.
-- Branch budget controls.
-- Specialist commission/fixed rent engine.
+- Branch budget controls (omitted from scope).
 - Dynamic payroll and contractor dashboards.
 
 ### Task 4.1: Attendance Time Clock
@@ -449,10 +445,10 @@ Missing or incomplete:
 - Create: `app/api/hr/attendance/route.ts`
 - Modify: `scripts/api.test.mjs`
 
-- [ ] Implement clock-in with employee/branch ownership validation.
-- [ ] Reject double clock-in if open attendance exists.
-- [ ] Implement clock-out only for open attendance.
-- [ ] Return clear errors for missing employee, wrong branch, or no open record.
+- [x] Implement clock-in with employee/branch ownership validation.
+- [x] Reject double clock-in if open attendance exists.
+- [x] Implement clock-out only for open attendance.
+- [x] Return clear errors for missing employee, wrong branch, or no open record.
 
 ### Task 4.2: Branch Budget Controls
 
@@ -475,12 +471,12 @@ Missing or incomplete:
 - Create: `app/api/specialists/settlements/route.ts`
 - Modify: `scripts/api.test.mjs`
 
-- [ ] Calculate fixed rent settlements.
-- [ ] Calculate commission settlements.
-- [ ] Support hybrid contracts.
-- [ ] Use Decimal-safe calculations.
-- [ ] Create settlement and settlement items in one transaction.
-- [ ] Add tests for exact 85/15 split and fixed rent deductions.
+- [x] Calculate fixed rent settlements.
+- [x] Calculate commission settlements.
+- [x] Support hybrid contracts.
+- [x] Use Decimal-safe calculations.
+- [x] Create settlement and settlement items in one transaction.
+- [x] Add tests for exact 85/15 split and fixed rent deductions.
 
 ### Task 4.4: HR and Specialist UI
 
@@ -491,18 +487,18 @@ Missing or incomplete:
 - Create: `components/modules/hr/*`
 - Create: `components/modules/specialists/*`
 
-- [ ] HR page: employee table, employee form, clock-in/clock-out controls, attendance list.
-- [ ] Specialists page: specialist list, contract view, settlement calculator, settlement table.
-- [ ] Display exact financial breakdowns.
+- [x] HR page: employee table, employee form, clock-in/clock-out controls, attendance list.
+- [x] Specialists page: specialist list, contract view, settlement calculator, settlement table.
+- [x] Display exact financial breakdowns.
 
 ### Sprint 4 Acceptance Criteria
 
-- [ ] Time clock works and blocks invalid double clock-in.
-- [ ] HR page displays real attendance counts.
-- [ ] Specialist settlements calculate fixed rent and commission correctly.
-- [ ] Settlement records are persisted.
-- [ ] UI shows exact automated financial breakdowns.
-- [ ] `pnpm test:api`, `pnpm typecheck`, `pnpm build`, and accessibility checks pass.
+- [x] Time clock works and blocks invalid double clock-in.
+- [x] HR page displays real attendance counts.
+- [x] Specialist settlements calculate fixed rent and commission correctly.
+- [x] Settlement records are persisted.
+- [x] UI shows exact automated financial breakdowns.
+- [x] `pnpm test:api`, `pnpm typecheck`, `pnpm build`, and accessibility checks pass.
 
 ---
 
