@@ -45,7 +45,7 @@ export default async function DashboardLayout({
         <div className="flex-1 flex flex-col overflow-hidden">
           <MobileModuleNav locale={locale as Locale} />
           {/* ONLY THIS SCROLLS */}
-          <main className="flex-1 overflow-y-auto overscroll-contain">{children}</main>
+          <main className="flex-1 overflow-y-auto">{children}</main>
         </div>
       </div>
     </div>

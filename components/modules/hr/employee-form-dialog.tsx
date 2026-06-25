@@ -104,13 +104,13 @@ export function EmployeeFormDialog({
         <DialogTrigger
           render={
             <Button size="sm">
-              <Plus />
+              <Plus className="size-4" />
               Alta empleado
             </Button>
           }
         />
       ) : null}
-      <StandardDialogContent>
+      <StandardDialogContent className="border-white/10 bg-background/85 shadow-2xl backdrop-blur-xl dark:bg-zinc-950/85">
         <StandardDialogHeader>
           <StandardDialogTitle>{isEditing ? "Editar empleado" : "Alta de empleado"}</StandardDialogTitle>
           <StandardDialogDescription>
@@ -174,11 +174,11 @@ export function EmployeeFormDialog({
           </div>
 
           <StandardDialogFooter>
-            <DialogClose render={<Button type="button" variant="outline" />}>
+            <DialogClose render={<Button type="button" variant="outline" disabled={isSubmitting} />}>
               Cancelar
             </DialogClose>
             <Button type="submit" disabled={isSubmitting}>
-              {isEditing ? <Edit /> : <Plus />}
+              {isSubmitting ? null : isEditing ? <Edit className="size-4" /> : <Plus className="size-4" />}
               {isSubmitting ? "Guardando..." : isEditing ? "Guardar cambios" : "Crear empleado"}
             </Button>
           </StandardDialogFooter>

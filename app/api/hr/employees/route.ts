@@ -1,11 +1,12 @@
 import { BranchStatus, EmploymentContractType, Prisma } from "@prisma/client";
 import { z } from "zod";
-import { prisma } from "@/lib/db/prisma";
+
 import { resolveWritableBranchId, scopedBranchWhere } from "@/lib/api/branch";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
 import { created, fail, ok } from "@/lib/api/response";
 import { normalizeEmail } from "@/lib/auth/password";
+import { prisma } from "@/lib/db/prisma";
 
 const CreateEmployeeSchema = z.object({
   branchId: z.string().optional(),

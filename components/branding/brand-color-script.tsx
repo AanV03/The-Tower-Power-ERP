@@ -2,6 +2,12 @@ import { BRAND_STORAGE_KEY, DEFAULT_BRAND_COLORS } from "@/components/branding/b
 
 const script = `
 (() => {
+  if (typeof document !== 'undefined') {
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.height = '100%';
+    document.body.style.height = '100%';
+  }
   const storageKey = ${JSON.stringify(BRAND_STORAGE_KEY)};
   const defaults = ${JSON.stringify(DEFAULT_BRAND_COLORS)};
   const hexToHslTriplet = (hex) => {
@@ -33,6 +39,15 @@ const script = `
     }
     return Math.round(h * 360) + " " + Math.round(s * 100) + "% " + Math.round(l * 100) + "%";
   };
+  const isLightColor = (hex) => {
+    const normalized = String(hex || "").replace("#", "");
+    if (normalized.length !== 6) return false;
+    const r = parseInt(normalized.slice(0, 2), 16);
+    const g = parseInt(normalized.slice(2, 4), 16);
+    const b = parseInt(normalized.slice(4, 6), 16);
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq >= 128;
+  };
   const currentScript = document.currentScript;
   const brandScope = currentScript ? currentScript.closest("[data-brand-id]") : null;
   const setProperty = (name, value) => {
@@ -45,9 +60,21 @@ const script = `
     if (!raw) return;
     const colors = { ...defaults, ...JSON.parse(raw) };
 
-    setProperty("--sidebar-bg", colors.sidebarBg);
-    setProperty("--topbar-bg", colors.topbarBg);
-    setProperty("--sidebar-text-primary", colors.sidebarText);
+    if (colors.sidebarBg && colors.sidebarBg.startsWith("#")) {
+      setProperty("--sidebar-bg", colors.sidebarBg);
+      const isLight = isLightColor(colors.sidebarBg);
+      setProperty("--sidebar-text-primary", isLight ? "#0f172a" : "#f8fafc");
+      setProperty("--sidebar-text-secondary", isLight ? "rgba(15, 23, 42, 0.7)" : "rgba(248, 250, 252, 0.7)");
+      setProperty("--sidebar-border-color", isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)");
+    }
+
+    if (colors.topbarBg && colors.topbarBg.startsWith("#")) {
+      setProperty("--topbar-bg", colors.topbarBg);
+      const isLight = isLightColor(colors.topbarBg);
+      setProperty("--topbar-foreground", isLight ? "#0f172a" : "#f8fafc");
+      setProperty("--topbar-border-color", isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)");
+    }
+
     setProperty("--radius", colors.radius);
 
     if (colors.accentColor && colors.accentColor.startsWith("#")) {
@@ -55,11 +82,10 @@ const script = `
     }
 
     if (colors.primaryColor && colors.primaryColor.startsWith("#")) {
-      const hsl = hexToHslTriplet(colors.primaryColor);
       setProperty("--brand-orange", colors.primaryColor);
       setProperty("--sidebar-accent-active", colors.primaryColor);
-      setProperty("--primary", hsl);
-      setProperty("--ring", hsl);
+      setProperty("--primary", colors.primaryColor);
+      setProperty("--ring", colors.primaryColor);
     }
 
     if (colors.contrast) {

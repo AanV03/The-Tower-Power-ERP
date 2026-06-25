@@ -1,10 +1,11 @@
 import { BranchStatus, Prisma, SpecialistContractModel, SpecialistType } from "@prisma/client";
 import { z } from "zod";
-import { prisma } from "@/lib/db/prisma";
+
 import { resolveWritableBranchId, scopedBranchWhere } from "@/lib/api/branch";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
 import { ApiError, created, fail, ok } from "@/lib/api/response";
+import { prisma } from "@/lib/db/prisma";
 
 const CreateSpecialistSchema = z.object({
   branchId: z.string().nullable().optional(),

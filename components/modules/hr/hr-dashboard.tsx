@@ -9,8 +9,8 @@ import { BranchScopeSelector } from "@/components/shared/branch-scope-selector";
 import { MetricCard } from "@/components/shared/metric-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
+import { prisma } from "@/lib/db/prisma";
 import type { Locale } from "@/lib/i18n";
 
 function formatDateTime(value: Date | null | undefined, locale: Locale) {
@@ -120,34 +120,36 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
 
   return (
     <section className="erp-section space-y-6" role="main" aria-label="RH y asistencia">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-normal text-foreground">RH y asistencia</h1>
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Plantilla, contratos y asistencia diaria con una vista operativa para sucursales.
-          </p>
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <BranchScopeSelector locale={locale} />
-          <div className="flex gap-2">
-            <EmployeeFormDialog
-              trigger={
-                <Button size="sm">
-                  <Plus />
-                  Alta empleado
-                </Button>
-              }
-            />
-            <TimeClockDialog
-              employees={timeClockEmployees}
-              trigger={
-                <Button size="sm" variant="outline">
-                  <Clock />
-                  Registrar
-                </Button>
-              }
-            />
-            <Button size="icon-sm" variant="outline" aria-label="Exportar RH"><Download /></Button>
+      <div className="rounded-lg border border-white/10 bg-card/80 p-4 shadow-sm backdrop-blur-xl dark:bg-zinc-950/50">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-semibold tracking-normal text-foreground">RH y asistencia</h1>
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
+              Plantilla, contratos y asistencia diaria con una vista operativa para sucursales.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <BranchScopeSelector locale={locale} />
+            <div className="flex gap-2">
+              <EmployeeFormDialog
+                trigger={
+                  <Button size="sm">
+                    <Plus />
+                    Alta empleado
+                  </Button>
+                }
+              />
+              <TimeClockDialog
+                employees={timeClockEmployees}
+                trigger={
+                  <Button size="sm" variant="outline">
+                    <Clock />
+                    Registrar
+                  </Button>
+                }
+              />
+              <Button size="icon-sm" variant="outline" aria-label="Exportar RH"><Download /></Button>
+            </div>
           </div>
         </div>
       </div>
@@ -159,7 +161,7 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
         <MetricCard label="Asistencias abiertas" value={String(openAttendance)} change="Clock" tone={openAttendance > 0 ? "warning" : "default"} locale={locale} />
       </div>
 
-      <Card className="rounded-lg">
+      <Card className="rounded-lg border-white/10 bg-card/80 backdrop-blur-xl dark:bg-zinc-950/50">
         <CardContent className="flex flex-wrap gap-2 p-3">
           <a href="#empleados" className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground">Empleados</a>
           <a href="#asistencia" className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">Asistencia</a>
@@ -180,7 +182,7 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-muted/30 px-4 py-3 text-sm text-muted-foreground backdrop-blur-xl">
         <CalendarClock className="size-4" />
         Acciones de captura y exportacion preparadas para integrarse con endpoints operativos.
       </div>

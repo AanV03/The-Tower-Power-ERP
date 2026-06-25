@@ -95,7 +95,7 @@ export function AnalyticsMultiChart({
                 </linearGradient>
               </defs>
               
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.6} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.6} />
               
               <ChartXAxis 
                 dataKey="label" 
@@ -114,12 +114,12 @@ export function AnalyticsMultiChart({
               />
               
               <ChartTooltip
-                cursor={{ stroke: "hsl(var(--border))", strokeWidth: 1 }}
+                cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
                 contentStyle={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
                   borderRadius: "8px",
-                  color: "hsl(var(--foreground))",
+                  color: "var(--foreground)",
                   boxShadow: "var(--glass-shadow)"
                 }}
               />

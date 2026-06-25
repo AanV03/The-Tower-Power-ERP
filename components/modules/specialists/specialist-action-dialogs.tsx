@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarClock, ClipboardCheck, FilePlus2, UserPlus } from "lucide-react";
+import { ClipboardCheck, FilePlus2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,8 @@ type ActionLabels = {
   newSpecialist: string;
 };
 
+type SpecialistModel = "FIXED_RENT" | "COMMISSION" | "HYBRID";
+
 const copy = {
   es: {
     generateTitle: "Generar liquidacion",
@@ -49,10 +51,6 @@ const copy = {
     specialist: "Especialista",
     periodStart: "Inicio del periodo",
     periodEnd: "Fin del periodo",
-    gross: "Monto bruto",
-    rent: "Renta",
-    commission: "Comision",
-    net: "Neto a pagar",
     notes: "Notas de revision",
     service: "Servicio",
     member: "ID de miembro",
@@ -71,7 +69,6 @@ const copy = {
     servicePrice: "Precio del servicio",
     submit: "Guardar",
     cancel: "Cancelar",
-    created: "Formulario registrado en el prototipo.",
     selectSpecialist: "Selecciona especialista",
     selectService: "Selecciona servicio",
     selectBranch: "Selecciona sucursal",
@@ -89,10 +86,6 @@ const copy = {
     specialist: "Specialist",
     periodStart: "Period start",
     periodEnd: "Period end",
-    gross: "Gross amount",
-    rent: "Rent",
-    commission: "Commission",
-    net: "Net payout",
     notes: "Review notes",
     service: "Service",
     member: "Member ID",
@@ -111,7 +104,6 @@ const copy = {
     servicePrice: "Service price",
     submit: "Save",
     cancel: "Cancel",
-    created: "Form registered in the prototype.",
     selectSpecialist: "Select specialist",
     selectService: "Select service",
     selectBranch: "Select branch",
@@ -129,10 +121,6 @@ const copy = {
     specialist: "Specialiste",
     periodStart: "Debut periode",
     periodEnd: "Fin periode",
-    gross: "Montant brut",
-    rent: "Loyer",
-    commission: "Commission",
-    net: "Paiement net",
     notes: "Notes de revision",
     service: "Service",
     member: "ID membre",
@@ -151,7 +139,6 @@ const copy = {
     servicePrice: "Prix du service",
     submit: "Enregistrer",
     cancel: "Annuler",
-    created: "Formulaire enregistre dans le prototype.",
     selectSpecialist: "Selectionner specialiste",
     selectService: "Selectionner service",
     selectBranch: "Selectionner succursale",
@@ -173,17 +160,14 @@ function Field({
   );
 }
 
-function dateToIso(value: FormDataEntryValue | null, endOfDay = false) {
-  const date = typeof value === "string" ? value : "";
-  if (!date) return "";
-  return new Date(`${date}T${endOfDay ? "23:59:59" : "00:00:00"}`).toISOString();
+function dateToIso(value: string, endOfDay = false) {
+  if (!value) return "";
+  return new Date(`${value}T${endOfDay ? "23:59:59" : "00:00:00"}`).toISOString();
 }
 
-function dateTimeToIso(dateValue: FormDataEntryValue | null, timeValue: FormDataEntryValue | null) {
-  const date = typeof dateValue === "string" ? dateValue : "";
-  const time = typeof timeValue === "string" && timeValue ? timeValue : "00:00";
-  if (!date) return "";
-  return new Date(`${date}T${time}`).toISOString();
+function dateTimeToIso(dateValue: string, timeValue: string) {
+  if (!dateValue) return "";
+  return new Date(`${dateValue}T${timeValue || "00:00"}`).toISOString();
 }
 
 async function postJson(url: string, payload: Record<string, unknown>) {
@@ -221,23 +205,41 @@ export function SpecialistActionDialogs({
   const [sessionOpen, setSessionOpen] = useState(false);
   const [specialistOpen, setSpecialistOpen] = useState(false);
   const [submitting, setSubmitting] = useState<"settlement" | "session" | "specialist" | null>(null);
+  const [specialistModel, setSpecialistModel] = useState<SpecialistModel>("COMMISSION");
+  const [sessionSpecialistId, setSessionSpecialistId] = useState("");
+  const [sessionServiceId, setSessionServiceId] = useState("");
+  const [sessionPrice, setSessionPrice] = useState("0.00");
+  const [settleSpecialistId, setSettleSpecialistId] = useState("");
+  const [settlePeriodStart, setSettlePeriodStart] = useState("");
+  const [settlePeriodEnd, setSettlePeriodEnd] = useState("");
 
-  const defaultServicePrice = useMemo(() => services[0]?.price ?? "0", [services]);
+  const filteredServices = useMemo(() => {
+    if (!sessionSpecialistId) return [];
+    return services.filter((service) => service.specialistId === sessionSpecialistId);
+  }, [services, sessionSpecialistId]);
 
   async function handleSettlementSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+
+    if (!settleSpecialistId || !settlePeriodStart || !settlePeriodEnd) {
+      toast.error("Completa especialista e intervalo de fechas.");
+      return;
+    }
 
     setSubmitting("settlement");
     try {
+      const formData = new FormData(event.currentTarget);
       await postJson("/api/specialists/settlements", {
-        specialistId: formData.get("specialistId"),
-        periodStart: dateToIso(formData.get("periodStart")),
-        periodEnd: dateToIso(formData.get("periodEnd"), true),
+        specialistId: settleSpecialistId,
+        periodStart: dateToIso(settlePeriodStart),
+        periodEnd: dateToIso(settlePeriodEnd, true),
         status: formData.get("status"),
       });
       toast.success("Liquidacion generada correctamente.");
       setSettlementOpen(false);
+      setSettleSpecialistId("");
+      setSettlePeriodStart("");
+      setSettlePeriodEnd("");
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo generar la liquidacion.");
@@ -248,21 +250,24 @@ export function SpecialistActionDialogs({
 
   async function handleSessionSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
 
     setSubmitting("session");
     try {
+      const formData = new FormData(event.currentTarget);
       await postJson("/api/specialists/sessions", {
-        specialistId: formData.get("specialistId"),
-        serviceId: formData.get("serviceId"),
+        specialistId: sessionSpecialistId,
+        serviceId: sessionServiceId,
         memberId: formData.get("memberId"),
         branchId: formData.get("branchId"),
-        scheduledAt: dateTimeToIso(formData.get("date"), formData.get("time")),
-        price: formData.get("price"),
+        scheduledAt: dateTimeToIso(String(formData.get("date") ?? ""), String(formData.get("time") ?? "")),
+        price: sessionPrice,
         status: formData.get("status"),
       });
       toast.success("Sesion registrada correctamente.");
       setSessionOpen(false);
+      setSessionSpecialistId("");
+      setSessionServiceId("");
+      setSessionPrice("0.00");
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo registrar la sesion.");
@@ -282,7 +287,7 @@ export function SpecialistActionDialogs({
         specialty: formData.get("specialty"),
         type: formData.get("type"),
         branchId: formData.get("branchId") || null,
-        contractModel: formData.get("contractModel"),
+        contractModel: specialistModel,
         fixedRentAmount: formData.get("fixedRentAmount") || undefined,
         commissionRate: formData.get("commissionRate") || undefined,
         serviceName: formData.get("serviceName") || undefined,
@@ -305,7 +310,7 @@ export function SpecialistActionDialogs({
           <FilePlus2 className="size-4" aria-hidden="true" />
           {labels.generate}
         </DialogTrigger>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-background/85 shadow-2xl backdrop-blur-xl dark:bg-zinc-950/85 sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{text.generateTitle}</DialogTitle>
             <DialogDescription>{text.generateDesc}</DialogDescription>
@@ -313,7 +318,13 @@ export function SpecialistActionDialogs({
           <form className="grid gap-4" onSubmit={handleSettlementSubmit}>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label={text.specialist}>
-                <NativeSelect name="specialistId" required aria-label={text.specialist} disabled={submitting === "settlement"}>
+                <NativeSelect
+                  required
+                  value={settleSpecialistId}
+                  onChange={(event) => setSettleSpecialistId(event.target.value)}
+                  aria-label={text.specialist}
+                  disabled={submitting === "settlement"}
+                >
                   <NativeSelectOption value="">{text.selectSpecialist}</NativeSelectOption>
                   {specialists.map((specialist) => (
                     <NativeSelectOption key={specialist.id} value={specialist.id}>
@@ -330,14 +341,26 @@ export function SpecialistActionDialogs({
                 </NativeSelect>
               </Field>
               <Field label={text.periodStart}>
-                <Input name="periodStart" type="date" required disabled={submitting === "settlement"} />
+                <Input
+                  type="date"
+                  value={settlePeriodStart}
+                  onChange={(event) => setSettlePeriodStart(event.target.value)}
+                  required
+                  disabled={submitting === "settlement"}
+                />
               </Field>
               <Field label={text.periodEnd}>
-                <Input name="periodEnd" type="date" required disabled={submitting === "settlement"} />
+                <Input
+                  type="date"
+                  value={settlePeriodEnd}
+                  onChange={(event) => setSettlePeriodEnd(event.target.value)}
+                  required
+                  disabled={submitting === "settlement"}
+                />
               </Field>
             </div>
             <Field label={text.notes}>
-              <Input placeholder="Revision de sesiones, ajustes y pagos pendientes" disabled={submitting === "settlement"} />
+              <Input name="notes" placeholder="Revision de sesiones, ajustes y pagos pendientes" disabled={submitting === "settlement"} />
             </Field>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setSettlementOpen(false)} disabled={submitting === "settlement"}>
@@ -356,7 +379,7 @@ export function SpecialistActionDialogs({
           <ClipboardCheck className="size-4" aria-hidden="true" />
           {labels.registerSession}
         </DialogTrigger>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-background/85 shadow-2xl backdrop-blur-xl dark:bg-zinc-950/85 sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{text.sessionTitle}</DialogTitle>
             <DialogDescription>{text.sessionDesc}</DialogDescription>
@@ -364,7 +387,17 @@ export function SpecialistActionDialogs({
           <form className="grid gap-4" onSubmit={handleSessionSubmit}>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label={text.specialist}>
-                <NativeSelect name="specialistId" required aria-label={text.specialist} disabled={submitting === "session"}>
+                <NativeSelect
+                  required
+                  value={sessionSpecialistId}
+                  onChange={(event) => {
+                    setSessionSpecialistId(event.target.value);
+                    setSessionServiceId("");
+                    setSessionPrice("0.00");
+                  }}
+                  aria-label={text.specialist}
+                  disabled={submitting === "session"}
+                >
                   <NativeSelectOption value="">{text.selectSpecialist}</NativeSelectOption>
                   {specialists.map((specialist) => (
                     <NativeSelectOption key={specialist.id} value={specialist.id}>
@@ -374,9 +407,20 @@ export function SpecialistActionDialogs({
                 </NativeSelect>
               </Field>
               <Field label={text.service}>
-                <NativeSelect name="serviceId" required aria-label={text.service} disabled={submitting === "session"}>
+                <NativeSelect
+                  required
+                  value={sessionServiceId}
+                  onChange={(event) => {
+                    const serviceId = event.target.value;
+                    setSessionServiceId(serviceId);
+                    const service = services.find((item) => item.id === serviceId);
+                    if (service) setSessionPrice(Number(service.price).toFixed(2));
+                  }}
+                  disabled={!sessionSpecialistId || submitting === "session"}
+                  aria-label={text.service}
+                >
                   <NativeSelectOption value="">{text.selectService}</NativeSelectOption>
-                  {services.map((service) => (
+                  {filteredServices.map((service) => (
                     <NativeSelectOption key={service.id} value={service.id}>
                       {service.label}
                     </NativeSelectOption>
@@ -403,7 +447,15 @@ export function SpecialistActionDialogs({
                 <Input name="time" type="time" required disabled={submitting === "session"} />
               </Field>
               <Field label={text.price}>
-                <Input name="price" type="number" min="0" step="0.01" defaultValue={defaultServicePrice} required disabled={submitting === "session"} />
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={sessionPrice}
+                  onChange={(event) => setSessionPrice(event.target.value)}
+                  required
+                  disabled={submitting === "session"}
+                />
               </Field>
               <Field label={text.status}>
                 <NativeSelect name="status" required aria-label={text.status} defaultValue="SCHEDULED" disabled={submitting === "session"}>
@@ -431,7 +483,7 @@ export function SpecialistActionDialogs({
           <UserPlus className="size-4" aria-hidden="true" />
           {labels.newSpecialist}
         </DialogTrigger>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-background/85 shadow-2xl backdrop-blur-xl dark:bg-zinc-950/85 sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{text.specialistTitle}</DialogTitle>
             <DialogDescription>{text.specialistDesc}</DialogDescription>
@@ -462,18 +514,28 @@ export function SpecialistActionDialogs({
                 </NativeSelect>
               </Field>
               <Field label={text.model}>
-                <NativeSelect name="contractModel" required aria-label={text.model} defaultValue="COMMISSION" disabled={submitting === "specialist"}>
+                <NativeSelect
+                  required
+                  value={specialistModel}
+                  onChange={(event) => setSpecialistModel(event.target.value as SpecialistModel)}
+                  aria-label={text.model}
+                  disabled={submitting === "specialist"}
+                >
                   <NativeSelectOption value="FIXED_RENT">Fixed rent</NativeSelectOption>
                   <NativeSelectOption value="COMMISSION">Commission</NativeSelectOption>
                   <NativeSelectOption value="HYBRID">Hybrid</NativeSelectOption>
                 </NativeSelect>
               </Field>
-              <Field label={text.fixedRent}>
-                <Input name="fixedRentAmount" type="number" min="0" step="0.01" placeholder="0.00" disabled={submitting === "specialist"} />
-              </Field>
-              <Field label={text.commissionRate}>
-                <Input name="commissionRate" type="number" min="0" max="100" step="0.01" placeholder="85" disabled={submitting === "specialist"} />
-              </Field>
+              {(specialistModel === "FIXED_RENT" || specialistModel === "HYBRID") && (
+                <Field label={text.fixedRent}>
+                  <Input name="fixedRentAmount" type="number" min="0" step="0.01" placeholder="0.00" required disabled={submitting === "specialist"} />
+                </Field>
+              )}
+              {(specialistModel === "COMMISSION" || specialistModel === "HYBRID") && (
+                <Field label={text.commissionRate}>
+                  <Input name="commissionRate" type="number" min="0" max="100" step="0.01" placeholder="85" required disabled={submitting === "specialist"} />
+                </Field>
+              )}
               <Field label={text.serviceName}>
                 <Input name="serviceName" placeholder="Consulta inicial" disabled={submitting === "specialist"} />
               </Field>
