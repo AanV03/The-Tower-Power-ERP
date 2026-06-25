@@ -1,9 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { resolve, join } from "node:path";
 
 import { navigationGroups } from "../data/navigation.ts";
 
