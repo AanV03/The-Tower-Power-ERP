@@ -25,7 +25,7 @@ export default async function DashboardLayout({
   const session = customContext ? null : await auth();
 
   if (!customContext?.tenantId && !session?.user?.tenantId) {
-    redirect(`/${locale}/signin`);
+    redirect("/login");
   }
 
   return (

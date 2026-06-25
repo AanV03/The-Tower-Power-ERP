@@ -322,7 +322,7 @@ export default function SignInPage() {
           <div className="border-t border-border px-8 py-5 text-center text-sm text-muted-foreground bg-muted/30">
             {auth.signin.footerPrefix}{" "}
             <Link
-              href={`/${locale}/signup`}
+              href="/register"
               className="font-semibold text-foreground hover:underline underline-offset-4 transition-colors"
               style={{ color: "var(--brand-orange)" }}
             >

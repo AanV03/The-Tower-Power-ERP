@@ -76,16 +76,6 @@ function stripLocale(pathname: string) {
   return stripped.length > 0 ? stripped : "/";
 }
 
-function isLocalizedAuthPage(pathname: string) {
-  return locales.some(
-    (locale) =>
-      pathname === `/${locale}/signin` ||
-      pathname === `/${locale}/signup` ||
-      pathname.startsWith(`/${locale}/signin/`) ||
-      pathname.startsWith(`/${locale}/signup/`),
-  );
-}
-
 function isPublicAuthApi(pathname: string) {
   return PUBLIC_AUTH_API_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
@@ -201,8 +191,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const isPublicPage =
-    PUBLIC_PAGES.has(pathname) || isLocalizedAuthPage(pathname);
+  const isPublicPage = PUBLIC_PAGES.has(pathname);
 
   if (pathname.startsWith("/api") && isPublicAuthApi(pathname)) {
     return NextResponse.next();
