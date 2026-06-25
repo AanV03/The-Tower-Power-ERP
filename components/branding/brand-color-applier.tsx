@@ -24,7 +24,7 @@ export type BrandColors = {
 
 export const DEFAULT_BRAND_COLORS: BrandColors = {
   sidebarBg: "#023047",
-  topbarBg: "#023047",
+  topbarBg: "#ffffff",
   primaryColor: "#fb8500",
   accentColor: "#edc531",
   sidebarText: "rgba(255,255,255,0.8)",
@@ -63,6 +63,16 @@ function hexToHslTriplet(hex: string): string {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
+function isLightColor(hex: string): boolean {
+  const normalized = hex.replace("#", "");
+  if (normalized.length !== 6) return false;
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 128;
+}
+
 function getBrandTargets() {
   return [
     document.documentElement,
@@ -89,18 +99,24 @@ function removeBrandProperty(name: string) {
  * primaryColor fans out to all orange/primary usages:
  *   --brand-orange     → charts (var(--brand-orange) in module-chart.tsx)
  *   --sidebar-accent-active → active nav item
- *   --primary          → shadcn buttons (hsl(var(--primary)))
+ *   --primary          → shadcn buttons (var(--primary))
  *   --ring             → focus ring
  */
 export function applyBrandColors(colors: Partial<BrandColors>) {
-  if (colors.sidebarBg !== undefined)
+  if (colors.sidebarBg !== undefined && colors.sidebarBg.startsWith("#")) {
     setBrandProperty("--sidebar-bg", colors.sidebarBg);
+    const isLight = isLightColor(colors.sidebarBg);
+    setBrandProperty("--sidebar-text-primary", isLight ? "#0f172a" : "#f8fafc");
+    setBrandProperty("--sidebar-text-secondary", isLight ? "rgba(15, 23, 42, 0.7)" : "rgba(248, 250, 252, 0.7)");
+    setBrandProperty("--sidebar-border-color", isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)");
+  }
 
-  if (colors.topbarBg !== undefined)
+  if (colors.topbarBg !== undefined && colors.topbarBg.startsWith("#")) {
     setBrandProperty("--topbar-bg", colors.topbarBg);
-
-  if (colors.sidebarText !== undefined)
-    setBrandProperty("--sidebar-text-primary", colors.sidebarText);
+    const isLight = isLightColor(colors.topbarBg);
+    setBrandProperty("--topbar-foreground", isLight ? "#0f172a" : "#f8fafc");
+    setBrandProperty("--topbar-border-color", isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)");
+  }
 
   if (colors.radius !== undefined)
     setBrandProperty("--radius", colors.radius);
@@ -111,11 +127,10 @@ export function applyBrandColors(colors: Partial<BrandColors>) {
 
   if (colors.primaryColor !== undefined && colors.primaryColor.startsWith("#")) {
     const hex = colors.primaryColor;
-    const hsl = hexToHslTriplet(hex);
     setBrandProperty("--brand-orange", hex);
     setBrandProperty("--sidebar-accent-active", hex);
-    setBrandProperty("--primary", hsl);       // used by shadcn Button (hsl(var(--primary)))
-    setBrandProperty("--ring", hsl);           // focus ring matches primary
+    setBrandProperty("--primary", hex);       // used by shadcn Button (var(--primary))
+    setBrandProperty("--ring", hex);           // focus ring matches primary
   }
 
   if (typeof document !== "undefined") {
@@ -162,6 +177,12 @@ export function resetBrandColors() {
 
 export function BrandColorApplier() {
   useEffect(() => {
+    // Hide scrollbars on body/html for dashboard layout view
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.height = "100%";
+    document.body.style.height = "100%";
+
     try {
       const raw = localStorage.getItem(BRAND_STORAGE_KEY);
       if (raw) {
@@ -180,6 +201,11 @@ export function BrandColorApplier() {
     return () => {
       document.removeEventListener("brand:update", onUpdate);
       document.removeEventListener("brand:reset", onReset);
+      // Restore scrollbars on unmount
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+      document.documentElement.style.height = "";
+      document.body.style.height = "";
     };
   }, []);
 

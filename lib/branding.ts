@@ -23,27 +23,27 @@ export const defaultBrand: BrandConfig = {
   id: "gerpy",
   name: "Gerpy ERP",
   logoText: "GE",
-  radius: "0.5rem",
+  radius: "0.75rem",
   palettes: {
     light: {
-      orange: "#ffb423",
-      surface: "#f4f4f4",
-      yellow: "#ffd700",
-      canvas: "#fcfcfc",
-      red: "#e60a1a",
-      green: "#00e699",
-      ink: "#212529",
-      navy: "#023047",
+      orange: "#fb8500",
+      surface: "#f1f5f9",
+      yellow: "#edc531",
+      canvas: "#f8fafc",
+      red: "#ef4444",
+      green: "#10b981",
+      ink: "#0f172a",
+      navy: "#0a1128",
     },
     dark: {
       orange: "#fb8500",
       yellow: "#edc531",
-      ink: "#f4f4f4",
-      navy: "#023047",
-      red: "#a60713",
-      green: "#00bc7d",
-      surface: "#2c3036",
-      canvas: "#212529",
+      ink: "#f8fafc",
+      navy: "#0a1128",
+      red: "#ef4444",
+      green: "#10b981",
+      surface: "#1e293b",
+      canvas: "#0b0f19",
     },
   },
 };
@@ -58,9 +58,23 @@ export function buildBrandCss(brand: BrandConfig) {
   `;
 }
 
+function isLightColor(hex: string): boolean {
+  const normalized = hex.replace("#", "");
+  if (normalized.length !== 6) return false;
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 128;
+}
+
 function toCssVariables(brand: BrandConfig, mode: BrandMode) {
   const palette = brand.palettes[mode];
   const isDark = mode === "dark";
+  const sidebarBg = palette.navy;
+  const topbarBg = palette.navy;
+  const isSidebarLight = isLightColor(sidebarBg);
+  const isTopbarLight = isLightColor(topbarBg);
 
   return [
     `--brand-orange: ${palette.orange};`,
@@ -72,25 +86,32 @@ function toCssVariables(brand: BrandConfig, mode: BrandMode) {
     `--brand-surface: ${palette.surface};`,
     `--brand-canvas: ${palette.canvas};`,
     `--radius: ${brand.radius};`,
-    `--background: ${hexToHslTriplet(palette.canvas)};`,
-    `--foreground: ${hexToHslTriplet(palette.ink)};`,
-    `--card: ${isDark ? hexToHslTriplet("#2c3036") : hexToHslTriplet("#ffffff")};`,
-    `--card-foreground: ${hexToHslTriplet(palette.ink)};`,
-    `--popover: ${isDark ? hexToHslTriplet("#2c3036") : hexToHslTriplet("#ffffff")};`,
-    `--popover-foreground: ${hexToHslTriplet(palette.ink)};`,
-    `--primary: ${hexToHslTriplet(palette.orange)};`,
-    `--primary-foreground: ${hexToHslTriplet("#212529")};`,
-    `--secondary: ${hexToHslTriplet(palette.surface)};`,
-    `--secondary-foreground: ${hexToHslTriplet(palette.ink)};`,
-    `--muted: ${hexToHslTriplet(palette.surface)};`,
-    `--muted-foreground: ${isDark ? "210 7% 72%" : "210 5% 42%"};`,
-    `--accent: ${hexToHslTriplet(palette.green)};`,
-    `--accent-foreground: ${hexToHslTriplet(isDark ? "#212529" : "#ffffff")};`,
-    `--destructive: ${hexToHslTriplet(palette.red)};`,
-    `--destructive-foreground: ${hexToHslTriplet("#ffffff")};`,
-    `--border: ${isDark ? "210 8% 28%" : "210 9% 88%"};`,
-    `--input: ${isDark ? "210 8% 28%" : "210 9% 88%"};`,
-    `--ring: ${hexToHslTriplet(palette.orange)};`,
+    `--sidebar-bg: ${sidebarBg};`,
+    `--topbar-bg: ${topbarBg};`,
+    `--sidebar-text-primary: ${isSidebarLight ? "#0f172a" : "#f8fafc"};`,
+    `--sidebar-text-secondary: ${isSidebarLight ? "rgba(15, 23, 42, 0.7)" : "rgba(248, 250, 252, 0.7)"};`,
+    `--sidebar-border-color: ${isSidebarLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)"};`,
+    `--topbar-foreground: ${isTopbarLight ? "#0f172a" : "#f8fafc"};`,
+    `--topbar-border-color: ${isTopbarLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)"};`,
+    `--background: ${palette.canvas};`,
+    `--foreground: ${palette.ink};`,
+    `--card: ${isDark ? "rgba(22, 28, 45, 0.6)" : "rgba(255, 255, 255, 0.65)"};`,
+    `--card-foreground: ${palette.ink};`,
+    `--popover: ${isDark ? "rgba(22, 28, 45, 0.85)" : "rgba(255, 255, 255, 0.85)"};`,
+    `--popover-foreground: ${palette.ink};`,
+    `--primary: ${palette.orange};`,
+    `--primary-foreground: #ffffff;`,
+    `--secondary: ${palette.surface};`,
+    `--secondary-foreground: ${palette.ink};`,
+    `--muted: ${palette.surface};`,
+    `--muted-foreground: ${isDark ? "#94a3b8" : "#64748b"};`,
+    `--accent: ${palette.surface};`,
+    `--accent-foreground: ${palette.ink};`,
+    `--destructive: ${palette.red};`,
+    `--destructive-foreground: #ffffff;`,
+    `--border: ${isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.08)"};`,
+    `--input: ${isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.08)"};`,
+    `--ring: ${palette.orange};`,
   ].join(" ");
 }
 
