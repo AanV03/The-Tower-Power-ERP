@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -282,6 +282,18 @@ export function MembershipsClient({
   const [activeTab, setActiveTab] = useState("members");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Mobile Pagination states
+  const [memberPage, setMemberPage] = useState(1);
+  const [planPage, setPlanPage] = useState(1);
+  const [subPage, setSubPage] = useState(1);
+
+  // Reset pagination on search query or active tab change
+  useEffect(() => {
+    setMemberPage(1);
+    setPlanPage(1);
+    setSubPage(1);
+  }, [searchQuery, activeTab]);
+
   // Dialog States
   const [memberDialogOpen, setMemberDialogOpen] = useState(false);
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
@@ -342,6 +354,27 @@ export function MembershipsClient({
       s.planName.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [subscriptions, searchQuery]);
+
+  // Pagination calculations
+  const ITEMS_PER_PAGE = 5;
+
+  const totalMemberPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
+  const paginatedMembers = useMemo(() => {
+    const startIndex = (memberPage - 1) * ITEMS_PER_PAGE;
+    return filteredMembers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredMembers, memberPage]);
+
+  const totalPlanPages = Math.ceil(filteredPlans.length / ITEMS_PER_PAGE);
+  const paginatedPlans = useMemo(() => {
+    const startIndex = (planPage - 1) * ITEMS_PER_PAGE;
+    return filteredPlans.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredPlans, planPage]);
+
+  const totalSubPages = Math.ceil(filteredSubscriptions.length / ITEMS_PER_PAGE);
+  const paginatedSubscriptions = useMemo(() => {
+    const startIndex = (subPage - 1) * ITEMS_PER_PAGE;
+    return filteredSubscriptions.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredSubscriptions, subPage]);
 
   // Actions for Subscriptions (Pause, Cancel, Reactivate)
   const handleSubscriptionAction = async (subscriptionId: string, action: "pause" | "cancel" | "reactivate") => {
@@ -599,20 +632,20 @@ export function MembershipsClient({
       <Card className="rounded-lg">
         <Tabs value={activeTab} onValueChange={(next) => { setActiveTab(next); setSearchQuery(""); }} className="flex flex-col gap-0">
           <div className="border-b border-border pb-4 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <TabsList className="grid h-auto w-full sm:w-auto grid-cols-4 gap-2 bg-muted/60 p-1">
-              <TabsTrigger value="members" className="h-9 px-3 text-xs sm:text-sm">
+            <TabsList className="w-full grid grid-cols-1 sm:grid-cols-4 !h-auto sm:!h-10 bg-muted/60 p-1 rounded-lg border gap-1 sm:gap-0">
+              <TabsTrigger value="members" className="text-xs sm:text-sm font-semibold w-full !h-9 sm:!h-full py-2 sm:py-0 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer">
                 <Users className="size-4 mr-1.5" />
                 <span>{t.membersTab}</span>
               </TabsTrigger>
-              <TabsTrigger value="plans" className="h-9 px-3 text-xs sm:text-sm">
+              <TabsTrigger value="plans" className="text-xs sm:text-sm font-semibold w-full !h-9 sm:!h-full py-2 sm:py-0 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer">
                 <ClipboardList className="size-4 mr-1.5" />
                 <span>{t.plansTab}</span>
               </TabsTrigger>
-              <TabsTrigger value="subscriptions" className="h-9 px-3 text-xs sm:text-sm">
+              <TabsTrigger value="subscriptions" className="text-xs sm:text-sm font-semibold w-full !h-9 sm:!h-full py-2 sm:py-0 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer">
                 <CheckCircle2 className="size-4 mr-1.5" />
                 <span>{t.subscriptionsTab}</span>
               </TabsTrigger>
-              <TabsTrigger value="simulator" className="h-9 px-3 text-xs sm:text-sm">
+              <TabsTrigger value="simulator" className="text-xs sm:text-sm font-semibold w-full !h-9 sm:!h-full py-2 sm:py-0 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm cursor-pointer">
                 <Laptop className="size-4 mr-1.5" />
                 <span>{t.simulatorTab}</span>
               </TabsTrigger>
@@ -692,22 +725,18 @@ export function MembershipsClient({
                           </label>
                           <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-branch`}>
                             {t.branch}
-                            <Select
+                            <select
                               id={`${formId}-branch`}
+                              className="glass-control w-full h-9 px-3 py-2 rounded-lg border text-sm text-foreground bg-card"
                               value={memberForm.branchId}
-                              onValueChange={(val) => setMemberForm((prev) => ({ ...prev, branchId: val ?? "" }))}
+                              onChange={(e) => setMemberForm((prev) => ({ ...prev, branchId: e.target.value }))}
                             >
-                              <StandardSelectTrigger id={`${formId}-branch`}>
-                                <StandardSelectValue />
-                              </StandardSelectTrigger>
-                              <StandardSelectContent>
-                                {branches.map((b) => (
-                                  <SelectItem key={b.id} value={b.id}>
-                                    {b.name}
-                                  </SelectItem>
-                                ))}
-                              </StandardSelectContent>
-                            </Select>
+                              {branches.map((b) => (
+                                <option key={b.id} value={b.id} className="text-foreground bg-background">
+                                  {b.name}
+                                </option>
+                              ))}
+                            </select>
                           </label>
                         </div>
                         <StandardDialogFooter>
@@ -747,20 +776,16 @@ export function MembershipsClient({
                         <div className="grid gap-4 sm:grid-cols-2">
                           <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-billing`}>
                             {t.billingPeriod}
-                            <Select
+                            <select
                               id={`${formId}-billing`}
+                              className="glass-control w-full h-9 px-3 py-2 rounded-lg border text-sm text-foreground bg-card"
                               value={planForm.billingPeriod}
-                              onValueChange={(val: any) => setPlanForm((prev) => ({ ...prev, billingPeriod: val }))}
+                              onChange={(e) => setPlanForm((prev) => ({ ...prev, billingPeriod: e.target.value as any }))}
                             >
-                              <StandardSelectTrigger id={`${formId}-billing`}>
-                                <StandardSelectValue />
-                              </StandardSelectTrigger>
-                              <StandardSelectContent>
-                                <SelectItem value="MONTHLY">{t.monthly}</SelectItem>
-                                <SelectItem value="QUARTERLY">{t.quarterly}</SelectItem>
-                                <SelectItem value="ANNUAL">{t.annual}</SelectItem>
-                              </StandardSelectContent>
-                            </Select>
+                              <option value="MONTHLY" className="text-foreground bg-background">{t.monthly}</option>
+                              <option value="QUARTERLY" className="text-foreground bg-background">{t.quarterly}</option>
+                              <option value="ANNUAL" className="text-foreground bg-background">{t.annual}</option>
+                            </select>
                           </label>
                           <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-price`}>
                             {t.price}
@@ -802,42 +827,34 @@ export function MembershipsClient({
                       <form onSubmit={handleSaveSub} className="grid gap-4">
                         <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-sub-member`}>
                           {t.member}
-                          <Select
+                          <select
                             id={`${formId}-sub-member`}
+                            className="glass-control w-full h-9 px-3 py-2 rounded-lg border text-sm text-foreground bg-card"
                             value={subForm.memberId}
-                            onValueChange={(val) => setSubForm((prev) => ({ ...prev, memberId: val ?? "" }))}
+                            onChange={(e) => setSubForm((prev) => ({ ...prev, memberId: e.target.value }))}
                           >
-                            <StandardSelectTrigger id={`${formId}-sub-member`}>
-                              <StandardSelectValue />
-                            </StandardSelectTrigger>
-                            <StandardSelectContent>
-                              {members.map((m) => (
-                                <SelectItem key={m.id} value={m.id}>
-                                  {m.name} ({m.email || "Sin correo"})
-                                </SelectItem>
-                              ))}
-                            </StandardSelectContent>
-                          </Select>
+                            {members.map((m) => (
+                              <option key={m.id} value={m.id} className="text-foreground bg-background">
+                                {m.name} ({m.email || "Sin correo"})
+                              </option>
+                            ))}
+                          </select>
                         </label>
 
                         <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-sub-plan`}>
                           {t.plan}
-                          <Select
+                          <select
                             id={`${formId}-sub-plan`}
+                            className="glass-control w-full h-9 px-3 py-2 rounded-lg border text-sm text-foreground bg-card"
                             value={subForm.planId}
-                            onValueChange={(val) => setSubForm((prev) => ({ ...prev, planId: val ?? "" }))}
+                            onChange={(e) => setSubForm((prev) => ({ ...prev, planId: e.target.value }))}
                           >
-                            <StandardSelectTrigger id={`${formId}-sub-plan`}>
-                              <StandardSelectValue />
-                            </StandardSelectTrigger>
-                            <StandardSelectContent>
-                              {plans.map((p) => (
-                                <SelectItem key={p.id} value={p.id}>
-                                  {p.name} — {new Intl.NumberFormat(locale === "es" ? "es-MX" : "en-US", { style: "currency", currency: "MXN" }).format(p.price)}
-                                </SelectItem>
-                              ))}
-                            </StandardSelectContent>
-                          </Select>
+                            {plans.map((p) => (
+                              <option key={p.id} value={p.id} className="text-foreground bg-background">
+                                {p.name} — {new Intl.NumberFormat(locale === "es" ? "es-MX" : "en-US", { style: "currency", currency: "MXN" }).format(p.price)}
+                              </option>
+                            ))}
+                          </select>
                         </label>
 
                         <StandardDialogFooter>
@@ -866,33 +883,93 @@ export function MembershipsClient({
                   No se encontraron miembros.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t.member}</TableHead>
-                        <TableHead>{t.email}</TableHead>
-                        <TableHead>{t.phone}</TableHead>
-                        <TableHead>{t.branch}</TableHead>
-                        <TableHead>{t.status}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredMembers.map((m) => (
-                        <TableRow key={m.id}>
-                          <TableCell className="font-semibold text-foreground">{m.name}</TableCell>
-                          <TableCell>{m.email || "-"}</TableCell>
-                          <TableCell>{m.phone || "-"}</TableCell>
-                          <TableCell>{m.branchName}</TableCell>
-                          <TableCell>
-                            <Badge className={statusStyles[m.status]} variant="outline">
-                              {m.status === "ACTIVE" ? t.active : t.inactive}
-                            </Badge>
-                          </TableCell>
+                <div className="flex flex-col gap-4">
+                  {/* Desktop View Table */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t.member}</TableHead>
+                          <TableHead>{t.email}</TableHead>
+                          <TableHead>{t.phone}</TableHead>
+                          <TableHead>{t.branch}</TableHead>
+                          <TableHead>{t.status}</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredMembers.map((m) => (
+                          <TableRow key={m.id}>
+                            <TableCell className="font-semibold text-foreground">{m.name}</TableCell>
+                            <TableCell>{m.email || "-"}</TableCell>
+                            <TableCell>{m.phone || "-"}</TableCell>
+                            <TableCell>{m.branchName}</TableCell>
+                            <TableCell>
+                              <Badge className={statusStyles[m.status]} variant="outline">
+                                {m.status === "ACTIVE" ? t.active : t.inactive}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile View: Grid of cards */}
+                  <div className="grid grid-cols-1 gap-4 md:hidden">
+                    {paginatedMembers.map((m) => (
+                      <div key={m.id} className="p-4 rounded-xl border border-border bg-card shadow-sm space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-bold text-foreground">{m.name}</span>
+                          <Badge className={statusStyles[m.status]} variant="outline">
+                            {m.status === "ACTIVE" ? t.active : t.inactive}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t.email}</p>
+                            <p className="font-medium text-foreground mt-0.5 break-all">{m.email || "-"}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t.phone}</p>
+                            <p className="font-medium text-foreground mt-0.5">{m.phone || "-"}</p>
+                          </div>
+                        </div>
+                        <div className="pt-2 border-t border-border/40 text-xs">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t.branch}</p>
+                          <p className="font-medium text-foreground mt-0.5">{m.branchName}</p>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Pagination controls */}
+                    {totalMemberPages > 1 && (
+                      <div className="flex items-center justify-between pt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={memberPage === 1}
+                          onClick={() => setMemberPage((p) => Math.max(1, p - 1))}
+                          className="text-xs text-foreground cursor-pointer"
+                        >
+                          Anterior
+                        </Button>
+                        <span className="text-xs text-muted-foreground">
+                          Página {memberPage} de {totalMemberPages}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={memberPage === totalMemberPages}
+                          onClick={() => setMemberPage((p) => Math.min(totalMemberPages, p + 1))}
+                          className="text-xs text-foreground cursor-pointer"
+                        >
+                          Siguiente
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </TabsContent>
@@ -904,33 +981,91 @@ export function MembershipsClient({
                   No se encontraron planes creados.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t.planName}</TableHead>
-                        <TableHead>{t.billingPeriod}</TableHead>
-                        <TableHead>{t.price}</TableHead>
-                        <TableHead>{t.status}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredPlans.map((p) => (
-                        <TableRow key={p.id}>
-                          <TableCell className="font-semibold text-foreground">{p.name}</TableCell>
-                          <TableCell>{translatePeriod(p.billingPeriod)}</TableCell>
-                          <TableCell>
-                            {new Intl.NumberFormat(locale === "es" ? "es-MX" : "en-US", { style: "currency", currency: "MXN" }).format(p.price)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={statusStyles[p.status]} variant="outline">
-                              {p.status === "ACTIVE" ? t.active : t.inactive}
-                            </Badge>
-                          </TableCell>
+                <div className="flex flex-col gap-4">
+                  {/* Desktop View Table */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t.planName}</TableHead>
+                          <TableHead>{t.billingPeriod}</TableHead>
+                          <TableHead>{t.price}</TableHead>
+                          <TableHead>{t.status}</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredPlans.map((p) => (
+                          <TableRow key={p.id}>
+                            <TableCell className="font-semibold text-foreground">{p.name}</TableCell>
+                            <TableCell>{translatePeriod(p.billingPeriod)}</TableCell>
+                            <TableCell>
+                              {new Intl.NumberFormat(locale === "es" ? "es-MX" : "en-US", { style: "currency", currency: "MXN" }).format(p.price)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={statusStyles[p.status]} variant="outline">
+                                {p.status === "ACTIVE" ? t.active : t.inactive}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile View: Grid of cards */}
+                  <div className="grid grid-cols-1 gap-4 md:hidden">
+                    {paginatedPlans.map((p) => (
+                      <div key={p.id} className="p-4 rounded-xl border border-border bg-card shadow-sm space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-bold text-foreground">{p.name}</span>
+                          <Badge className={statusStyles[p.status]} variant="outline">
+                            {p.status === "ACTIVE" ? t.active : t.inactive}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t.billingPeriod}</p>
+                            <p className="font-medium text-foreground mt-0.5">{translatePeriod(p.billingPeriod)}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t.price}</p>
+                            <p className="font-bold text-foreground mt-0.5">
+                              {new Intl.NumberFormat(locale === "es" ? "es-MX" : "en-US", { style: "currency", currency: "MXN" }).format(p.price)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Pagination controls */}
+                    {totalPlanPages > 1 && (
+                      <div className="flex items-center justify-between pt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={planPage === 1}
+                          onClick={() => setPlanPage((p) => Math.max(1, p - 1))}
+                          className="text-xs text-foreground cursor-pointer"
+                        >
+                          Anterior
+                        </Button>
+                        <span className="text-xs text-muted-foreground">
+                          Página {planPage} de {totalPlanPages}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={planPage === totalPlanPages}
+                          onClick={() => setPlanPage((p) => Math.min(totalPlanPages, p + 1))}
+                          className="text-xs text-foreground cursor-pointer"
+                        >
+                          Siguiente
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </TabsContent>
@@ -942,71 +1077,168 @@ export function MembershipsClient({
                   No hay suscripciones registradas.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t.member}</TableHead>
-                        <TableHead>{t.plan}</TableHead>
-                        <TableHead>{t.startDate}</TableHead>
-                        <TableHead>{t.endDate}</TableHead>
-                        <TableHead>{t.status}</TableHead>
-                        <TableHead>{t.actions}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredSubscriptions.map((s) => (
-                        <TableRow key={s.id}>
-                          <TableCell className="font-semibold text-foreground">{s.memberName}</TableCell>
-                          <TableCell>{s.planName}</TableCell>
-                          <TableCell>{new Date(s.startDate).toLocaleDateString()}</TableCell>
-                          <TableCell>{s.endDate ? new Date(s.endDate).toLocaleDateString() : "-"}</TableCell>
-                          <TableCell>
-                            <Badge className={statusStyles[s.status]} variant="outline">
-                              {s.status === "ACTIVE"
-                                ? t.active
-                                : s.status === "PAUSED"
-                                ? t.paused
-                                : t.cancelled}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              {s.status === "ACTIVE" ? (
-                                <>
+                <div className="flex flex-col gap-4">
+                  {/* Desktop View Table */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t.member}</TableHead>
+                          <TableHead>{t.plan}</TableHead>
+                          <TableHead>{t.startDate}</TableHead>
+                          <TableHead>{t.endDate}</TableHead>
+                          <TableHead>{t.status}</TableHead>
+                          <TableHead>{t.actions}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredSubscriptions.map((s) => (
+                          <TableRow key={s.id}>
+                            <TableCell className="font-semibold text-foreground">{s.memberName}</TableCell>
+                            <TableCell>{s.planName}</TableCell>
+                            <TableCell>{new Date(s.startDate).toLocaleDateString()}</TableCell>
+                            <TableCell>{s.endDate ? new Date(s.endDate).toLocaleDateString() : "-"}</TableCell>
+                            <TableCell>
+                              <Badge className={statusStyles[s.status]} variant="outline">
+                                {s.status === "ACTIVE"
+                                  ? t.active
+                                  : s.status === "PAUSED"
+                                  ? t.paused
+                                  : t.cancelled}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                {s.status === "ACTIVE" ? (
+                                  <>
+                                    <Button
+                                      size="xs"
+                                      variant="outline"
+                                      onClick={() => handleSubscriptionAction(s.id, "pause")}
+                                      className="border-amber-500/25 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20"
+                                    >
+                                      {t.pauseButton}
+                                    </Button>
+                                    <Button
+                                      size="xs"
+                                      variant="outline"
+                                      onClick={() => handleSubscriptionAction(s.id, "cancel")}
+                                      className="border-red-500/25 bg-red-500/10 text-red-700 hover:bg-red-500/20"
+                                    >
+                                      {t.cancelButton}
+                                    </Button>
+                                  </>
+                                ) : s.status === "PAUSED" ? (
                                   <Button
                                     size="xs"
                                     variant="outline"
-                                    onClick={() => handleSubscriptionAction(s.id, "pause")}
-                                    className="border-amber-500/25 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20"
+                                    onClick={() => handleSubscriptionAction(s.id, "reactivate")}
+                                    className="border-emerald-500/25 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
                                   >
-                                    {t.pauseButton}
+                                    {t.reactivateButton}
                                   </Button>
-                                  <Button
-                                    size="xs"
-                                    variant="outline"
-                                    onClick={() => handleSubscriptionAction(s.id, "cancel")}
-                                    className="border-red-500/25 bg-red-500/10 text-red-700 hover:bg-red-500/20"
-                                  >
-                                    {t.cancelButton}
-                                  </Button>
-                                </>
-                              ) : s.status === "PAUSED" ? (
+                                ) : null}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile View: Grid of cards */}
+                  <div className="grid grid-cols-1 gap-4 md:hidden">
+                    {paginatedSubscriptions.map((s) => (
+                      <div key={s.id} className="p-4 rounded-xl border border-border bg-card shadow-sm space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-bold text-foreground">{s.memberName}</span>
+                          <Badge className={statusStyles[s.status]} variant="outline">
+                            {s.status === "ACTIVE"
+                              ? t.active
+                              : s.status === "PAUSED"
+                              ? t.paused
+                              : t.cancelled}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t.plan}</p>
+                          <p className="text-sm font-semibold text-foreground">{s.planName}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 py-2 border-t border-b border-border/40 text-xs">
+                          <div>
+                            <p className="text-[10px] text-muted-foreground font-bold">{t.startDate}</p>
+                            <p className="font-medium text-foreground mt-0.5">{new Date(s.startDate).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground font-bold">{t.endDate}</p>
+                            <p className="font-medium text-foreground mt-0.5">{s.endDate ? new Date(s.endDate).toLocaleDateString() : "-"}</p>
+                          </div>
+                        </div>
+                        <div className="flex justify-end pt-1">
+                          <div className="flex gap-2">
+                            {s.status === "ACTIVE" ? (
+                              <>
                                 <Button
                                   size="xs"
                                   variant="outline"
-                                  onClick={() => handleSubscriptionAction(s.id, "reactivate")}
-                                  className="border-emerald-500/25 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
+                                  onClick={() => handleSubscriptionAction(s.id, "pause")}
+                                  className="border-amber-500/25 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 text-[10px] font-bold px-2.5 py-1 h-7"
                                 >
-                                  {t.reactivateButton}
+                                  {t.pauseButton}
                                 </Button>
-                              ) : null}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                                <Button
+                                  size="xs"
+                                  variant="outline"
+                                  onClick={() => handleSubscriptionAction(s.id, "cancel")}
+                                  className="border-red-500/25 bg-red-500/10 text-red-700 hover:bg-red-500/20 text-[10px] font-bold px-2.5 py-1 h-7"
+                                >
+                                  {t.cancelButton}
+                                </Button>
+                              </>
+                            ) : s.status === "PAUSED" ? (
+                              <Button
+                                size="xs"
+                                variant="outline"
+                                onClick={() => handleSubscriptionAction(s.id, "reactivate")}
+                                className="border-emerald-500/25 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 text-[10px] font-bold px-2.5 py-1 h-7"
+                              >
+                                {t.reactivateButton}
+                              </Button>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Pagination controls */}
+                    {totalSubPages > 1 && (
+                      <div className="flex items-center justify-between pt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={subPage === 1}
+                          onClick={() => setSubPage((p) => Math.max(1, p - 1))}
+                          className="text-xs text-foreground cursor-pointer"
+                        >
+                          Anterior
+                        </Button>
+                        <span className="text-xs text-muted-foreground">
+                          Página {subPage} de {totalSubPages}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={subPage === totalSubPages}
+                          onClick={() => setSubPage((p) => Math.min(totalSubPages, p + 1))}
+                          className="text-xs text-foreground cursor-pointer"
+                        >
+                          Siguiente
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </TabsContent>

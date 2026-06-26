@@ -269,7 +269,7 @@ export const navigationGroups: NavGroup[] = [
   {
     id: "operations",
     labels: { es: "Operacion", en: "Operations", fr: "Operations" },
-    items: [navItem("dashboard"), navItem("pos"), navItem("access")],
+    items: [navItem("dashboard"), navItem("pos"), navItem("memberships"), navItem("access")],
   },
   {
     id: "logistics",
