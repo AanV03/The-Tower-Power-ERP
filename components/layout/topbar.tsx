@@ -64,9 +64,9 @@ export function Topbar({ locale }: { locale: Locale }) {
       }}
       role="banner"
     >
-      <div className="flex h-full w-full items-center gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="flex h-full w-full items-center gap-2 sm:gap-4 px-2 sm:px-6 lg:px-8">
         <button
-          className="topbar-icon-button inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-none text-sm font-medium"
+          className="topbar-icon-button inline-flex size-8 sm:size-10 shrink-0 items-center justify-center rounded-none text-sm font-medium"
           aria-label={dictionary.common.toggleSidebar}
           onClick={() => document.dispatchEvent(new CustomEvent("sidebar:toggle"))}
           type="button"
@@ -74,8 +74,9 @@ export function Topbar({ locale }: { locale: Locale }) {
           <Menu className="size-4" />
         </button>
 
-        <div className="flex min-w-0 flex-1 justify-start">
-          <div className="w-full max-w-xs sm:max-w-md xl:max-w-xl">
+        {/* Search: icon-only on mobile, full bar on sm+ */}
+        <div className="hidden sm:flex min-w-0 flex-1 justify-start">
+          <div className="w-full max-w-md xl:max-w-xl">
             <button
               className="glass-control relative flex h-10 w-full items-center gap-3 rounded-none px-4 text-left text-sm"
               onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
@@ -83,15 +84,23 @@ export function Topbar({ locale }: { locale: Locale }) {
               type="button"
             >
               <Search className="size-4 text-current" aria-hidden="true" />
-              <span className="flex-1 hidden sm:inline">{dictionary.common.searchPlaceholder}</span>
-              <kbd className="hidden h-5 items-center gap-1 border border-[var(--topbar-border-color,var(--sidebar-border-color))] bg-[var(--glass-control-bg)] px-1.5 font-mono text-[10px] font-medium text-current opacity-80 sm:inline-flex">
+              <span className="flex-1">{dictionary.common.searchPlaceholder}</span>
+              <kbd className="inline-flex h-5 items-center gap-1 border border-[var(--topbar-border-color,var(--sidebar-border-color))] bg-[var(--glass-control-bg)] px-1.5 font-mono text-[10px] font-medium text-current opacity-80">
                 <span className="text-xs">⌘</span>K
               </kbd>
             </button>
           </div>
         </div>
+        <button
+          className="topbar-icon-button inline-flex size-8 shrink-0 items-center justify-center rounded-none text-sm font-medium sm:hidden"
+          onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+          aria-label={dictionary.common.searchPlaceholder}
+          type="button"
+        >
+          <Search className="size-4" />
+        </button>
 
-        <div className="ml-auto flex shrink-0 items-center justify-end gap-2 sm:gap-4">
+        <div className="ml-auto flex shrink-0 items-center justify-end gap-1 sm:gap-3">
           {/* Notificaciones */}
           <NotificationsPopover locale={locale} />
 
@@ -99,7 +108,7 @@ export function Topbar({ locale }: { locale: Locale }) {
           <div ref={languageRef} className="relative">
             <button
               onClick={() => setLanguageOpen(!languageOpen)}
-              className="topbar-icon-button inline-flex h-10 w-10 items-center justify-center rounded-none text-sm font-medium"
+              className="topbar-icon-button inline-flex size-8 sm:size-10 items-center justify-center rounded-none text-sm font-medium"
               aria-label={dictionary.common.language}
               title={dictionary.common.language}
               aria-haspopup="menu"
@@ -154,14 +163,14 @@ export function Topbar({ locale }: { locale: Locale }) {
           <div ref={accountRef} className="relative">
             <button
               onClick={() => setAccountOpen(!accountOpen)}
-              className="topbar-icon-button inline-flex h-10 w-10 items-center justify-center rounded-none text-sm font-medium"
+              className="topbar-icon-button inline-flex size-8 sm:size-10 items-center justify-center rounded-none text-sm font-medium"
               aria-label={dictionary.common.account}
               aria-haspopup="menu"
               aria-expanded={accountOpen}
               aria-controls={accountOpen ? accountMenuId : undefined}
               type="button"
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-none text-sm font-medium text-current">
+              <div className="flex size-7 sm:size-9 items-center justify-center rounded-none text-sm font-medium text-current">
                 U
               </div>
             </button>

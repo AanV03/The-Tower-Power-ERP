@@ -17,7 +17,7 @@ export function NotificationsPopover({ locale = "es" }: { locale?: Locale }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger 
-        className="topbar-icon-button inline-flex size-10 items-center justify-center rounded-none text-sm font-medium"
+        className="topbar-icon-button inline-flex size-8 sm:size-10 items-center justify-center rounded-none text-sm font-medium"
         aria-label={dictionary.common.notifications}
         aria-haspopup="menu"
         aria-expanded="false"

@@ -12,7 +12,7 @@ export function ThemeToggle({ locale = "es" }: { locale?: Locale } = {}) {
       duration={450}
       aria-label={dictionary.common.theme}
       title={dictionary.common.theme}
-      className="topbar-icon-button inline-flex size-10 items-center justify-center rounded-none text-sm [&_svg]:size-4 [&_svg]:shrink-0"
+      className="topbar-icon-button inline-flex size-8 sm:size-10 items-center justify-center rounded-none text-sm [&_svg]:size-4 [&_svg]:shrink-0"
     />
   );
 }
