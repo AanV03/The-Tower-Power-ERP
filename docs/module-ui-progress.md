@@ -20,6 +20,12 @@ Este documento sirve como contexto rapido para continuar el rediseño frontend d
 |---|---|---|---|
 | Nomina y comisiones | `/[locale]/payroll` | Mejorado | Usa `PayrollDashboard` y componentes propios en `components/modules/payroll/`. Ya no depende de `ModulePage`. |
 | Especialistas | `/[locale]/specialists` | Mejorado | Rediseñado en rama `especialistas`. Incluye control center, dialogs de acciones, modelos de contrato, KPIs compactos y tabs para agenda/liquidaciones/directorio. |
+| Punto de venta | `/[locale]/pos` | Mejorado | Pantalla de caja operativa: caja activa, búsqueda de productos, carrito de compras, cálculo de cambio, comisión de tarjeta, checkout en tiempo real y decremento de stock. |
+| Membresias | `/[locale]/memberships` | Mejorado | CRUD completo para miembros, planes, renovaciones y suspensiones. Incorpora simulador interactivo de molinete y dropdowns responsivos de sucursales. |
+| Control de acceso | `/[locale]/access` | Mejorado | Monitor de accesos en tiempo real con estados online/offline de dispositivos y validador de suscripción activa. |
+| Finanzas | `/[locale]/finance` | Mejorado | Listado de facturas y transacciones con controles de scroll fijos en modales y paginación responsiva de tarjetas. |
+| RH | `/[locale]/hr` | Mejorado | Expedientes de colaboradores, control de asistencia time clock manual y listado de contratos vigentes/vencidos. |
+| Inventario | `/[locale]/inventory` | Mejorado | Control de existencias físicas por almacén, tablero Kanban de niveles críticos (Suficiente, Bajo, Sin Stock), gráficos de distribución con Recharts e impacto transaccional atómico en el Kardex. |
 
 ## Modulos parcialmente personalizados
 
@@ -33,12 +39,6 @@ Estos modulos siguen usando `ModulePage` directamente y por eso se ven estandari
 
 | Modulo | Ruta | Prioridad sugerida | Rediseño recomendado |
 |---|---|---:|---|
-| Punto de venta | `/[locale]/pos` | Alta | Pantalla de caja real: busqueda de producto, carrito, totales, pago, recibo, estado de caja. |
-| Membresias | `/[locale]/memberships` | Alta | CRUD operativo para miembros, planes, renovaciones, pausas y cobranza. |
-| Control de acceso | `/[locale]/access` | Alta | Monitor de accesos, validacion QR/biometria, denegados, dispositivos online/offline. |
-| Finanzas | `/[locale]/finance` | Alta | CxC/CxP, conciliacion, facturas, pagos, alertas de vencimiento. |
-| RH | `/[locale]/hr` | Media-alta | Expedientes, asistencia, turnos, contratos y acciones de personal. |
-| Inventario | `/[locale]/inventory` | Media-alta | Stock por sucursal, alertas, ajustes, mermas y traspasos. |
 | Catalogo | `/[locale]/catalog` | Media | CRUD de productos/categorias/SKU/costos/impuestos. |
 | Compras | `/[locale]/purchases` | Media | Flujo proveedor -> factura -> recepcion -> stock. |
 | Almacenes | `/[locale]/warehouse` | Media | Vista de almacenes, movimientos, transferencias y stock critico. |

@@ -8,7 +8,7 @@ import { created, fail, ok } from "@/lib/api/response";
 const CreateMovementSchema = z.object({
   warehouseId: z.string(),
   productId: z.string(),
-  type: z.enum(InventoryMovementType),
+  type: z.nativeEnum(InventoryMovementType),
   quantity: z.coerce.number().positive(),
   unitCost: z.coerce.number().nonnegative().optional(),
   sourceType: z.string().trim().max(80).optional(),
@@ -49,17 +49,46 @@ export async function POST(request: Request) {
     const context = await requireApiContext({ moduleId: "warehouse" });
     const data = CreateMovementSchema.parse(await request.json());
 
-    const movement = await prisma.inventoryMovement.create({
-      data: {
-        tenantId: context.tenantId,
-        warehouseId: data.warehouseId,
-        productId: data.productId,
-        type: data.type,
-        quantity: new Prisma.Decimal(data.quantity),
-        unitCost: data.unitCost === undefined ? undefined : new Prisma.Decimal(data.unitCost),
-        sourceType: data.sourceType,
-        sourceId: data.sourceId,
-      },
+    const movement = await prisma.$transaction(async (tx) => {
+      const qtyDecimal = new Prisma.Decimal(data.quantity);
+
+      const m = await tx.inventoryMovement.create({
+        data: {
+          tenantId: context.tenantId,
+          warehouseId: data.warehouseId,
+          productId: data.productId,
+          type: data.type,
+          quantity: qtyDecimal,
+          unitCost: data.unitCost === undefined ? undefined : new Prisma.Decimal(data.unitCost),
+          sourceType: data.sourceType,
+          sourceId: data.sourceId,
+        },
+      });
+
+      const isIncrement = ["PURCHASE", "TRANSFER_IN", "ADJUSTMENT"].includes(data.type);
+
+      await tx.inventoryItem.upsert({
+        where: {
+          tenantId_warehouseId_productId: {
+            tenantId: context.tenantId,
+            warehouseId: data.warehouseId,
+            productId: data.productId,
+          },
+        },
+        update: {
+          quantityOnHand: isIncrement ? { increment: qtyDecimal } : { decrement: qtyDecimal },
+        },
+        create: {
+          tenantId: context.tenantId,
+          warehouseId: data.warehouseId,
+          productId: data.productId,
+          quantityOnHand: isIncrement ? qtyDecimal : new Prisma.Decimal(0),
+          quantityReserved: new Prisma.Decimal(0),
+          reorderPoint: new Prisma.Decimal(0),
+        },
+      });
+
+      return m;
     });
 
     return created(movement);

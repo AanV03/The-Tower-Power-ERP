@@ -1,4 +1,4 @@
-import { ModulePage } from "@/components/shared/module-page";
+import { InventoryDashboard } from "@/components/modules/inventory/inventory-dashboard";
 import type { Locale } from "@/lib/i18n";
 
 export default async function InventoryPage({
@@ -7,5 +7,5 @@ export default async function InventoryPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  return <ModulePage moduleId="inventory" locale={locale as Locale} />;
+  return <InventoryDashboard locale={locale as Locale} />;
 }
