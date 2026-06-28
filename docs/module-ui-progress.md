@@ -28,6 +28,7 @@ Este documento sirve como contexto rapido para continuar el rediseño frontend d
 | Inventario | `/[locale]/inventory` | Mejorado | Control de existencias físicas por almacén, tablero Kanban de niveles críticos (Suficiente, Bajo, Sin Stock), gráficos de distribución con Recharts e impacto transaccional atómico en el Kardex. |
 | Almacenes | `/[locale]/warehouse` | Mejorado | CRUD completo de almacenes/bodegas físicas, vinculación por sucursal, KPIs consolidados, gráficos de capacidad y paginación unificada. |
 | Catálogo | `/[locale]/catalog` | Mejorado | CRUD completo de productos y categorías con biblioteca de imágenes deportivas predefinidas, vista de catálogo visual en tarjetas e integración de gráficos y KPIs. |
+| Marketing | `/[locale]/marketing` | Mejorado | Gráfico de área multi-serie de rendimiento de campañas, panel de churn con intervenciones, embudo de conversión con barras animadas, tarjetas de campaña con sparklines y flujo de automatización con nodos pulsantes. |
 
 ## Modulos parcialmente personalizados
 
@@ -43,7 +44,6 @@ Estos modulos siguen usando `ModulePage` directamente y por eso se ven estandari
 |---|---|---:|---|
 | Compras | `/[locale]/purchases` | Media | Flujo proveedor -> factura -> recepcion -> stock. |
 | Contabilidad | `/[locale]/accounting` | Media | Editor de polizas con debito/credito, cuadre y estados. |
-| Marketing | `/[locale]/marketing` | Media | Embudo CRM, segmentos, campanas y churn/intervenciones. |
 | Analytics | `/[locale]/analytics` | Media | BI con filtros, comparativos, reportes y snapshots. |
 | Integraciones | `/[locale]/integrations` | Baja-media | Consola tecnica de eventos, outbox, reintentos y webhooks. |
 | Mantenimiento | `/[locale]/maintenance` | Baja-media | Tablero de tickets, prioridad, asignacion y estados. |

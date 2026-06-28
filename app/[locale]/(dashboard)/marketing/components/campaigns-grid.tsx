@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mail, MessageSquare, Share2, Play, Pause, BarChart3 } from "lucide-react";
+import { Mail, MessageSquare, Share2, Play, Pause, BarChart3, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 
 type Campaign = {
@@ -16,6 +16,56 @@ type Campaign = {
   openRate: number;
   clickRate: number;
   conversion: number;
+};
+
+// Simulated sparkline data per campaign
+const SPARKLINES: Record<string, number[]> = {
+  "1": [40, 65, 58, 72, 68, 80, 75, 90],
+  "2": [0, 0, 0, 0, 0, 0, 0, 0],
+  "3": [30, 45, 52, 48, 55, 50, 60, 64],
+  "4": [20, 18, 22, 25, 21, 19, 23, 26],
+};
+
+const CHANNEL_STYLES: Record<Campaign["channel"], { icon: React.ReactNode; border: string; bg: string; label: string }> = {
+  email: {
+    icon: <Mail className="size-4" aria-hidden="true" />,
+    border: "border-blue-500/30 hover:border-blue-500/60",
+    bg: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    label: "Email",
+  },
+  sms: {
+    icon: <MessageSquare className="size-4" aria-hidden="true" />,
+    border: "border-emerald-500/30 hover:border-emerald-500/60",
+    bg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    label: "SMS",
+  },
+  social: {
+    icon: <Share2 className="size-4" aria-hidden="true" />,
+    border: "border-purple-500/30 hover:border-purple-500/60",
+    bg: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+    label: "Social",
+  },
+};
+
+const MiniSparkline = ({ data, color }: { data: number[]; color: string }) => {
+  const max = Math.max(...data, 1);
+  const points = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * 100;
+    const y = 100 - (v / max) * 100;
+    return `${x},${y}`;
+  });
+  return (
+    <svg width="56" height="24" viewBox="0 0 100 100" preserveAspectRatio="none" className="opacity-70">
+      <polyline
+        points={points.join(" ")}
+        fill="none"
+        stroke={color}
+        strokeWidth="8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 };
 
 export function CampaignsGrid({
@@ -80,7 +130,7 @@ export function CampaignsGrid({
       channel: "social",
       status: "paused",
       sent: 8430,
-      openRate: 0, // Click-through impressions instead
+      openRate: 0,
       clickRate: 3.2,
       conversion: 1.8,
     },
@@ -101,27 +151,33 @@ export function CampaignsGrid({
     );
   };
 
-  const getChannelIcon = (channel: Campaign["channel"]) => {
-    switch (channel) {
-      case "email":
-        return <Mail className="w-4 h-4 text-[var(--color-primary)]" aria-hidden="true" />;
-      case "sms":
-        return <MessageSquare className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />;
-      case "social":
-        return <Share2 className="w-4 h-4 text-sky-500" aria-hidden="true" />;
-    }
-  };
-
   const getStatusBadge = (status: Campaign["status"]) => {
     switch (status) {
       case "active":
-        return <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">{translations.status.active}</Badge>;
+        return (
+          <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 gap-1">
+            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            {translations.status.active}
+          </Badge>
+        );
       case "draft":
         return <Badge variant="outline">{translations.status.draft}</Badge>;
       case "scheduled":
-        return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">{translations.status.scheduled}</Badge>;
+        return (
+          <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400">
+            {translations.status.scheduled}
+          </Badge>
+        );
       case "paused":
         return <Badge variant="destructive">{translations.status.paused}</Badge>;
+    }
+  };
+
+  const getSparklineColor = (channel: Campaign["channel"]) => {
+    switch (channel) {
+      case "email": return "#3b82f6";
+      case "sms": return "#10b981";
+      case "social": return "#a855f7";
     }
   };
 
@@ -132,75 +188,85 @@ export function CampaignsGrid({
           <CardTitle>{translations.title}</CardTitle>
           <CardDescription>{translations.description}</CardDescription>
         </div>
+        <TrendingUp className="size-5 text-muted-foreground" />
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
-        {campaigns.map((campaign) => (
-          <div
-            key={campaign.id}
-            className="flex flex-col justify-between p-4 rounded-xl border border-foreground/10 bg-[rgba(var(--glass-bg),0.01)] hover:border-foreground/20 transition-all shadow-xs"
-          >
-            {/* Header info */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="p-1.5 rounded-lg bg-foreground/5">{getChannelIcon(campaign.channel)}</span>
-                  <span className="font-semibold text-foreground line-clamp-1">{campaign.name}</span>
+        {campaigns.map((campaign) => {
+          const channelStyle = CHANNEL_STYLES[campaign.channel];
+          const sparkData = SPARKLINES[campaign.id] ?? [0];
+          return (
+            <div
+              key={campaign.id}
+              className={`flex flex-col justify-between p-4 rounded-xl border transition-all duration-200 shadow-xs ${channelStyle.border} bg-card/50 hover:bg-card`}
+            >
+              {/* Header info */}
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`p-1.5 rounded-lg ${channelStyle.bg} shrink-0`}>
+                      {channelStyle.icon}
+                    </span>
+                    <span className="font-semibold text-foreground text-sm line-clamp-2 leading-tight">{campaign.name}</span>
+                  </div>
+                  <div className="shrink-0">{getStatusBadge(campaign.status)}</div>
                 </div>
-                {getStatusBadge(campaign.status)}
-              </div>
 
-              {/* Stats grid */}
-              <div className="grid grid-cols-4 gap-1 text-center py-2 bg-foreground/2 rounded-lg text-xs border border-foreground/5">
-                <div>
-                  <div className="text-muted-foreground">{translations.metrics.sent}</div>
-                  <div className="font-mono font-medium text-foreground">{campaign.sent.toLocaleString()}</div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground">{translations.metrics.openRate}</div>
-                  <div className="font-mono font-medium text-foreground">
-                    {campaign.channel === "social" ? "—" : `${campaign.openRate}%`}
+                {/* Stats grid */}
+                <div className="grid grid-cols-4 gap-1 text-center py-2 bg-muted/30 rounded-lg text-xs border border-border/40">
+                  <div>
+                    <div className="text-muted-foreground text-[10px]">{translations.metrics.sent}</div>
+                    <div className="font-mono font-semibold text-foreground">{campaign.sent.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground text-[10px]">{translations.metrics.openRate}</div>
+                    <div className="font-mono font-semibold text-foreground">
+                      {campaign.channel === "social" ? "—" : `${campaign.openRate}%`}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground text-[10px]">{translations.metrics.clickRate}</div>
+                    <div className="font-mono font-semibold text-foreground">{campaign.clickRate}%</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground text-[10px]">{translations.metrics.conversion}</div>
+                    <div className="font-mono font-semibold text-foreground">{campaign.conversion}%</div>
                   </div>
                 </div>
-                <div>
-                  <div className="text-muted-foreground">{translations.metrics.clickRate}</div>
-                  <div className="font-mono font-medium text-foreground">{campaign.clickRate}%</div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground">{translations.metrics.conversion}</div>
-                  <div className="font-mono font-medium text-foreground">{campaign.conversion}%</div>
+              </div>
+
+              {/* Actions + sparkline */}
+              <div className="flex items-center justify-between gap-2 mt-3">
+                <MiniSparkline data={sparkData} color={getSparklineColor(campaign.channel)} />
+                <div className="flex items-center gap-1.5">
+                  {(campaign.status === "active" || campaign.status === "paused") && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleStatus(campaign.id)}
+                      className="h-7 gap-1 text-xs"
+                    >
+                      {campaign.status === "active" ? (
+                        <>
+                          <Pause className="size-3" aria-hidden="true" />
+                          {translations.actions.pause}
+                        </>
+                      ) : (
+                        <>
+                          <Play className="size-3" aria-hidden="true" />
+                          {translations.actions.resume}
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs hover:bg-muted">
+                    <BarChart3 className="size-3" aria-hidden="true" />
+                    {translations.actions.viewDetails}
+                  </Button>
                 </div>
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-2 mt-4">
-              {(campaign.status === "active" || campaign.status === "paused") && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => toggleStatus(campaign.id)}
-                  className="h-8 gap-1"
-                >
-                  {campaign.status === "active" ? (
-                    <>
-                      <Pause className="w-3.5 h-3.5" aria-hidden="true" />
-                      <span>{translations.actions.pause}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-3.5 h-3.5" aria-hidden="true" />
-                      <span>{translations.actions.resume}</span>
-                    </>
-                  )}
-                </Button>
-              )}
-              <Button variant="ghost" size="sm" className="h-8 gap-1 hover:bg-foreground/5">
-                <BarChart3 className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>{translations.actions.viewDetails}</span>
-              </Button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </CardContent>
     </Card>
   );
