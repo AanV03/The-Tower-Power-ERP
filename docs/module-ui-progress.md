@@ -26,6 +26,7 @@ Este documento sirve como contexto rapido para continuar el rediseño frontend d
 | Finanzas | `/[locale]/finance` | Mejorado | Listado de facturas y transacciones con controles de scroll fijos en modales y paginación responsiva de tarjetas. |
 | RH | `/[locale]/hr` | Mejorado | Expedientes de colaboradores, control de asistencia time clock manual y listado de contratos vigentes/vencidos. |
 | Inventario | `/[locale]/inventory` | Mejorado | Control de existencias físicas por almacén, tablero Kanban de niveles críticos (Suficiente, Bajo, Sin Stock), gráficos de distribución con Recharts e impacto transaccional atómico en el Kardex. |
+| Almacenes | `/[locale]/warehouse` | Mejorado | CRUD completo de almacenes/bodegas físicas, vinculación por sucursal, KPIs consolidados, gráficos de capacidad y paginación unificada. |
 
 ## Modulos parcialmente personalizados
 
@@ -41,7 +42,6 @@ Estos modulos siguen usando `ModulePage` directamente y por eso se ven estandari
 |---|---|---:|---|
 | Catalogo | `/[locale]/catalog` | Media | CRUD de productos/categorias/SKU/costos/impuestos. |
 | Compras | `/[locale]/purchases` | Media | Flujo proveedor -> factura -> recepcion -> stock. |
-| Almacenes | `/[locale]/warehouse` | Media | Vista de almacenes, movimientos, transferencias y stock critico. |
 | Contabilidad | `/[locale]/accounting` | Media | Editor de polizas con debito/credito, cuadre y estados. |
 | Marketing | `/[locale]/marketing` | Media | Embudo CRM, segmentos, campanas y churn/intervenciones. |
 | Analytics | `/[locale]/analytics` | Media | BI con filtros, comparativos, reportes y snapshots. |
