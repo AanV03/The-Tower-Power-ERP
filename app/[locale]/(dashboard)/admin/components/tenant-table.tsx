@@ -6,6 +6,34 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n";
 
+// Simple SVG sparkline component
+function Sparkline({ data, color }: { data: number[], color: string }) {
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const width = 60;
+  const height = 24;
+  
+  const points = data.map((val, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((val - min) / range) * height;
+    return `${x},${y}`;
+  }).join(" ");
+
+  return (
+    <svg width={width} height={height} className="overflow-visible">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export interface Tenant {
   id: string;
   name: string;
@@ -14,6 +42,7 @@ export interface Tenant {
   status: "Active" | "Suspended" | "Trial";
   createdAt: string;
   modules: string[];
+  activityData?: number[]; // For sparkline
 }
 
 interface TenantTableProps {
@@ -154,6 +183,7 @@ export function TenantTable({ tenants, onEdit, onAdd, locale, dict }: TenantTabl
                 <th className="px-4 py-3">{dict.adminSaas.subdomain}</th>
                 <th className="px-4 py-3">{dict.adminSaas.plan}</th>
                 <th className="px-4 py-3">{dict.adminSaas.status}</th>
+                <th className="px-4 py-3">Actividad (30d)</th>
                 <th className="px-4 py-3">{dict.adminSaas.modulesConfig}</th>
                 <th className="px-4 py-3">{dict.adminSaas.creationDate}</th>
                 <th className="px-4 py-3 text-right">{dict.adminSaas.actions}</th>
@@ -167,8 +197,10 @@ export function TenantTable({ tenants, onEdit, onAdd, locale, dict }: TenantTabl
                     className="hover:bg-muted/30 transition-colors group cursor-pointer"
                     onClick={() => onEdit(tenant)}
                   >
-                    <td className="px-4 py-3.5 font-semibold text-foreground flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-[var(--sidebar-accent-active)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <td className="px-4 py-3.5 font-semibold text-foreground flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-xs font-bold text-muted-foreground border border-border shrink-0">
+                        {tenant.name.substring(0, 2).toUpperCase()}
+                      </div>
                       {tenant.name}
                     </td>
                     <td className="px-4 py-3.5 font-mono text-xs text-muted-foreground">
@@ -179,6 +211,12 @@ export function TenantTable({ tenants, onEdit, onAdd, locale, dict }: TenantTabl
                     </td>
                     <td className="px-4 py-3.5">{getPlanBadge(tenant.plan)}</td>
                     <td className="px-4 py-3.5">{getStatusBadge(tenant.status)}</td>
+                    <td className="px-4 py-3.5">
+                      <Sparkline 
+                        data={tenant.activityData || Array.from({length: 10}, () => Math.floor(Math.random() * 100))} 
+                        color={tenant.status === "Active" ? "currentColor" : "var(--muted-foreground)"} 
+                      />
+                    </td>
                     <td className="px-4 py-3.5 text-xs text-muted-foreground font-medium">
                       <span className="bg-muted px-2 py-0.5 rounded border border-border">
                         {tenant.modules.length} / 18 módulos

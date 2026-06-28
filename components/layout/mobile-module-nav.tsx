@@ -23,12 +23,40 @@ function MobileDrawer({
 }) {
   const dictionary = getDictionary(locale);
 
+  const [logoUrl, setLogoUrl] = useState<string>("");
+
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [open]);
+
+  useEffect(() => {
+    const onBrandUpdate = (e: Event) => {
+      if (e instanceof CustomEvent && e.detail) {
+        setLogoUrl(e.detail.logoUrl || "");
+      }
+    };
+
+    const onBrandReset = () => setLogoUrl("");
+
+    // Load initial logo
+    try {
+      const raw = localStorage.getItem("gerpy-brand-colors");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.logoUrl) setLogoUrl(parsed.logoUrl);
+      }
+    } catch { /* ignore */ }
+
+    document.addEventListener("brand:update", onBrandUpdate);
+    document.addEventListener("brand:reset", onBrandReset);
+    return () => {
+      document.removeEventListener("brand:update", onBrandUpdate);
+      document.removeEventListener("brand:reset", onBrandReset);
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -52,12 +80,20 @@ function MobileDrawer({
     >
       <div className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--sidebar-border-color)] px-5">
         <div className="flex items-center gap-3">
-          <div
-            className="flex h-10 w-12 items-center justify-center rounded-none text-sm font-bold"
-            style={{ backgroundColor: "var(--brand-yellow)", color: "var(--brand-ink)" }}
-          >
-            {defaultBrand.logoText}
-          </div>
+          {logoUrl ? (
+            <img 
+              src={logoUrl} 
+              alt="Brand Logo" 
+              className="h-10 w-12 object-contain" 
+            />
+          ) : (
+            <div
+              className="flex h-10 w-12 items-center justify-center rounded-none text-sm font-bold"
+              style={{ backgroundColor: "var(--brand-yellow)", color: "var(--brand-ink)" }}
+            >
+              {defaultBrand.logoText}
+            </div>
+          )}
           <div>
             <p id="mobile-module-menu-title" className="text-sm font-semibold">
               {defaultBrand.name}

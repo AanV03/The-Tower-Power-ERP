@@ -11,6 +11,7 @@ import {
   type BrandColors,
 } from "@/components/branding/brand-color-applier";
 import { defaultLocale, formatMessage, getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { Upload, Trash2, Image as ImageIcon } from "lucide-react";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -229,6 +230,41 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
     document.dispatchEvent(new CustomEvent("brand:reset"));
   };
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.size > 2 * 1024 * 1024) {
+      alert("El logo no debe superar los 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setColors((prev) => {
+        const next = { ...prev, logoUrl: base64 };
+        try {
+          persistColors(next);
+          document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
+        } catch { /* ignore */ }
+        return next;
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    setColors((prev) => {
+      const next = { ...prev, logoUrl: "" };
+      try {
+        persistColors(next);
+        document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
+      } catch { /* ignore */ }
+      return next;
+    });
+  };
+
   return (
     <section
       aria-label={t.title}
@@ -289,6 +325,51 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
             changeColorTitle={t.changeColorTitle}
           />
         ))}
+      </div>
+
+      {/* ── Logo Upload ── */}
+      <div className="border-t border-border bg-card px-6 py-5">
+        <label htmlFor="logo-upload" className="text-sm font-semibold leading-none text-card-foreground block mb-3">
+          Logotipo de la Empresa
+        </label>
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div className="relative w-24 h-24 rounded-xl border-2 border-dashed border-border flex items-center justify-center bg-muted/20 overflow-hidden group">
+            {colors.logoUrl ? (
+              <>
+                <img src={colors.logoUrl} alt="Logo" className="w-full h-full object-contain p-2" />
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={handleRemoveLogo} className="p-2 bg-destructive text-destructive-foreground rounded-full hover:scale-105 transition-transform">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-muted-foreground gap-1">
+                <ImageIcon className="w-6 h-6 opacity-50" />
+                <span className="text-[10px] font-medium uppercase tracking-wider">Vacio</span>
+              </div>
+            )}
+          </div>
+          <div className="space-y-2 flex-1">
+            <p className="text-xs text-muted-foreground max-w-sm">
+              Sube el logo corporativo del tenant. Este reemplazará al texto &quot;GE&quot; en la barra lateral.
+              Se recomiendan imágenes cuadradas o transparentes (PNG/SVG) menores a 2MB.
+            </p>
+            <div className="relative">
+              <input
+                id="logo-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              <button type="button" className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg text-sm font-medium transition-colors">
+                <Upload className="w-4 h-4" />
+                Subir Imagen
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── Contraste y Fuentes ── */}

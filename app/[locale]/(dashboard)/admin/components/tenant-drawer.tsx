@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Shield, Settings, Check } from "lucide-react";
+import { X, Shield, Settings, Check, Database, Cpu, Activity } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import type { Tenant } from "./tenant-table";
 import type { Locale } from "@/lib/i18n";
@@ -147,6 +147,44 @@ export function TenantDrawer({ isOpen, onClose, tenant, onSave, locale, dict }: 
               </select>
             </div>
           </div>
+
+          {/* Simulated Resource Consumption (Premium UI touch) */}
+          {tenant && (
+            <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-4">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <Activity className="w-3.5 h-3.5" /> Consumo de Recursos
+              </h4>
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 font-medium"><Database className="w-3.5 h-3.5 text-blue-500" /> Almacenamiento</span>
+                    <span className="text-muted-foreground">64% (3.2 / 5 GB)</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                    <div className="h-full bg-blue-500 rounded-full" style={{ width: "64%" }} />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 font-medium"><Cpu className="w-3.5 h-3.5 text-emerald-500" /> CPU Promedio (7d)</span>
+                    <span className="text-muted-foreground">32%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: "32%" }} />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 font-medium"><Activity className="w-3.5 h-3.5 text-orange-500" /> Límites de API</span>
+                    <span className="text-muted-foreground font-semibold text-orange-500">89%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                    <div className="h-full bg-orange-500 rounded-full" style={{ width: "89%" }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Enabled Modules (Grid of check cards) */}
           <div className="space-y-3">

@@ -32,12 +32,12 @@ Este documento sirve como contexto rapido para continuar el rediseño frontend d
 | Analytics | `/[locale]/analytics` | Mejorado | 3 tabs (Resumen/Sucursales/Reportes), gráfico de barras comparativo por sucursal, panel de snapshots de periodos (MoM/WoW/DoD) con deltas visuales, KPI cards con sparklines siempre visibles. |
 | Compras | `/[locale]/purchases` | Mejorado | Flujo modularizado en 4 tabs: Dashboard, Proveedores, Órdenes & Stock, Facturación (CxP). Se eliminó el scroll infinito y se mantuvo trazabilidad en cada paso. |
 | Contabilidad | `/[locale]/accounting` | Mejorado | Editor interactivo de pólizas con validación de cuadre (Débito/Crédito) en tiempo real, soporte multi-línea, y un panel lateral con historial de pólizas. |
+| SaaS Admin | `/[locale]/admin` | Mejorado | Panel `BrandingPanel` para custom colors y subida de Logo dinámico, tabla de Inquilinos con sparklines, drawer con panel simulado de consumo de recursos y consola `AuditLogsConsole`. |
 
 ## Modulos parcialmente personalizados
 
 | Modulo | Ruta | Estado | Notas |
 |---|---|---|---|
-| SaaS Admin | `/[locale]/admin` | Parcial | Usa `ModulePage`, pero agrega `BrandingPanel`. Pendiente convertirlo en consola SaaS completa para tenants, plan, modulos y white-label persistente. |
 
 ## Modulos pendientes
 

@@ -20,6 +20,7 @@ export type BrandColors = {
   radius: string;       // rem  — kept for future UI
   contrast?: "normal" | "medium" | "high";
   font?: "default" | "serif" | "mono" | "elegant";
+  logoUrl?: string;     // base64 encoded logo image
 };
 
 export const DEFAULT_BRAND_COLORS: BrandColors = {
@@ -31,6 +32,7 @@ export const DEFAULT_BRAND_COLORS: BrandColors = {
   radius: "0.625rem",
   contrast: "normal",
   font: "default",
+  logoUrl: "",
 };
 
 export function normalizeBrandColors(colors: Partial<BrandColors> | null | undefined): BrandColors {

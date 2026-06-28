@@ -22,6 +22,8 @@ export function AppSidebar({ locale }: { locale: Locale }) {
     }
   });
 
+  const [logoUrl, setLogoUrl] = useState<string>("");
+
   useEffect(() => {
     const onToggle = () => {
       setCollapsed((prev) => {
@@ -47,11 +49,32 @@ export function AppSidebar({ locale }: { locale: Locale }) {
       }
     };
 
+    const onBrandUpdate = (e: Event) => {
+      if (e instanceof CustomEvent && e.detail) {
+        setLogoUrl(e.detail.logoUrl || "");
+      }
+    };
+
+    const onBrandReset = () => setLogoUrl("");
+
+    // Load initial logo
+    try {
+      const raw = localStorage.getItem("gerpy-brand-colors");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.logoUrl) setLogoUrl(parsed.logoUrl);
+      }
+    } catch { /* ignore */ }
+
     document.addEventListener("sidebar:toggle", onToggle);
     document.addEventListener("sidebar:set", onSet as EventListener);
+    document.addEventListener("brand:update", onBrandUpdate);
+    document.addEventListener("brand:reset", onBrandReset);
     return () => {
       document.removeEventListener("sidebar:toggle", onToggle);
       document.removeEventListener("sidebar:set", onSet as EventListener);
+      document.removeEventListener("brand:update", onBrandUpdate);
+      document.removeEventListener("brand:reset", onBrandReset);
     };
   }, []);
 
@@ -77,12 +100,20 @@ export function AppSidebar({ locale }: { locale: Locale }) {
         aria-label={dictionary.common.primaryNavigation}
       >
         <div className={cn("flex h-16 items-center gap-3 border-b border-[var(--sidebar-border-color)]", collapsed ? "justify-center px-2" : "px-5")}>
-          <div
-            className={cn("flex items-center justify-center rounded-none text-sm font-bold", collapsed ? "h-10 w-10 text-base" : "h-10 w-12")}
-            style={{ backgroundColor: "var(--brand-yellow)", color: "var(--brand-ink)" }}
-          >
-            {defaultBrand.logoText}
-          </div>
+          {logoUrl ? (
+            <img 
+              src={logoUrl} 
+              alt="Brand Logo" 
+              className={cn("object-contain", collapsed ? "h-8 w-8" : "h-10 w-12")} 
+            />
+          ) : (
+            <div
+              className={cn("flex items-center justify-center rounded-none text-sm font-bold", collapsed ? "h-10 w-10 text-base" : "h-10 w-12")}
+              style={{ backgroundColor: "var(--brand-yellow)", color: "var(--brand-ink)" }}
+            >
+              {defaultBrand.logoText}
+            </div>
+          )}
           {!collapsed && (
             <div>
               <p className="text-sm font-semibold">{defaultBrand.name}</p>
