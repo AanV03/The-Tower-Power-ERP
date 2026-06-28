@@ -31,6 +31,7 @@ Este documento sirve como contexto rapido para continuar el rediseño frontend d
 | Marketing | `/[locale]/marketing` | Mejorado | Gráfico de área multi-serie de rendimiento de campañas, panel de churn con intervenciones, embudo de conversión con barras animadas, tarjetas de campaña con sparklines y flujo de automatización con nodos pulsantes. |
 | Analytics | `/[locale]/analytics` | Mejorado | 3 tabs (Resumen/Sucursales/Reportes), gráfico de barras comparativo por sucursal, panel de snapshots de periodos (MoM/WoW/DoD) con deltas visuales, KPI cards con sparklines siempre visibles. |
 | Compras | `/[locale]/purchases` | Mejorado | Flujo modularizado en 4 tabs: Dashboard, Proveedores, Órdenes & Stock, Facturación (CxP). Se eliminó el scroll infinito y se mantuvo trazabilidad en cada paso. |
+| Contabilidad | `/[locale]/accounting` | Mejorado | Editor interactivo de pólizas con validación de cuadre (Débito/Crédito) en tiempo real, soporte multi-línea, y un panel lateral con historial de pólizas. |
 
 ## Modulos parcialmente personalizados
 
@@ -44,7 +45,6 @@ Estos modulos siguen usando `ModulePage` directamente y por eso se ven estandari
 
 | Modulo | Ruta | Prioridad sugerida | Rediseño recomendado |
 |---|---|---:|---|
-| Contabilidad | `/[locale]/accounting` | Media | Editor de polizas con debito/credito, cuadre y estados. |
 | Integraciones | `/[locale]/integrations` | Baja-media | Consola tecnica de eventos, outbox, reintentos y webhooks. |
 | Mantenimiento | `/[locale]/maintenance` | Baja-media | Tablero de tickets, prioridad, asignacion y estados. |
 | Panel operativo | `/[locale]/dashboard` | Media | Dashboard ejecutivo con alertas reales, drill-downs y comparativos por sucursal. |

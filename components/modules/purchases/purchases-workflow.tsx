@@ -612,26 +612,24 @@ export function PurchasesWorkflow({ locale }: { locale: Locale }) {
   return (
     <section className="erp-section space-y-6" role="main" aria-label={copy[locale].title}>
       {/* Header General */}
-      <div className="overflow-hidden rounded-[28px] border border-border/70 bg-[linear-gradient(135deg,rgba(2,48,71,0.06),rgba(251,133,0,0.08),rgba(255,255,255,0.78))] p-6 shadow-sm ring-1 ring-foreground/5 dark:bg-[linear-gradient(135deg,rgba(2,48,71,0.22),rgba(251,133,0,0.16),rgba(15,23,42,0.88))] sm:p-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">Supply Chain</Badge>
-              <Badge variant="outline">CxP</Badge>
-              <Badge variant="outline">Recepción</Badge>
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                {copy[locale].title}
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                {copy[locale].subtitle}
-              </p>
-            </div>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/40 pb-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 mb-2">
+            <Badge variant="secondary">Supply Chain</Badge>
+            <Badge variant="outline">CxP</Badge>
+            <Badge variant="outline">Recepción</Badge>
           </div>
-          <div className="rounded-2xl border border-border/70 bg-background/90 px-4 py-3 shadow-xs backdrop-blur-sm">
-            <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{copy[locale].stepLabel}</p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            {copy[locale].title}
+          </h1>
+          <p className="text-sm leading-6 text-muted-foreground">
+            {copy[locale].subtitle}
+          </p>
+        </div>
+        <div className="shrink-0 flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">{copy[locale].stepLabel}</p>
+            <p className="text-sm font-medium text-foreground">
               {workflowSteps[0].label[locale]} → {workflowSteps[1].label[locale]} → {workflowSteps[2].label[locale]}
             </p>
           </div>
