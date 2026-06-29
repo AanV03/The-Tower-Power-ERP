@@ -1,9 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Forge Your Legacy | Elite Gym",
-  description: "High-performance training facility.",
+  title: "Gerpy ERP | Gym Operations Platform",
+  description: "ERP software for gym memberships, billing, access, inventory, payroll, and analytics.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -12,9 +17,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       {/* antialiased makes text render much sharper on dark backgrounds */}
-      <body className="bg-zinc-950 text-white antialiased">
+      <body className="bg-zinc-950 text-white antialiased" suppressHydrationWarning>
         {children}
       </body>
     </html>

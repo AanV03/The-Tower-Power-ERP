@@ -1,28 +1,34 @@
-import React from "react";
+import { Download, Save, SlidersHorizontal } from "lucide-react";
 
 export default function FilterBar() {
   return (
-    <div className="w-full z-10 relative">
-      <div className="bg-card text-card-foreground p-3 rounded-xl border border-border shadow-xs flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <label htmlFor="rango-select" className="text-sm text-muted-foreground" aria-hidden>
-            Rango
+    <div className="relative z-10 w-full">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/95 p-3 text-card-foreground shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-[var(--brand-orange)]/10 text-[var(--brand-orange)]">
+            <SlidersHorizontal className="size-4" aria-hidden="true" />
+          </div>
+          <label htmlFor="range-select" className="text-sm font-medium text-muted-foreground">
+            Range
           </label>
           <select
-            id="rango-select"
-            className="text-sm bg-transparent border-none outline-none focus:ring-0 cursor-pointer font-medium text-foreground"
+            id="range-select"
+            className="cursor-pointer rounded-lg border border-input bg-background px-3 py-2 text-sm font-semibold text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30"
           >
-            <option className="bg-card text-foreground">Últimos 7 días</option>
-            <option className="bg-card text-foreground">Últimos 30 días</option>
-            <option className="bg-card text-foreground">Este año</option>
+            <option>Last 7 days</option>
+            <option>Last 30 days</option>
+            <option>This year</option>
           </select>
         </div>
-        <div className="flex items-center gap-4">
-          <button className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium cursor-pointer">
-            Exportar
+
+        <div className="flex items-center gap-2">
+          <button className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" type="button">
+            <Download className="size-4" aria-hidden="true" />
+            Export
           </button>
-          <button className="text-sm text-primary hover:brightness-110 font-semibold transition-all cursor-pointer">
-            Guardar vista
+          <button className="inline-flex items-center gap-2 rounded-lg bg-[var(--brand-orange)] px-3 py-2 text-sm font-bold text-black transition-all hover:brightness-110" type="button">
+            <Save className="size-4" aria-hidden="true" />
+            Save view
           </button>
         </div>
       </div>

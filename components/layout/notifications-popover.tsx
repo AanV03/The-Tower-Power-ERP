@@ -25,30 +25,30 @@ export function NotificationsPopover({ locale = "es" }: { locale?: Locale }) {
       >
         <Bell className="size-4" aria-hidden="true" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="glass-menu glass-topbar w-80 rounded-none">
-        <DropdownMenuLabel className="text-[var(--sidebar-text-secondary)]">{dictionary.common.notifications}</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="glass-menu glass-topbar w-80 rounded-lg border border-[var(--shell-topbar-border-color)]">
+        <DropdownMenuLabel className="text-[var(--shell-topbar-foreground-secondary)]">{dictionary.common.notifications}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ul className="max-h-96 overflow-y-auto space-y-1" aria-label={dictionary.common.notificationsHistory}>
           <li className="list-none">
             <button
-              className="flex w-full items-center gap-3 rounded-none px-2 py-3 text-left transition-colors hover:bg-[var(--glass-control-hover)] focus-visible:ring-2 focus-visible:ring-offset-2"
+              className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-left transition-colors hover:bg-[var(--glass-control-hover)] focus-visible:ring-2 focus-visible:ring-offset-2"
               aria-label={dictionary.common.systemUpdated}
               type="button"
             >
               <Check className="size-4 flex-shrink-0 text-[var(--brand-green)]" aria-hidden="true" />
-              <div className="flex-1 text-sm text-[var(--sidebar-text-primary)]">
+              <div className="flex-1 text-sm text-[var(--shell-topbar-foreground)]">
                 {dictionary.common.systemUpdated}
               </div>
             </button>
           </li>
           <li className="list-none">
             <button
-              className="flex w-full items-center gap-3 rounded-none px-2 py-3 text-left transition-colors hover:bg-[var(--glass-control-hover)] focus-visible:ring-2 focus-visible:ring-offset-2"
+              className="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-left transition-colors hover:bg-[var(--glass-control-hover)] focus-visible:ring-2 focus-visible:ring-offset-2"
               aria-label={dictionary.common.noNotifications}
               type="button"
             >
-              <BellOff className="size-4 flex-shrink-0 text-[var(--sidebar-text-secondary)]" aria-hidden="true" />
-              <div className="flex-1 text-sm text-[var(--sidebar-text-secondary)]">
+              <BellOff className="size-4 flex-shrink-0 text-[var(--shell-topbar-foreground-secondary)]" aria-hidden="true" />
+              <div className="flex-1 text-sm text-[var(--shell-topbar-foreground-secondary)]">
                 {dictionary.common.noNotifications}
               </div>
             </button>

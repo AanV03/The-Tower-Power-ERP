@@ -73,12 +73,12 @@ function MobileDrawer({
 
   return (
     <div
-          className="glass-panel-strong glass-sidebar fixed inset-0 z-50 flex flex-col rounded-none border-0 text-[var(--sidebar-text-primary)] md:hidden"
+          className="glass-panel-strong glass-sidebar fixed inset-0 z-50 flex flex-col rounded-none border-0 text-[var(--shell-sidebar-foreground)] md:hidden"
       role="dialog"
       aria-modal="true"
       aria-labelledby="mobile-module-menu-title"
     >
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--sidebar-border-color)] px-5">
+      <div className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--shell-sidebar-border-color)] px-5">
         <div className="flex items-center gap-3">
           {logoUrl ? (
             <img 
@@ -98,7 +98,7 @@ function MobileDrawer({
             <p id="mobile-module-menu-title" className="text-sm font-semibold">
               {defaultBrand.name}
             </p>
-            <p className="text-xs" style={{ color: "var(--sidebar-text-secondary)" }}>
+            <p className="text-xs" style={{ color: "var(--shell-sidebar-foreground-secondary)" }}>
               {dictionary.common.productCategory}
             </p>
           </div>
@@ -119,7 +119,7 @@ function MobileDrawer({
             <li key={group.id} className="pt-3 first:pt-0">
               <p
                 className="px-4 pb-1 text-xs font-semibold uppercase tracking-wide"
-                style={{ color: "var(--sidebar-text-secondary)" }}
+                style={{ color: "var(--shell-sidebar-foreground-secondary)" }}
               >
                 {group.labels[locale]}
               </p>
@@ -142,7 +142,7 @@ function MobileDrawer({
                         style={
                           isActive
                             ? { backgroundColor: "var(--sidebar-accent-active)", color: "#0f172a" }
-                            : { color: "var(--sidebar-text-primary)" }
+                            : { color: "var(--shell-sidebar-foreground)" }
                         }
                       >
                         <Icon className="size-5 shrink-0" aria-hidden="true" />
@@ -157,8 +157,8 @@ function MobileDrawer({
         </ul>
       </nav>
 
-      <div className="shrink-0 border-t border-[var(--sidebar-border-color)] px-5 py-4">
-        <p className="text-xs" style={{ color: "var(--sidebar-text-secondary)" }}>
+      <div className="shrink-0 border-t border-[var(--shell-sidebar-border-color)] px-5 py-4">
+        <p className="text-xs" style={{ color: "var(--shell-sidebar-foreground-secondary)" }}>
           (c) {new Date().getFullYear()} Gerpy
         </p>
       </div>

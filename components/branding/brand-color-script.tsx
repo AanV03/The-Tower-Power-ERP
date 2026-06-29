@@ -72,6 +72,7 @@ const script = `
       setProperty("--topbar-bg", colors.topbarBg);
       const isLight = isLightColor(colors.topbarBg);
       setProperty("--topbar-foreground", isLight ? "#0f172a" : "#f8fafc");
+      setProperty("--topbar-foreground-secondary", isLight ? "rgba(15, 23, 42, 0.68)" : "rgba(248, 250, 252, 0.65)");
       setProperty("--topbar-border-color", isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)");
     }
 

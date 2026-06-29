@@ -117,6 +117,7 @@ export function applyBrandColors(colors: Partial<BrandColors>) {
     setBrandProperty("--topbar-bg", colors.topbarBg);
     const isLight = isLightColor(colors.topbarBg);
     setBrandProperty("--topbar-foreground", isLight ? "#0f172a" : "#f8fafc");
+    setBrandProperty("--topbar-foreground-secondary", isLight ? "rgba(15, 23, 42, 0.68)" : "rgba(248, 250, 252, 0.65)");
     setBrandProperty("--topbar-border-color", isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)");
   }
 
@@ -158,6 +159,9 @@ export function resetBrandColors() {
   const props = [
     "--sidebar-bg",
     "--topbar-bg",
+    "--topbar-foreground",
+    "--topbar-foreground-secondary",
+    "--topbar-border-color",
     "--sidebar-text-primary",
     "--radius",
     "--brand-yellow",

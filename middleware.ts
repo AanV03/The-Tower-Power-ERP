@@ -11,7 +11,7 @@ import {
 
 const PUBLIC_FILE = /\.(.*)$/;
 
-const PUBLIC_PAGES = new Set(["/", "/login", "/register"]);
+const PUBLIC_PAGES = new Set(["/"]);
 const PUBLIC_AUTH_API_PREFIXES = [
   "/api/auth/login",
   "/api/auth/register",
@@ -84,6 +84,23 @@ function isLocalizedAuthPage(pathname: string) {
       pathname.startsWith(`/${locale}/signin/`) ||
       pathname.startsWith(`/${locale}/signup/`),
   );
+}
+
+function localeFromPathname(pathname: string) {
+  return locales.find(
+    (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
+  ) ?? defaultLocale;
+}
+
+function redirectLegacyAuthPage(request: NextRequest) {
+  const targetLocale =
+    request.nextUrl.searchParams.get("next")?.match(/^\/(es|en|fr)(?:\/|$)/)?.[1] ??
+    defaultLocale;
+  const isRegister = request.nextUrl.pathname === "/register";
+  const url = request.nextUrl.clone();
+
+  url.pathname = `/${targetLocale}/${isRegister ? "signup" : "signin"}`;
+  return NextResponse.redirect(url);
 }
 
 function isPublicAuthApi(pathname: string) {
@@ -160,7 +177,8 @@ function unauthorizedResponse(request: NextRequest) {
     );
   }
 
-  const loginUrl = new URL("/login", request.url);
+  const locale = localeFromPathname(request.nextUrl.pathname);
+  const loginUrl = new URL(`/${locale}/signin`, request.url);
   loginUrl.searchParams.set(
     "next",
     `${request.nextUrl.pathname}${request.nextUrl.search}`,
@@ -199,6 +217,10 @@ export async function middleware(request: NextRequest) {
     PUBLIC_FILE.test(pathname)
   ) {
     return NextResponse.next();
+  }
+
+  if (pathname === "/login" || pathname === "/register") {
+    return redirectLegacyAuthPage(request);
   }
 
   const isPublicPage =
