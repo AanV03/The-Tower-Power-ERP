@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { LayoutDashboard, Users, PackageOpen, CreditCard } from "lucide-react";
+import { LayoutDashboard, Users, PackageOpen, CreditCard, Truck } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 
 type PurchaseStatus = "draft" | "received" | "paid" | "overdue";
@@ -611,28 +611,16 @@ function DashboardSummary({ locale }: { locale: Locale }) {
 export function PurchasesWorkflow({ locale }: { locale: Locale }) {
   return (
     <section className="erp-section space-y-6" role="main" aria-label={copy[locale].title}>
-      {/* Header General */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/40 pb-4">
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Badge variant="secondary">Supply Chain</Badge>
-            <Badge variant="outline">CxP</Badge>
-            <Badge variant="outline">Recepción</Badge>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
+            <Truck className="size-7 text-primary" aria-hidden="true" />
             {copy[locale].title}
           </h1>
-          <p className="text-sm leading-6 text-muted-foreground">
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
             {copy[locale].subtitle}
           </p>
-        </div>
-        <div className="shrink-0 flex items-center gap-3">
-          <div className="text-right">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">{copy[locale].stepLabel}</p>
-            <p className="text-sm font-medium text-foreground">
-              {workflowSteps[0].label[locale]} → {workflowSteps[1].label[locale]} → {workflowSteps[2].label[locale]}
-            </p>
-          </div>
         </div>
       </div>
 

@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { headerPrimaryActionClass } from "@/lib/utils";
 
 type ProductOption = {
   id: string;
@@ -126,7 +127,7 @@ export function MovementFormDialog({
       <DialogTrigger
         render={
           trigger ?? (
-            <Button size="sm">
+            <Button size="sm" className={headerPrimaryActionClass}>
               <ArrowRightLeft className="size-4" />
               Nuevo Movimiento
             </Button>

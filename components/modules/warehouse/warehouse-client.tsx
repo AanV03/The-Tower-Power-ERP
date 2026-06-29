@@ -36,6 +36,7 @@ import { BranchScopeSelector } from "@/components/shared/branch-scope-selector";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { WarehouseFormDialog } from "./warehouse-form-dialog";
 import type { Locale } from "@/lib/i18n";
+import { cn, headerPrimaryActionClass } from "@/lib/utils";
 
 type WarehouseItem = {
   id: string;
@@ -247,7 +248,7 @@ export function WarehouseClient({
       {/* Header y Acciones */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-normal text-foreground">{t.title}</h1>
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground"><WarehouseIcon className="size-7 text-primary" aria-hidden="true" />{t.title}</h1>
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
             {t.subtitle}
           </p>
@@ -260,7 +261,7 @@ export function WarehouseClient({
             <WarehouseFormDialog
               branches={branches}
               trigger={
-                <Button className="w-full sm:w-auto">
+                <Button className={cn(headerPrimaryActionClass, "w-full sm:w-auto")}>
                   <WarehouseIcon className="size-4 mr-2" />
                   {t.newWarehouse}
                 </Button>

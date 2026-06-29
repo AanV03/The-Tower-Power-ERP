@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 import type { Locale } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { cn, headerPrimaryActionClass } from "@/lib/utils";
 import {
   Activity,
   Laptop,
@@ -501,7 +501,7 @@ export function AccessClient({
         </div>
         <Button
           onClick={() => setShowAddModal(true)}
-          className="bg-[var(--brand-orange)] hover:bg-[var(--brand-orange)]/90 text-white font-semibold text-xs py-4 px-4 shadow-lg hover:shadow-primary/20 shrink-0 cursor-pointer"
+          className={cn(headerPrimaryActionClass, "shrink-0 cursor-pointer px-4 py-4 text-xs")}
         >
           <Plus className="size-4 mr-2" />
           {t.registerDevice}

@@ -85,7 +85,7 @@ export function AppSidebar({ locale, serverIdentity }: { locale: Locale, serverI
 
       <aside
         className={cn(
-          "glass-panel glass-sidebar hidden h-full shrink-0 overflow-y-auto overscroll-contain border-y-0 border-l-0 text-[var(--shell-sidebar-foreground)] shadow-2xl shadow-black/15 transition-[width] duration-300 ease-out lg:flex lg:flex-col gerpy-sidebar",
+          "glass-panel glass-sidebar hidden h-full shrink-0 overflow-hidden border-y-0 border-l-0 text-[var(--shell-sidebar-foreground)] shadow-2xl shadow-black/15 transition-[width] duration-300 ease-out lg:flex lg:flex-col gerpy-sidebar",
           collapsed ? "w-[5.25rem]" : "w-72",
         )}
         aria-label={dictionary.common.primaryNavigation}
@@ -115,9 +115,9 @@ export function AppSidebar({ locale, serverIdentity }: { locale: Locale, serverI
           )}
         </div>
 
-        <div className={cn("flex min-h-0 flex-1 flex-col gerpy-sidebar-branded", collapsed ? "items-center" : "")}>
+        <div className={cn("flex min-h-0 flex-1 flex-col overflow-hidden gerpy-sidebar-branded", collapsed ? "items-center" : "")}>
           <nav
-            className={cn("sidebar-content w-full flex-none space-y-1 py-5", collapsed ? "px-0" : "px-3")}
+            className={cn("sidebar-content min-h-0 w-full flex-1 space-y-1 overflow-y-auto overscroll-contain py-5", collapsed ? "px-0" : "px-3")}
             aria-label={dictionary.common.moduleNavigation}
           >
             {navigationGroups.map((group) => (
@@ -167,7 +167,7 @@ export function AppSidebar({ locale, serverIdentity }: { locale: Locale, serverI
                       )}
                       <Icon
                         className="relative z-10 size-4 shrink-0 transition-transform group-hover:scale-110"
-                        style={!isActive && isActiveGroup ? { color: "var(--sidebar-accent-active)" } : undefined}
+                        style={!isActive ? { color: "var(--sidebar-accent-active)" } : undefined}
                         aria-hidden="true"
                       />
                       <AnimatePresence initial={false}>

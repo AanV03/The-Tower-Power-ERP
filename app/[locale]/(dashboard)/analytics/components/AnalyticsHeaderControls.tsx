@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { scopeOptions } from "@/data/navigation";
 import { ExportReportModal } from "./ExportReportModal";
 import { getDictionary, type Locale } from "@/lib/i18n";
+import { cn, headerPrimaryActionClass } from "@/lib/utils";
 
 type AnalyticsHeaderControlsProps = {
   locale: Locale;
@@ -86,7 +87,7 @@ export function AnalyticsHeaderControls({
       {/* Export Button */}
       <Button
         onClick={() => setIsOpen(true)}
-        className="bg-[var(--brand-orange)] text-white hover:bg-[var(--brand-orange)]/90 transition-all font-semibold flex items-center gap-2 h-9 text-xs rounded-md shadow-xs px-3"
+        className={cn(headerPrimaryActionClass, "flex h-9 items-center gap-2 rounded-md px-3 text-xs")}
       >
         <FileDown className="w-4 h-4" aria-hidden="true" />
         <span>{dictionary.analytics.export.button}</span>

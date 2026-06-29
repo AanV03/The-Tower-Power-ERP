@@ -39,6 +39,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ProductFormDialog } from "./product-form-dialog";
 import { CategoryFormDialog } from "./category-form-dialog";
 import type { Locale } from "@/lib/i18n";
+import { cn, headerPrimaryActionClass } from "@/lib/utils";
 
 type ProductItem = {
   id: string;
@@ -424,7 +425,7 @@ export function CatalogClient({
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-normal text-foreground">{t.title}</h1>
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground"><Package className="size-7 text-primary" aria-hidden="true" />{t.title}</h1>
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
             {t.subtitle}
           </p>
@@ -434,7 +435,7 @@ export function CatalogClient({
             <ProductFormDialog
               categories={categories}
               trigger={
-                <Button className="w-full sm:w-auto">
+                <Button className={cn(headerPrimaryActionClass, "w-full sm:w-auto")}>
                   <Package className="size-4 mr-2" />
                   {t.newProduct}
                 </Button>
@@ -444,7 +445,7 @@ export function CatalogClient({
             <CategoryFormDialog
               categories={categories}
               trigger={
-                <Button className="w-full sm:w-auto">
+                <Button className={cn(headerPrimaryActionClass, "w-full sm:w-auto")}>
                   <FolderOpen className="size-4 mr-2" />
                   {t.newCategory}
                 </Button>

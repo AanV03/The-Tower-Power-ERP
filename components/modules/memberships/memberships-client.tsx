@@ -23,7 +23,7 @@ import {
 } from "@/components/shared/standard-select";
 import { Select, SelectItem } from "@/components/ui/select";
 import type { Locale } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { cn, headerPrimaryActionClass } from "@/lib/utils";
 import { CheckCircle2, User, Users, ClipboardList, Laptop, ShieldAlert, KeyRound, Loader2, Play } from "lucide-react";
 
 type Member = {
@@ -579,7 +579,7 @@ export function MembershipsClient({
       {/* Title block */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-normal text-foreground">{t.title}</h1>
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground"><Users className="size-7 text-primary" aria-hidden="true" />{t.title}</h1>
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
             Control integrado de expedientes, cobros recurrentes de planes y validaciones de entradas de torniquetes.
           </p>
@@ -664,7 +664,7 @@ export function MembershipsClient({
 
                 {activeTab === "members" && (
                   <Dialog open={memberDialogOpen} onOpenChange={setMemberDialogOpen}>
-                    <DialogTrigger render={<Button size="sm">{t.addMember}</Button>} />
+                    <DialogTrigger render={<Button size="sm" className={headerPrimaryActionClass}>{t.addMember}</Button>} />
                     <StandardDialogContent>
                       <StandardDialogHeader>
                         <StandardDialogTitle>{t.addMember}</StandardDialogTitle>
@@ -755,7 +755,7 @@ export function MembershipsClient({
 
                 {activeTab === "plans" && (
                   <Dialog open={planDialogOpen} onOpenChange={setPlanDialogOpen}>
-                    <DialogTrigger render={<Button size="sm">{t.addPlan}</Button>} />
+                    <DialogTrigger render={<Button size="sm" className={headerPrimaryActionClass}>{t.addPlan}</Button>} />
                     <StandardDialogContent>
                       <StandardDialogHeader>
                         <StandardDialogTitle>{t.addPlan}</StandardDialogTitle>
@@ -816,7 +816,7 @@ export function MembershipsClient({
 
                 {activeTab === "subscriptions" && (
                   <Dialog open={subDialogOpen} onOpenChange={setSubDialogOpen}>
-                    <DialogTrigger render={<Button size="sm">{t.addSubscription}</Button>} />
+                    <DialogTrigger render={<Button size="sm" className={headerPrimaryActionClass}>{t.addSubscription}</Button>} />
                     <StandardDialogContent>
                       <StandardDialogHeader>
                         <StandardDialogTitle>{t.addSubscription}</StandardDialogTitle>

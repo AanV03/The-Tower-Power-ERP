@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import type { Locale } from "@/lib/i18n";
+import { headerPrimaryActionClass } from "@/lib/utils";
 
 type Option = {
   id: string;
@@ -361,7 +362,7 @@ export function SpecialistActionDialogs({
   return (
     <div className="flex flex-wrap gap-2" role="group" aria-label={labels.generate}>
       <Dialog open={settlementOpen} onOpenChange={setSettlementOpen}>
-        <DialogTrigger render={<Button aria-label={labels.generate} />}>
+        <DialogTrigger render={<Button aria-label={labels.generate} className={headerPrimaryActionClass} />}>
           <FilePlus2 className="size-4" aria-hidden="true" />
           {labels.generate}
         </DialogTrigger>

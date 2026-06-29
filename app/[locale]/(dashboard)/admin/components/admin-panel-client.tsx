@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldCheck, Server, Settings, Terminal, Activity, Globe, Users } from "lucide-react";
+import { ShieldCheck, Settings, Terminal, Users } from "lucide-react";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { TenantTable, type Tenant } from "./tenant-table";
 import { TenantDrawer } from "./tenant-drawer";
@@ -108,39 +108,19 @@ export function AdminPanelClient({ locale }: AdminPanelClientProps) {
     toast.success(dict.adminSaas.saveSuccess);
   };
 
-  // Metrics summary
-  const totalTenants = tenants.length;
-  const activeTenants = tenants.filter((t) => t.status === "Active").length;
-  const enterprisePlans = tenants.filter((t) => t.plan === "Enterprise").length;
 
   return (
     <section className="erp-section space-y-6" role="main" aria-label={dict.modules.admin}>
-      {/* Premium Header */}
-      <div className="flex flex-col gap-1 md:flex-row md:items-center justify-between border-b border-border/80 pb-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <ShieldCheck className="h-6 w-6 text-[var(--sidebar-accent-active)]" />
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-1">
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
+            <ShieldCheck className="size-7 text-primary" />
             {dict.modules.admin}
           </h1>
-          <p className="text-xs text-muted-foreground">
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
             Consola central de operaciones y administración global de inquilinos SaaS.
           </p>
-        </div>
-
-        {/* Small stats badges */}
-        <div className="flex items-center gap-3 mt-2 md:mt-0 font-mono text-xs">
-          <span className="flex items-center gap-1 bg-muted px-2.5 py-1 rounded-lg border border-border">
-            <Server className="h-3.5 w-3.5 text-muted-foreground" />
-            <span>Tenants: <strong className="text-foreground">{totalTenants}</strong></span>
-          </span>
-          <span className="flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-            <Activity className="h-3.5 w-3.5" />
-            <span>Activos: <strong>{activeTenants}</strong></span>
-          </span>
-          <span className="flex items-center gap-1 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2.5 py-1 rounded-lg border border-indigo-500/20">
-            <Globe className="h-3.5 w-3.5" />
-            <span>Enterprise: <strong>{enterprisePlans}</strong></span>
-          </span>
         </div>
       </div>
 

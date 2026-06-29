@@ -30,6 +30,7 @@ export function Topbar({ locale }: { locale: Locale }) {
   const router = useRouter();
   const [languageOpen, setLanguageOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [now, setNow] = useState<Date | null>(null);
   const languageRef = useRef<HTMLDivElement>(null);
   const accountRef = useRef<HTMLDivElement>(null);
   const languageMenuId = "topbar-language-menu";
@@ -41,6 +42,12 @@ export function Topbar({ locale }: { locale: Locale }) {
     "--nav-section-ink": sectionTheme.ink,
     "--nav-section-rgb": sectionTheme.rgb,
   } as CSSProperties;
+
+  useEffect(() => {
+    setNow(new Date());
+    const intervalId = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -76,6 +83,21 @@ export function Topbar({ locale }: { locale: Locale }) {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => null);
     await signOut({ callbackUrl: "/login" });
   };
+
+  const timeLabel =
+    now?.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    }) ?? "--:--:-- --";
+
+  const dateLabel =
+    now?.toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    }) ?? "--/--/----";
 
   return (
     <header
@@ -120,6 +142,16 @@ export function Topbar({ locale }: { locale: Locale }) {
         </button>
 
         <div className="ml-auto flex shrink-0 items-center justify-end gap-1 sm:gap-3">
+          <div
+            className="hidden min-w-[92px] flex-col items-end justify-center leading-tight text-[var(--shell-topbar-foreground)] sm:flex"
+            aria-label={`${dateLabel} ${timeLabel}`}
+          >
+            <span className="font-mono text-xs font-semibold tabular-nums sm:text-sm">{timeLabel}</span>
+            <span className="font-mono text-[11px] font-medium tabular-nums text-[var(--shell-topbar-foreground-secondary)] sm:text-xs">
+              {dateLabel}
+            </span>
+          </div>
+
           {/* Notificaciones */}
           <NotificationsPopover locale={locale} />
 

@@ -7,7 +7,6 @@ import {
   Boxes,
   CreditCard,
   ShieldCheck,
-  Sparkles,
   UsersRound,
 } from "lucide-react";
 
@@ -78,33 +77,24 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   ];
 
   return (
-    <div className="container mx-auto px-4 pb-8 pt-4 lg:px-6">
-      <FilterBar />
+    <section className="erp-section space-y-6" role="main" aria-label={moduleConfigs.dashboard.title[l]}>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-1">
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
+            <Activity className="size-7 text-primary" aria-hidden="true" />
+            {moduleConfigs.dashboard.title[l]}
+          </h1>
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
+            {moduleConfigs.dashboard.subtitle[l]}
+          </p>
+        </div>
+        <FilterBar />
+      </div>
 
-      <main className="mt-6 grid grid-cols-1 items-stretch gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+      <main className="grid grid-cols-1 items-stretch gap-6 xl:grid-cols-[1.35fr_0.65fr]">
         <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-card p-6 text-card-foreground shadow-2xl shadow-black/10">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(251,133,0,0.18),transparent_34rem),radial-gradient(circle_at_90%_10%,rgba(0,188,125,0.12),transparent_26rem)]" />
           <div className="relative flex flex-col gap-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-orange)]/25 bg-[var(--brand-orange)]/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-[var(--brand-orange)]">
-                  <Sparkles className="size-3.5" aria-hidden="true" />
-                  Live operations
-                </div>
-                <h1 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-                  {moduleConfigs.dashboard.title[l]}
-                </h1>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-                  {moduleConfigs.dashboard.subtitle[l]}
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-background/50 px-4 py-3 text-right">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Operational score
-                </p>
-                <p className="mt-1 text-2xl font-black text-foreground">94%</p>
-              </div>
-            </div>
 
             <div className="grid gap-3 md:grid-cols-3">
               {dashboardCards.map(({ icon: Icon, ...card }) => (
@@ -173,7 +163,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
         </aside>
       </main>
 
-      <section className="mt-6">
+      <section>
         <OperationalGrid>
           <article className="flex min-h-[260px] h-full w-full flex-col rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
             <div className="flex items-center justify-between">
@@ -222,7 +212,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
         </OperationalGrid>
       </section>
 
-      <section className="mt-8">
+      <section>
         <div className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
           <div className="flex items-center justify-between">
             <h5 className="text-sm font-bold text-foreground">Recent activity</h5>
@@ -237,6 +227,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       </section>
 
       <DrillPane />
-    </div>
+    </section>
   );
 }

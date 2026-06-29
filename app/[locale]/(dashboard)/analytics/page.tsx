@@ -70,12 +70,13 @@ export default async function AnalyticsPage({
   return (
     <section className="erp-section space-y-6" role="main" aria-label={config.title[locale as Locale]}>
       {/* Header with inline controls */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/40 pb-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
+            <Lightbulb className="size-7 text-primary" aria-hidden="true" />
             {config.title[locale as Locale]}
           </h1>
-          <p className="text-sm leading-6 text-muted-foreground">
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
             {config.subtitle[locale as Locale]}
           </p>
         </div>

@@ -6,7 +6,6 @@ import type { Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
   Store,
-  Clock,
   Search,
   Trash2,
   Plus,
@@ -111,7 +110,6 @@ const posLabels = {
     lowStock: "Bajo stock",
     noStock: "Agotado",
     registerNameLabel: "Caja",
-    openedAtLabel: "Abierta el",
     closeSessionTitle: "Cierre de Caja",
     closeSessionDesc: "Ingresa el monto final reportado en el arqueo de caja.",
     closingAmount: "Monto de Arqueo Final (MXN)",
@@ -165,7 +163,6 @@ const posLabels = {
     lowStock: "Low stock",
     noStock: "Out of stock",
     registerNameLabel: "Register",
-    openedAtLabel: "Opened on",
     closeSessionTitle: "Close Cash Register",
     closeSessionDesc: "Enter the final cash count amount from the register.",
     closingAmount: "Final Count Amount (MXN)",
@@ -219,7 +216,6 @@ const posLabels = {
     lowStock: "Stock bas",
     noStock: "Épuisé",
     registerNameLabel: "Caisse",
-    openedAtLabel: "Ouvert le",
     closeSessionTitle: "Clôture de Caisse",
     closeSessionDesc: "Saisissez le montant final lors du comptage de la caisse.",
     closingAmount: "Montant de Fermeture (MXN)",
@@ -859,37 +855,24 @@ export function PosClient({
 
   return (
     <div className="h-[calc(100vh-64px)] p-4 sm:p-6 bg-background flex flex-col text-sm relative overflow-hidden">
-      {/* Header bar */}
-      <header className="w-full flex items-center justify-between gap-4 p-4 glass-panel rounded-xl border border-border/60 mb-6 shrink-0 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary animate-in zoom-in-50 duration-300">
-            <Store className="size-5" />
-          </div>
-          <div>
-            <h1 className="text-lg font-extrabold tracking-tight text-foreground">{t.title}</h1>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-semibold text-muted-foreground dark:text-slate-300">
-                {t.activeSession}: <span className="text-foreground font-medium">{activeSession.registerName}</span>
-              </span>
-            </div>
-          </div>
+      {/* Page Header */}
+      <header className="mb-6 flex w-full shrink-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
+            <Store className="size-7 text-primary" />
+            {t.title}
+          </h1>
+          <p className="text-sm leading-6 text-muted-foreground sm:text-base">
+            {t.activeSession}: <span className="font-medium text-foreground">{activeSession.registerName}</span>
+          </p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground dark:text-slate-300 font-medium bg-muted/40 border border-border/40 px-3 py-1.5 rounded-lg">
-            <Clock className="size-3.5 text-muted-foreground dark:text-slate-350" />
-            <span>
-              {t.openedAtLabel}: {new Date(activeSession.openedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          </div>
-          <Button
-            onClick={() => setShowCloseModal(true)}
-            variant="outline"
-            className="border-destructive/30 hover:bg-destructive/10 text-destructive dark:text-red-400 font-bold text-xs px-4 rounded-lg cursor-pointer"
-          >
-            {t.closeSessionButton}
-          </Button>
-        </div>
+        <Button
+          onClick={() => setShowCloseModal(true)}
+          variant="outline"
+          className="border-destructive/30 text-xs font-bold text-destructive hover:bg-destructive/10 dark:text-red-400 sm:px-4 cursor-pointer"
+        >
+          {t.closeSessionButton}
+        </Button>
       </header>
 
       {/* Main Grid Layout */}

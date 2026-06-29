@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Plus, Search, UsersRound, Clock, FileText, CalendarClock, Edit, AlertTriangle } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { headerPrimaryActionClass } from "@/lib/utils";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -229,7 +229,7 @@ export function HrClient({
       {/* Title & Action Bar */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-normal text-foreground">{t.title}</h1>
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground"><UsersRound className="size-7 text-primary" aria-hidden="true" />{t.title}</h1>
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
             {t.subtitle}
           </p>
@@ -239,7 +239,7 @@ export function HrClient({
           <div className="flex gap-2">
             <EmployeeFormDialog
               trigger={
-                <Button size="sm">
+                <Button size="sm" className={headerPrimaryActionClass}>
                   <Plus className="mr-1.5 size-4" />
                   {t.addEmployee}
                 </Button>

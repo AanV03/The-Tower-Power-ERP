@@ -1,6 +1,5 @@
 import {
   BadgeDollarSign,
-  BarChart3,
   Boxes,
   Building2,
   Calculator,
@@ -19,6 +18,7 @@ import {
   Warehouse,
   Webhook,
   Wrench,
+  Home,
 } from "lucide-react";
 import type { ElementType } from "react";
 
@@ -62,7 +62,7 @@ export const navigationItems: NavItem[] = [
   {
     id: "dashboard",
     href: "/dashboard",
-    icon: BarChart3,
+    icon: Home,
     labels: { es: "Panel operativo", en: "Operations board", fr: "Tableau de bord opérationnel" },
     description: {
       es: "KPIs, alertas y actividad por sucursal.",

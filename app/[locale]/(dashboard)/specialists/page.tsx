@@ -726,34 +726,28 @@ export default async function SpecialistsPage({
 
   return (
     <section className="erp-section space-y-5" role="main" aria-label={config.title[locale]}>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="space-y-1">
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
+            <Dumbbell className="size-7 text-primary" aria-hidden="true" />
+            {labels.title}
+          </h1>
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">{labels.subtitle}</p>
+        </div>
+        <div className="flex shrink-0 justify-start lg:justify-end">
+          <SpecialistActionDialogs
+            locale={locale}
+            labels={labels}
+            specialists={specialistOptions}
+            services={serviceOptions}
+            members={memberOptions}
+            branches={branchOptions}
+          />
+        </div>
+      </div>
+
       <div className="rounded-lg border border-border bg-card p-4 sm:p-6">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className="border-orange-500/25 bg-orange-500/10 text-orange-700 dark:text-orange-300">
-                <Dumbbell className="size-3" aria-hidden="true" />
-                {labels.eyebrow}
-              </Badge>
-              <Badge variant="outline">{labels.period}</Badge>
-            </div>
-            <div className="max-w-3xl space-y-2">
-              <h1 className="text-3xl font-semibold tracking-normal text-foreground sm:text-4xl">
-                {labels.title}
-              </h1>
-              <p className="text-sm leading-6 text-muted-foreground sm:text-base">{labels.subtitle}</p>
-            </div>
-            <div className="space-y-2">
-              <SpecialistActionDialogs
-                locale={locale}
-                labels={labels}
-                specialists={specialistOptions}
-                services={serviceOptions}
-                members={memberOptions}
-                branches={branchOptions}
-              />
-              <p className="max-w-2xl text-xs leading-5 text-muted-foreground">{labels.sessionPurpose}</p>
-            </div>
-          </div>
+        <div className="grid gap-5">
           <div className="rounded-lg border border-border bg-background p-4">
             <div className="flex items-center justify-between gap-3">
               <div>

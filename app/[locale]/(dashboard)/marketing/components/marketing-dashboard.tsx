@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Locale } from "@/lib/i18n";
+import { cn, headerPrimaryActionClass } from "@/lib/utils";
 import { MetricCard } from "@/components/shared/metric-card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -55,10 +56,11 @@ export function MarketingDashboard({
       {/* Header */}
       <div className="space-y-1">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-3xl font-semibold tracking-normal text-foreground">
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
+            <Megaphone className="size-7 text-primary" aria-hidden="true" />
             {title}
           </h1>
-          <Button onClick={() => handleOpenModal("")} className="h-9 gap-1">
+          <Button onClick={() => handleOpenModal("")} className={cn(headerPrimaryActionClass, "h-9 gap-1")}>
             <Plus className="w-4 h-4" />
             <span>{primaryActionLabel}</span>
           </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { Calculator } from "lucide-react";
 import { JournalEntryEditor } from "./JournalEntryEditor";
 import { JournalEntryList } from "./JournalEntryList";
 import type { Locale } from "@/lib/i18n";
@@ -8,25 +8,16 @@ import type { Locale } from "@/lib/i18n";
 export function AccountingDashboard({ locale }: { locale: Locale }) {
   return (
     <section className="erp-section space-y-6" role="main" aria-label="Contabilidad">
-      {/* Header General */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/40 pb-4">
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Badge variant="secondary">Finanzas</Badge>
-            <Badge variant="outline">Libro Mayor</Badge>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
+            <Calculator className="size-7 text-primary" aria-hidden="true" />
             Contabilidad
           </h1>
-          <p className="text-sm leading-6 text-muted-foreground">
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
             Editor de pólizas, cuadre de saldos en tiempo real y registro en el libro mayor.
           </p>
-        </div>
-        <div className="shrink-0 flex items-center gap-3">
-          <div className="text-right">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Periodo Abierto</p>
-            <p className="text-sm font-medium text-foreground">Junio 2026</p>
-          </div>
         </div>
       </div>
 

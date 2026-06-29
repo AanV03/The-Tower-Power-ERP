@@ -549,7 +549,7 @@ export function InventoryClient({
       {/* Cabecera y Acciones Rápidas */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-normal text-foreground">{t.title}</h1>
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground"><Package className="size-7 text-primary" aria-hidden="true" />{t.title}</h1>
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
             {t.subtitle}
           </p>
