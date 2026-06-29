@@ -12,85 +12,63 @@ export default async function AccessPage({
   const context = await requireApiContext({ moduleId: "access" });
 
   const [devices, members, branches, recentLogs] = await Promise.all([
-    // 1. Fetch access devices
     prisma.accessDevice.findMany({
-      where: {
-        tenantId: context.tenantId,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+      where: { tenantId: context.tenantId },
+      orderBy: { createdAt: "desc" },
     }),
-    // 2. Fetch active members for the simulator lookup
     prisma.member.findMany({
-      where: {
-        tenantId: context.tenantId,
-        status: "ACTIVE",
-      },
-      orderBy: {
-        firstName: "asc",
-      },
+      where: { tenantId: context.tenantId, status: "ACTIVE" },
+      orderBy: { firstName: "asc" },
     }),
-    // 3. Fetch branches for register dialog
     prisma.branch.findMany({
-      where: {
-        tenantId: context.tenantId,
-        status: "ACTIVE",
-      },
-      orderBy: {
-        name: "asc",
-      },
+      where: { tenantId: context.tenantId, status: "ACTIVE" },
+      orderBy: { name: "asc" },
     }),
-    // 4. Fetch recent outbox access logs (last 50)
     prisma.outboxEvent.findMany({
       where: {
         tenantId: context.tenantId,
-        type: {
-          in: ["member.access.allowed", "member.access.denied"],
-        },
+        type: { in: ["member.access.allowed", "member.access.denied"] },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
       take: 50,
     }),
   ]);
 
-  // Safe client serialization
-  const serializedDevices = devices.map((d) => ({
-    id: d.id,
-    name: d.name,
-    code: d.code,
-    type: d.type,
-    status: d.status,
-    branchId: d.branchId,
+  const serializedDevices = devices.map((device) => ({
+    id: device.id,
+    name: device.name,
+    code: device.code,
+    type: device.type,
+    status: device.status,
+    branchId: device.branchId,
   }));
 
-  const serializedMembers = members.map((m) => ({
-    id: m.id,
-    name: `${m.firstName} ${m.lastName}`,
-    email: m.email ?? "",
-    status: m.status,
+  const serializedMembers = members.map((member) => ({
+    id: member.id,
+    name: `${member.firstName} ${member.lastName}`,
+    email: member.email ?? "",
+    status: member.status,
   }));
 
-  const serializedBranches = branches.map((b) => ({
-    id: b.id,
-    name: b.name,
+  const serializedBranches = branches.map((branch) => ({
+    id: branch.id,
+    name: branch.name,
   }));
 
   const serializedLogs = recentLogs.map((log) => {
-    const payload = (log.payload as any) || {};
+    const payload = (log.payload as Record<string, unknown>) || {};
+
     return {
       id: log.id,
       type: log.type,
-      allowed: payload.allowed ?? (log.type === "member.access.allowed"),
-      memberName: payload.memberName ?? "Miembro Desconocido",
-      memberId: payload.memberId ?? "",
-      deviceName: payload.deviceName ?? "Dispositivo",
-      deviceCode: payload.deviceCode ?? "",
-      planName: payload.planName ?? null,
-      reason: payload.reason ?? null,
-      timestamp: payload.timestamp ?? log.createdAt.toISOString(),
+      allowed: Boolean(payload.allowed ?? log.type === "member.access.allowed"),
+      memberName: typeof payload.memberName === "string" ? payload.memberName : "Miembro Desconocido",
+      memberId: typeof payload.memberId === "string" ? payload.memberId : "",
+      deviceName: typeof payload.deviceName === "string" ? payload.deviceName : "Dispositivo",
+      deviceCode: typeof payload.deviceCode === "string" ? payload.deviceCode : "",
+      planName: typeof payload.planName === "string" ? payload.planName : null,
+      reason: typeof payload.reason === "string" ? payload.reason : null,
+      timestamp: typeof payload.timestamp === "string" ? payload.timestamp : log.createdAt.toISOString(),
     };
   });
 

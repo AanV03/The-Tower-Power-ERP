@@ -4,6 +4,8 @@ import type { Locale } from "@/lib/i18n";
 import { CatalogClient } from "@/components/catalog/catalog-client";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function CatalogPage({
   params,

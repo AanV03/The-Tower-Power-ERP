@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
+import { gsap } from "gsap";
 import BackgroundGrid from "../BackgroundGrid";
 import AuroraBackground from "../AuroraBackground";
 

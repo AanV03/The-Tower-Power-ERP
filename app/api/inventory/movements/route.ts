@@ -1,16 +1,17 @@
 import { InventoryMovementType } from "@prisma/client";
 import { z } from "zod";
-import { prisma } from "@/lib/db/prisma";
+
 import { requireApiContext } from "@/lib/api/context";
-import { parsePagination } from "@/lib/api/pagination";
 import { createInventoryMovement } from "@/lib/api/inventory-movements";
+import { parsePagination } from "@/lib/api/pagination";
 import { created, fail, ok } from "@/lib/api/response";
+import { prisma } from "@/lib/db/prisma";
 
 const CreateMovementSchema = z.object({
   warehouseId: z.string().optional(),
   branchId: z.string().optional(),
-  productId: z.string(),
-  type: z.nativeEnum(InventoryMovementType).default(InventoryMovementType.PURCHASE),
+  productId: z.string().min(1),
+  type: z.enum(InventoryMovementType).default(InventoryMovementType.PURCHASE),
   quantity: z.coerce.number().positive(),
   unitCost: z.coerce.number().nonnegative().optional(),
   sourceType: z.string().trim().max(80).optional(),
@@ -21,7 +22,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "warehouse" });
+    const context = await requireApiContext({ moduleId: "inventory" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = {
@@ -32,7 +33,7 @@ export async function GET(request: Request) {
     const [items, total] = await Promise.all([
       prisma.inventoryMovement.findMany({
         where,
-        include: { product: true, warehouse: true },
+        include: { product: true, warehouse: { include: { branch: true } } },
         orderBy: { createdAt: "desc" },
         skip: pagination.skip,
         take: pagination.take,
@@ -48,9 +49,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "warehouse" });
+    const context = await requireApiContext({ moduleId: "inventory" });
     const data = CreateMovementSchema.parse(await request.json());
-
     const result = await createInventoryMovement(context, data);
 
     return created(result);
