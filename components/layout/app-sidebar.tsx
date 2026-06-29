@@ -11,10 +11,13 @@ import { getActiveNavigationGroupId, getNavSectionTheme } from "@/components/lay
 import { navigationGroups } from "@/data/navigation";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { defaultBrand } from "@/lib/branding";
+import { useBrandIdentity, type BrandIdentity } from "@/components/branding/brand-identity";
 
-export function AppSidebar({ locale }: { locale: Locale }) {
+export function AppSidebar({ locale, serverIdentity }: { locale: Locale, serverIdentity?: BrandIdentity | null }) {
   const dictionary = getDictionary(locale);
   const pathname = usePathname();
+  const identity = useBrandIdentity(serverIdentity);
   const [collapsed, setCollapsed] = useState(false);
   const activeSectionId = getActiveNavigationGroupId(pathname, locale);
   const sectionTheme = getNavSectionTheme(activeSectionId);
@@ -30,10 +33,9 @@ export function AppSidebar({ locale }: { locale: Locale }) {
     } catch {
       setCollapsed(false);
     }
-  });
+  }, []);
 
-  const [logoUrl, setLogoUrl] = useState<string>("");
-
+  useEffect(() => {
     const onToggle = () => {
       setCollapsed((prev) => {
         const next = !prev;
@@ -58,32 +60,11 @@ export function AppSidebar({ locale }: { locale: Locale }) {
       }
     };
 
-    const onBrandUpdate = (e: Event) => {
-      if (e instanceof CustomEvent && e.detail) {
-        setLogoUrl(e.detail.logoUrl || "");
-      }
-    };
-
-    const onBrandReset = () => setLogoUrl("");
-
-    // Load initial logo
-    try {
-      const raw = localStorage.getItem("gerpy-brand-colors");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed.logoUrl) setLogoUrl(parsed.logoUrl);
-      }
-    } catch { /* ignore */ }
-
     document.addEventListener("sidebar:toggle", onToggle);
     document.addEventListener("sidebar:set", onSet as EventListener);
-    document.addEventListener("brand:update", onBrandUpdate);
-    document.addEventListener("brand:reset", onBrandReset);
     return () => {
       document.removeEventListener("sidebar:toggle", onToggle);
       document.removeEventListener("sidebar:set", onSet as EventListener);
-      document.removeEventListener("brand:update", onBrandUpdate);
-      document.removeEventListener("brand:reset", onBrandReset);
     };
   }, []);
 
@@ -110,9 +91,9 @@ export function AppSidebar({ locale }: { locale: Locale }) {
         aria-label={dictionary.common.primaryNavigation}
       >
         <div className={cn("flex h-16 items-center gap-3 border-b border-[var(--sidebar-border-color)]", collapsed ? "justify-center px-2" : "px-5")}>
-          {logoUrl ? (
+          {identity.logoDataUrl ? (
             <img 
-              src={logoUrl} 
+              src={identity.logoDataUrl} 
               alt="Brand Logo" 
               className={cn("object-contain", collapsed ? "h-8 w-8" : "h-10 w-12")} 
             />
@@ -121,14 +102,14 @@ export function AppSidebar({ locale }: { locale: Locale }) {
               className={cn("flex items-center justify-center rounded-none text-sm font-bold", collapsed ? "h-10 w-10 text-base" : "h-10 w-12")}
               style={{ backgroundColor: "var(--brand-yellow)", color: "var(--brand-ink)" }}
             >
-              {defaultBrand.logoText}
+              {identity.logoText}
             </div>
           )}
           {!collapsed && (
-            <div>
-              <p className="text-sm font-semibold">{defaultBrand.name}</p>
-              <p className="text-xs" style={{ color: "var(--sidebar-text-secondary)" }}>
-                {dictionary.common.productCategory}
+            <div className="overflow-hidden">
+              <p className="text-sm font-semibold truncate">{identity.name}</p>
+              <p className="text-xs truncate" style={{ color: "var(--sidebar-text-secondary)" }}>
+                {identity.subtitle || dictionary.common.productCategory}
               </p>
             </div>
           )}
@@ -167,7 +148,7 @@ export function AppSidebar({ locale }: { locale: Locale }) {
                           : "min-h-11 items-center gap-3 px-3",
                       )}
                       style={{
-                        color: isActive ? "var(--nav-section-ink)" : "var(--shell-sidebar-foreground)",
+                        color: isActive ? "var(--sidebar-accent-active-foreground, #ffffff)" : "var(--shell-sidebar-foreground)",
                       }}
                       aria-current={isActive ? "page" : undefined}
                       aria-label={collapsed ? `${group.labels[locale]}: ${item.labels[locale]}` : undefined}
@@ -177,16 +158,16 @@ export function AppSidebar({ locale }: { locale: Locale }) {
                         <motion.span
                           layoutId="sidebar-active-item"
                           className="absolute inset-0 rounded-lg"
-                          style={{ backgroundColor: "var(--nav-section-accent)" }}
+                          style={{ backgroundColor: "var(--sidebar-accent-active)" }}
                           transition={{ type: "spring", stiffness: 480, damping: 42 }}
                         />
                       )}
                       {!isActive && !collapsed && (
-                        <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-[var(--nav-section-accent)] opacity-0 transition-opacity group-hover:opacity-80" />
+                        <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-[var(--sidebar-accent-active)] opacity-0 transition-opacity group-hover:opacity-80" />
                       )}
                       <Icon
                         className="relative z-10 size-4 shrink-0 transition-transform group-hover:scale-110"
-                        style={!isActive && isActiveGroup ? { color: "var(--nav-section-accent)" } : undefined}
+                        style={!isActive && isActiveGroup ? { color: "var(--sidebar-accent-active)" } : undefined}
                         aria-hidden="true"
                       />
                       <AnimatePresence initial={false}>

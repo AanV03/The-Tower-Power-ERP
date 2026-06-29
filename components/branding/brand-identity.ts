@@ -40,9 +40,16 @@ export function loadBrandIdentity(): BrandIdentity {
   }
 }
 
-export function persistBrandIdentity(identity: BrandIdentity) {
+export async function persistBrandIdentity(identity: BrandIdentity) {
   localStorage.setItem(BRAND_IDENTITY_STORAGE_KEY, JSON.stringify(identity));
-  document.dispatchEvent(new CustomEvent("brand:identity:update", { detail: identity }));
+
+  if (typeof window !== "undefined") {
+    await fetch("/api/admin/tenant", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ brandIdentity: identity }),
+    }).catch(() => {});
+  }
 }
 
 export function resetBrandIdentity() {
@@ -50,11 +57,15 @@ export function resetBrandIdentity() {
   document.dispatchEvent(new CustomEvent("brand:identity:reset"));
 }
 
-export function useBrandIdentity() {
-  const [identity, setIdentity] = useState<BrandIdentity>(DEFAULT_BRAND_IDENTITY);
+export function useBrandIdentity(serverIdentity?: BrandIdentity | null) {
+  const [identity, setIdentity] = useState<BrandIdentity>(serverIdentity || DEFAULT_BRAND_IDENTITY);
 
   useEffect(() => {
-    setIdentity(loadBrandIdentity());
+    // Only load from local storage if there's no server identity provided,
+    // or if we want to sync. But server is source of truth.
+    if (!serverIdentity) {
+      setIdentity(loadBrandIdentity());
+    }
 
     const onUpdate = (event: Event) => {
       if (event instanceof CustomEvent) {

@@ -9,6 +9,8 @@ const UpdateTenantSchema = z.object({
   legalName: z.string().trim().max(180).nullable().optional(),
   taxId: z.string().trim().max(60).nullable().optional(),
   modules: z.record(z.string(), z.boolean()).optional(),
+  brandColors: z.any().optional(),
+  brandIdentity: z.any().optional(),
 });
 
 export const runtime = "nodejs";
@@ -80,6 +82,8 @@ export async function PATCH(request: Request) {
           name: data.name,
           legalName: data.legalName,
           taxId: data.taxId,
+          brandColors: data.brandColors ?? undefined,
+          brandIdentity: data.brandIdentity ?? undefined,
         },
         include: {
           plan: true,

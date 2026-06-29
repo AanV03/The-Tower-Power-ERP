@@ -79,7 +79,7 @@ export function Topbar({ locale }: { locale: Locale }) {
 
   return (
     <header
-      className="glass-panel glass-topbar relative z-50 flex h-20 flex-shrink-0 border-x-0 border-t-0 text-[var(--shell-topbar-foreground)] shadow-xl shadow-black/10"
+      className="glass-panel glass-topbar relative z-50 flex h-16 flex-shrink-0 border-x-0 border-t-0 text-[var(--shell-topbar-foreground)] shadow-xl shadow-black/10"
       role="banner"
       style={sectionStyle}
     >

@@ -141,7 +141,7 @@ function MobileDrawer({
                         )}
                         style={
                           isActive
-                            ? { backgroundColor: "var(--sidebar-accent-active)", color: "#0f172a" }
+                            ? { backgroundColor: "var(--sidebar-accent-active)", color: "var(--sidebar-accent-active-foreground, #ffffff)" }
                             : { color: "var(--shell-sidebar-foreground)" }
                         }
                       >

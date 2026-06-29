@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { ImagePlus, RotateCcw, Upload } from "lucide-react";
 
 import {
@@ -19,7 +20,7 @@ import {
   type BrandIdentity,
 } from "@/components/branding/brand-identity";
 import { defaultLocale, formatMessage, getDictionary, isLocale, type Locale } from "@/lib/i18n";
-import { Upload, Trash2, Image as ImageIcon } from "lucide-react";
+import { Trash2, Image as ImageIcon } from "lucide-react";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -44,9 +45,17 @@ function hasCompletePalette(colors: BrandColors) {
   );
 }
 
-function persistColors(colors: BrandColors) {
+async function persistColors(colors: BrandColors) {
   if (!hasCompletePalette(colors)) return;
   localStorage.setItem(BRAND_STORAGE_KEY, JSON.stringify(colors));
+
+  if (typeof window !== "undefined") {
+    await fetch("/api/admin/tenant", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ brandColors: colors }),
+    }).catch(() => {});
+  }
 }
 
 // ─── Color Card ───────────────────────────────────────────────────────────────
@@ -168,6 +177,7 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
   const l: Locale = isLocale(locale) ? locale : defaultLocale;
   const t = getDictionary(l).branding;
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const [colors, setColors] = useState<BrandColors>(loadSaved);
   const [identity, setIdentity] = useState<BrandIdentity>(DEFAULT_BRAND_IDENTITY);
@@ -184,18 +194,12 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
   // Live preview: apply brand colors to :root whenever the user changes any value
   useEffect(() => {
     applyBrandColors(colors);
-    try {
-      persistColors(colors);
-    } catch { /* ignore */ }
   }, [colors]);
 
   const handleChange = useCallback((key: keyof BrandColors, value: string) => {
     setColors((prev) => {
       const next = { ...prev, [key]: value };
-      try {
-        persistColors(next);
-        document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
-      } catch { /* ignore */ }
+      document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
       return next;
     });
   }, []);
@@ -203,10 +207,7 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
   const handleContrastChange = (contrast: "normal" | "medium" | "high") => {
     setColors((prev) => {
       const next = { ...prev, contrast };
-      try {
-        persistColors(next);
-        document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
-      } catch { /* ignore */ }
+      document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
       return next;
     });
   };
@@ -214,10 +215,7 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
   const handleFontChange = (font: "default" | "serif" | "mono" | "elegant") => {
     setColors((prev) => {
       const next = { ...prev, font };
-      try {
-        persistColors(next);
-        document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
-      } catch { /* ignore */ }
+      document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
       return next;
     });
   };
@@ -225,9 +223,7 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
   const handleIdentityChange = useCallback((key: keyof BrandIdentity, value: string) => {
     setIdentity((prev) => {
       const next = { ...prev, [key]: value };
-      try {
-        persistBrandIdentity(next);
-      } catch { /* ignore */ }
+      document.dispatchEvent(new CustomEvent("brand:identity:update", { detail: next }));
       return next;
     });
   }, []);
@@ -251,11 +247,7 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
       const logoDataUrl = typeof reader.result === "string" ? reader.result : "";
       setIdentity((prev) => {
         const next = { ...prev, logoDataUrl };
-        try {
-          persistBrandIdentity(next);
-        } catch {
-          setLogoError(l === "es" ? "No se pudo guardar el logo." : "Could not save the logo.");
-        }
+        document.dispatchEvent(new CustomEvent("brand:identity:update", { detail: next }));
         return next;
       });
     };
@@ -265,26 +257,27 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
   const clearLogo = useCallback(() => {
     setIdentity((prev) => {
       const next = { ...prev, logoDataUrl: undefined };
-      try {
-        persistBrandIdentity(next);
-      } catch { /* ignore */ }
+      document.dispatchEvent(new CustomEvent("brand:identity:update", { detail: next }));
       return next;
     });
     if (logoInputRef.current) logoInputRef.current.value = "";
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
-      persistColors(colors);
+      await Promise.all([
+        persistColors(colors),
+        persistBrandIdentity(identity)
+      ]);
       applyBrandColors(colors);
-      persistBrandIdentity(identity);
       document.dispatchEvent(new CustomEvent("brand:update", { detail: colors }));
+      router.refresh();
     } catch { /* ignore */ }
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 2000);
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     const defaults = { ...DEFAULT_BRAND_COLORS };
     setColors(defaults);
     try {
@@ -296,42 +289,18 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
     setLogoError("");
     if (logoInputRef.current) logoInputRef.current.value = "";
     document.dispatchEvent(new CustomEvent("brand:reset"));
-  };
-
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
     
-    if (file.size > 2 * 1024 * 1024) {
-      alert("El logo no debe superar los 2MB.");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      setColors((prev) => {
-        const next = { ...prev, logoUrl: base64 };
-        try {
-          persistColors(next);
-          document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
-        } catch { /* ignore */ }
-        return next;
-      });
-    };
-    reader.readAsDataURL(file);
+    // Also reset in DB
+    try {
+      await Promise.all([
+        persistColors(defaults),
+        persistBrandIdentity(DEFAULT_BRAND_IDENTITY)
+      ]);
+      router.refresh();
+    } catch { /* ignore */ }
   };
 
-  const handleRemoveLogo = () => {
-    setColors((prev) => {
-      const next = { ...prev, logoUrl: "" };
-      try {
-        persistColors(next);
-        document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
-      } catch { /* ignore */ }
-      return next;
-    });
-  };
+
 
   return (
     <section
@@ -494,50 +463,7 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
         ))}
       </div>
 
-      {/* ── Logo Upload ── */}
-      <div className="border-t border-border bg-card px-6 py-5">
-        <label htmlFor="logo-upload" className="text-sm font-semibold leading-none text-card-foreground block mb-3">
-          Logotipo de la Empresa
-        </label>
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div className="relative w-24 h-24 rounded-xl border-2 border-dashed border-border flex items-center justify-center bg-muted/20 overflow-hidden group">
-            {colors.logoUrl ? (
-              <>
-                <img src={colors.logoUrl} alt="Logo" className="w-full h-full object-contain p-2" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={handleRemoveLogo} className="p-2 bg-destructive text-destructive-foreground rounded-full hover:scale-105 transition-transform">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center text-muted-foreground gap-1">
-                <ImageIcon className="w-6 h-6 opacity-50" />
-                <span className="text-[10px] font-medium uppercase tracking-wider">Vacio</span>
-              </div>
-            )}
-          </div>
-          <div className="space-y-2 flex-1">
-            <p className="text-xs text-muted-foreground max-w-sm">
-              Sube el logo corporativo del tenant. Este reemplazará al texto &quot;GE&quot; en la barra lateral.
-              Se recomiendan imágenes cuadradas o transparentes (PNG/SVG) menores a 2MB.
-            </p>
-            <div className="relative">
-              <input
-                id="logo-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleLogoUpload}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-              <button type="button" className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground border border-border rounded-lg text-sm font-medium transition-colors">
-                <Upload className="w-4 h-4" />
-                Subir Imagen
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+
 
       {/* ── Contraste y Fuentes ── */}
       <div className="border-t border-border bg-muted/20 px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-6">

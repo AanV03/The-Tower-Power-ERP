@@ -83,10 +83,11 @@ const script = `
     }
 
     if (colors.primaryColor && colors.primaryColor.startsWith("#")) {
+      const hsl = hexToHslTriplet(colors.primaryColor);
       setProperty("--brand-orange", colors.primaryColor);
       setProperty("--sidebar-accent-active", colors.primaryColor);
-      setProperty("--primary", colors.primaryColor);
-      setProperty("--ring", colors.primaryColor);
+      setProperty("--primary", hsl);
+      setProperty("--ring", hsl);
     }
 
     if (colors.contrast) {

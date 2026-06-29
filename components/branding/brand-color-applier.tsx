@@ -65,12 +65,23 @@ function hexToHslTriplet(hex: string): string {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
-function isLightColor(hex: string): boolean {
+function isLightColor(hex: string, isDarkMode: boolean = false): boolean {
   const normalized = hex.replace("#", "");
   if (normalized.length !== 6) return false;
-  const r = parseInt(normalized.slice(0, 2), 16);
-  const g = parseInt(normalized.slice(2, 4), 16);
-  const b = parseInt(normalized.slice(4, 6), 16);
+  let r = parseInt(normalized.slice(0, 2), 16);
+  let g = parseInt(normalized.slice(2, 4), 16);
+  let b = parseInt(normalized.slice(4, 6), 16);
+
+  if (isDarkMode) {
+    r = r * 0.5 + 13 * 0.5;
+    g = g * 0.5 + 15 * 0.5;
+    b = b * 0.5 + 24 * 0.5;
+  } else {
+    r = r * 0.85 + 255 * 0.15;
+    g = g * 0.85 + 255 * 0.15;
+    b = b * 0.85 + 255 * 0.15;
+  }
+
   const yiq = (r * 299 + g * 587 + b * 114) / 1000;
   return yiq >= 128;
 }
@@ -105,20 +116,43 @@ function removeBrandProperty(name: string) {
  *   --ring             → focus ring
  */
 export function applyBrandColors(colors: Partial<BrandColors>) {
+  let isDarkMode = false;
+  if (typeof document !== "undefined") {
+    isDarkMode = document.documentElement.classList.contains("dark");
+  }
+
   if (colors.sidebarBg !== undefined && colors.sidebarBg.startsWith("#")) {
     setBrandProperty("--sidebar-bg", colors.sidebarBg);
-    const isLight = isLightColor(colors.sidebarBg);
-    setBrandProperty("--sidebar-text-primary", isLight ? "#0f172a" : "#f8fafc");
-    setBrandProperty("--sidebar-text-secondary", isLight ? "rgba(15, 23, 42, 0.7)" : "rgba(248, 250, 252, 0.7)");
-    setBrandProperty("--sidebar-border-color", isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)");
+    const isLight = isLightColor(colors.sidebarBg, isDarkMode);
+    const textPrimary = isLight ? "#0f172a" : "#f8fafc";
+    const textSecondary = isLight ? "rgba(15, 23, 42, 0.7)" : "rgba(248, 250, 252, 0.7)";
+    const borderColor = isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)";
+    
+    setBrandProperty("--sidebar-text-primary", textPrimary);
+    setBrandProperty("--sidebar-text-secondary", textSecondary);
+    setBrandProperty("--sidebar-border-color", borderColor);
+    
+    // Also update shell variables
+    setBrandProperty("--shell-sidebar-foreground", textPrimary);
+    setBrandProperty("--shell-sidebar-foreground-secondary", textSecondary);
+    setBrandProperty("--shell-sidebar-border-color", borderColor);
   }
 
   if (colors.topbarBg !== undefined && colors.topbarBg.startsWith("#")) {
     setBrandProperty("--topbar-bg", colors.topbarBg);
-    const isLight = isLightColor(colors.topbarBg);
-    setBrandProperty("--topbar-foreground", isLight ? "#0f172a" : "#f8fafc");
-    setBrandProperty("--topbar-foreground-secondary", isLight ? "rgba(15, 23, 42, 0.68)" : "rgba(248, 250, 252, 0.65)");
-    setBrandProperty("--topbar-border-color", isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)");
+    const isLight = isLightColor(colors.topbarBg, isDarkMode);
+    const textPrimary = isLight ? "#0f172a" : "#f8fafc";
+    const textSecondary = isLight ? "rgba(15, 23, 42, 0.68)" : "rgba(248, 250, 252, 0.65)";
+    const borderColor = isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)";
+    
+    setBrandProperty("--topbar-foreground", textPrimary);
+    setBrandProperty("--topbar-foreground-secondary", textSecondary);
+    setBrandProperty("--topbar-border-color", borderColor);
+    
+    // Also update shell variables
+    setBrandProperty("--shell-topbar-foreground", textPrimary);
+    setBrandProperty("--shell-topbar-foreground-secondary", textSecondary);
+    setBrandProperty("--shell-topbar-border-color", borderColor);
   }
 
   if (colors.radius !== undefined)
@@ -130,13 +164,24 @@ export function applyBrandColors(colors: Partial<BrandColors>) {
 
   if (colors.primaryColor !== undefined && colors.primaryColor.startsWith("#")) {
     const hex = colors.primaryColor;
+    const hsl = hexToHslTriplet(hex);
+    
+    // Evaluate if the primary color is light to determine the appropriate foreground
+    const isLight = isLightColor(hex, false);
+    const primaryForegroundHex = isLight ? "#0f172a" : "#ffffff";
+    const primaryForegroundHsl = hexToHslTriplet(primaryForegroundHex);
+
     setBrandProperty("--brand-orange", hex);
     setBrandProperty("--sidebar-accent-active", hex);
-    setBrandProperty("--primary", hex);       // used by shadcn Button (var(--primary))
-    setBrandProperty("--ring", hex);           // focus ring matches primary
+    setBrandProperty("--sidebar-accent-active-foreground", primaryForegroundHex);
+    setBrandProperty("--primary", hsl);       // used by shadcn Button (hsl(var(--primary)))
+    setBrandProperty("--primary-foreground", primaryForegroundHsl);
+    setBrandProperty("--ring", hsl);           // focus ring matches primary
   }
 
   if (typeof document !== "undefined") {
+    // Dynamic style injection is removed to allow globals.css gradients to function properly.
+
     if (colors.contrast !== undefined) {
       document.documentElement.setAttribute("data-contrast", colors.contrast);
     }
@@ -163,16 +208,29 @@ export function resetBrandColors() {
     "--topbar-foreground-secondary",
     "--topbar-border-color",
     "--sidebar-text-primary",
+    "--sidebar-text-secondary",
+    "--sidebar-border-color",
+    "--shell-sidebar-foreground",
+    "--shell-sidebar-foreground-secondary",
+    "--shell-sidebar-border-color",
+    "--shell-topbar-foreground",
+    "--shell-topbar-foreground-secondary",
+    "--shell-topbar-border-color",
     "--radius",
     "--brand-yellow",
     "--brand-orange",
     "--sidebar-accent-active",
+    "--sidebar-accent-active-foreground",
     "--primary",
+    "--primary-foreground",
     "--ring",
   ];
   for (const p of props) removeBrandProperty(p);
 
   if (typeof document !== "undefined") {
+    const styleEl = document.getElementById("dynamic-brand-colors");
+    if (styleEl) styleEl.remove();
+
     document.documentElement.removeAttribute("data-contrast");
     document.documentElement.removeAttribute("data-font");
     document.documentElement.style.removeProperty("--font-family-override");
@@ -202,11 +260,28 @@ export function BrandColorApplier() {
     };
     const onReset = () => resetBrandColors();
 
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === "class") {
+          try {
+            const currentRaw = localStorage.getItem(BRAND_STORAGE_KEY);
+            if (currentRaw) {
+               applyBrandColors(normalizeBrandColors(JSON.parse(currentRaw) as Partial<BrandColors>));
+            } else {
+               applyBrandColors(DEFAULT_BRAND_COLORS);
+            }
+          } catch { /* ignore */ }
+        }
+      }
+    });
+    observer.observe(document.documentElement, { attributes: true });
+
     document.addEventListener("brand:update", onUpdate);
     document.addEventListener("brand:reset", onReset);
     return () => {
       document.removeEventListener("brand:update", onUpdate);
       document.removeEventListener("brand:reset", onReset);
+      observer.disconnect();
       // Restore scrollbars on unmount
       document.documentElement.style.overflow = "";
       document.body.style.overflow = "";

@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "../styles/contrast-medium.css";
+@import "../styles/contrast-high.css";
 
 @theme {
   --color-background: var(--background);
@@ -295,7 +297,7 @@
 
   .glass-topbar {
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.9)),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(248, 250, 252, 0.05)),
       var(--topbar-bg);
     border-color: var(--shell-topbar-border-color);
     color: var(--shell-topbar-foreground);
@@ -304,7 +306,7 @@
   .glass-sidebar {
     background:
       radial-gradient(circle at 0% 0%, rgba(var(--nav-section-rgb, 237, 197, 49), 0.14), transparent 36%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.88)),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(248, 250, 252, 0.05)),
       var(--sidebar-bg);
     border-color: var(--shell-sidebar-border-color);
     color: var(--shell-sidebar-foreground);
@@ -313,7 +315,7 @@
   .glass-panel-strong.glass-sidebar {
     background:
       radial-gradient(circle at 0% 0%, rgba(var(--nav-section-rgb, 237, 197, 49), 0.16), transparent 36%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.9)),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(248, 250, 252, 0.05)),
       var(--sidebar-bg);
     border-color: var(--shell-sidebar-border-color);
     color: var(--shell-sidebar-foreground);
@@ -321,13 +323,13 @@
 
   .glass-menu.glass-topbar {
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96)),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(248, 250, 252, 0.1)),
       var(--topbar-bg);
   }
 
   .glass-menu.glass-sidebar {
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96)),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(248, 250, 252, 0.1)),
       var(--sidebar-bg);
   }
 
@@ -338,33 +340,33 @@
 
   .dark .glass-topbar {
     background:
-      linear-gradient(180deg, rgba(14, 16, 24, 0.98), rgba(9, 10, 15, 0.94)),
+      linear-gradient(180deg, rgba(14, 16, 24, 0.4), rgba(9, 10, 15, 0.5)),
       var(--topbar-bg);
   }
 
   .dark .glass-sidebar {
     background:
       radial-gradient(circle at 0% 0%, rgba(var(--nav-section-rgb, 237, 197, 49), 0.1), transparent 34%),
-      linear-gradient(180deg, rgba(13, 15, 24, 0.99), rgba(7, 8, 13, 0.97)),
+      linear-gradient(180deg, rgba(13, 15, 24, 0.4), rgba(7, 8, 13, 0.5)),
       var(--sidebar-bg);
   }
 
   .dark .glass-panel-strong.glass-sidebar {
     background:
       radial-gradient(circle at 0% 0%, rgba(var(--nav-section-rgb, 237, 197, 49), 0.12), transparent 34%),
-      linear-gradient(180deg, rgba(13, 15, 24, 0.99), rgba(7, 8, 13, 0.97)),
+      linear-gradient(180deg, rgba(13, 15, 24, 0.4), rgba(7, 8, 13, 0.5)),
       var(--sidebar-bg);
   }
 
   .dark .glass-menu.glass-topbar {
     background:
-      linear-gradient(180deg, rgba(15, 17, 25, 0.99), rgba(9, 10, 15, 0.97)),
+      linear-gradient(180deg, rgba(15, 17, 25, 0.5), rgba(9, 10, 15, 0.6)),
       var(--topbar-bg);
   }
 
   .dark .glass-menu.glass-sidebar {
     background:
-      linear-gradient(180deg, rgba(15, 17, 25, 0.99), rgba(9, 10, 15, 0.97)),
+      linear-gradient(180deg, rgba(15, 17, 25, 0.5), rgba(9, 10, 15, 0.6)),
       var(--sidebar-bg);
   }
 
@@ -458,4 +460,17 @@
   .aurora {
     transition: none;
   }
+}
+
+/* Accessibility Font Overrides */
+:root[data-font="serif"] * {
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+}
+
+:root[data-font="mono"] * {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+:root[data-font="elegant"] * {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }

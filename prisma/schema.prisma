@@ -206,56 +206,58 @@ enum OutboxStatus {
 }
 
 model Tenant {
-  id          String       @id @default(cuid())
-  name        String
-  legalName   String?
-  taxId       String?
-  status      TenantStatus @default(ACTIVE)
-  planId      String?
-  plan        SaasPlan?    @relation(fields: [planId], references: [id])
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id            String       @id @default(cuid())
+  name          String
+  legalName     String?
+  taxId         String?
+  status        TenantStatus @default(ACTIVE)
+  planId        String?
+  plan          SaasPlan?    @relation(fields: [planId], references: [id])
+  brandColors   Json?
+  brandIdentity Json?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
-  modules                 TenantModule[]
-  branches                Branch[]
-  users                   User[]
-  roles                   Role[]
-  members                 Member[]
-  membershipPlans         MembershipPlan[]
-  subscriptions           Subscription[]
-  subscriptionPauses      SubscriptionPause[]
+  modules                   TenantModule[]
+  branches                  Branch[]
+  users                     User[]
+  roles                     Role[]
+  members                   Member[]
+  membershipPlans           MembershipPlan[]
+  subscriptions             Subscription[]
+  subscriptionPauses        SubscriptionPause[]
   subscriptionCancellations SubscriptionCancellation[]
-  accessDevices           AccessDevice[]
-  suppliers               Supplier[]
-  chartAccounts           ChartAccount[]
-  invoices                Invoice[]
-  invoiceItems            InvoiceItem[]
-  payments                Payment[]
-  paymentGatewayEvents    PaymentGatewayEvent[]
-  journalEntries          JournalEntry[]
-  journalEntryLines       JournalEntryLine[]
-  productCategories       ProductCategory[]
-  products                Product[]
-  warehouses              Warehouse[]
-  inventoryItems          InventoryItem[]
-  inventoryMovements      InventoryMovement[]
-  posRegisters            PosRegister[]
-  cashSessions            CashSession[]
-  sales                   Sale[]
-  saleItems               SaleItem[]
-  positions               Position[]
-  employees               Employee[]
-  employeeContracts       EmployeeContract[]
-  attendanceRecords       AttendanceRecord[]
-  payrollPeriods          PayrollPeriod[]
-  payrollItems            PayrollItem[]
-  specialists             Specialist[]
-  specialistContracts     SpecialistContract[]
-  specialistServices      SpecialistService[]
-  specialistSessions      SpecialistSession[]
-  specialistSettlements   SpecialistSettlement[]
+  accessDevices             AccessDevice[]
+  suppliers                 Supplier[]
+  chartAccounts             ChartAccount[]
+  invoices                  Invoice[]
+  invoiceItems              InvoiceItem[]
+  payments                  Payment[]
+  paymentGatewayEvents      PaymentGatewayEvent[]
+  journalEntries            JournalEntry[]
+  journalEntryLines         JournalEntryLine[]
+  productCategories         ProductCategory[]
+  products                  Product[]
+  warehouses                Warehouse[]
+  inventoryItems            InventoryItem[]
+  inventoryMovements        InventoryMovement[]
+  posRegisters              PosRegister[]
+  cashSessions              CashSession[]
+  sales                     Sale[]
+  saleItems                 SaleItem[]
+  positions                 Position[]
+  employees                 Employee[]
+  employeeContracts         EmployeeContract[]
+  attendanceRecords         AttendanceRecord[]
+  payrollPeriods            PayrollPeriod[]
+  payrollItems              PayrollItem[]
+  specialists               Specialist[]
+  specialistContracts       SpecialistContract[]
+  specialistServices        SpecialistService[]
+  specialistSessions        SpecialistSession[]
+  specialistSettlements     SpecialistSettlement[]
   specialistSettlementItems SpecialistSettlementItem[]
-  outboxEvents            OutboxEvent[]
+  outboxEvents              OutboxEvent[]
 
   @@index([status])
   @@map("tenants")
@@ -322,31 +324,31 @@ model Branch {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  tenantId     String?
-  tenant       Tenant?    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  branchId     String?
-  branch       Branch?    @relation(fields: [branchId], references: [id])
-  name         String?
-  email        String?    @unique
-  emailVerified DateTime?
-  image        String?
-  passwordHash String?
+  id               String     @id @default(cuid())
+  tenantId         String?
+  tenant           Tenant?    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branchId         String?
+  branch           Branch?    @relation(fields: [branchId], references: [id])
+  name             String?
+  email            String?    @unique
+  emailVerified    DateTime?
+  image            String?
+  passwordHash     String?
   twoFactorSecret  String?
   twoFactorEnabled Boolean    @default(false)
-  employeeId   String?    @unique
-  employee     Employee?  @relation(fields: [employeeId], references: [id])
-  status       UserStatus @default(INVITED)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  employeeId       String?    @unique
+  employee         Employee?  @relation(fields: [employeeId], references: [id])
+  status           UserStatus @default(INVITED)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
-  accounts                    Account[]
-  sessions                    Session[]
-  roles                       UserRole[]
-  approvedSubscriptionPauses  SubscriptionPause[] @relation("SubscriptionPauseApprover")
-  cancelledSubscriptions      SubscriptionCancellation[] @relation("SubscriptionCancellationActor")
-  openedCashSessions          CashSession[] @relation("CashSessionOpenedBy")
-  closedCashSessions          CashSession[] @relation("CashSessionClosedBy")
+  accounts                   Account[]
+  sessions                   Session[]
+  roles                      UserRole[]
+  approvedSubscriptionPauses SubscriptionPause[]        @relation("SubscriptionPauseApprover")
+  cancelledSubscriptions     SubscriptionCancellation[] @relation("SubscriptionCancellationActor")
+  openedCashSessions         CashSession[]              @relation("CashSessionOpenedBy")
+  closedCashSessions         CashSession[]              @relation("CashSessionClosedBy")
 
   @@unique([tenantId, email])
   @@index([tenantId, status])
@@ -495,21 +497,21 @@ model MembershipPlan {
 }
 
 model Subscription {
-  id                  String             @id @default(cuid())
-  tenantId            String
-  tenant              Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  memberId            String
-  member              Member             @relation(fields: [memberId], references: [id])
-  planId              String
-  plan                MembershipPlan     @relation(fields: [planId], references: [id])
-  status              SubscriptionStatus @default(ACTIVE)
-  externalReference   String?
-  startDate           DateTime
-  endDate             DateTime?
-  nextBillingDate     DateTime?
-  autoRenew           Boolean            @default(true)
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  id                String             @id @default(cuid())
+  tenantId          String
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  memberId          String
+  member            Member             @relation(fields: [memberId], references: [id])
+  planId            String
+  plan              MembershipPlan     @relation(fields: [planId], references: [id])
+  status            SubscriptionStatus @default(ACTIVE)
+  externalReference String?
+  startDate         DateTime
+  endDate           DateTime?
+  nextBillingDate   DateTime?
+  autoRenew         Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   pauses        SubscriptionPause[]
   cancellations SubscriptionCancellation[]
@@ -593,17 +595,17 @@ model Supplier {
 }
 
 model ChartAccount {
-  id        String      @id @default(cuid())
+  id        String         @id @default(cuid())
   tenantId  String
-  tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   code      String
   name      String
   type      AccountType
   parentId  String?
-  parent    ChartAccount? @relation("ChartAccountTree", fields: [parentId], references: [id])
+  parent    ChartAccount?  @relation("ChartAccountTree", fields: [parentId], references: [id])
   children  ChartAccount[] @relation("ChartAccountTree")
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
   journalLines JournalEntryLine[]
 
@@ -661,29 +663,29 @@ model InvoiceItem {
 }
 
 model Payment {
-  id                 String        @id @default(cuid())
-  tenantId           String
-  tenant             Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  branchId           String?
-  branch             Branch?       @relation(fields: [branchId], references: [id])
-  invoiceId          String?
-  invoice            Invoice?      @relation(fields: [invoiceId], references: [id])
-  memberId           String?
-  member             Member?       @relation(fields: [memberId], references: [id])
-  subscriptionId     String?
-  subscription       Subscription? @relation(fields: [subscriptionId], references: [id])
-  saleId             String?
-  sale               Sale?         @relation(fields: [saleId], references: [id])
-  paymentGatewayId   String?
-  amount             Decimal       @db.Decimal(12, 2)
-  currency           String        @default("MXN")
-  method             PaymentMethod
-  status             PaymentStatus @default(PENDING)
-  provider           String?
-  externalReference  String?
-  paidAt             DateTime?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  id                String        @id @default(cuid())
+  tenantId          String
+  tenant            Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branchId          String?
+  branch            Branch?       @relation(fields: [branchId], references: [id])
+  invoiceId         String?
+  invoice           Invoice?      @relation(fields: [invoiceId], references: [id])
+  memberId          String?
+  member            Member?       @relation(fields: [memberId], references: [id])
+  subscriptionId    String?
+  subscription      Subscription? @relation(fields: [subscriptionId], references: [id])
+  saleId            String?
+  sale              Sale?         @relation(fields: [saleId], references: [id])
+  paymentGatewayId  String?
+  amount            Decimal       @db.Decimal(12, 2)
+  currency          String        @default("MXN")
+  method            PaymentMethod
+  status            PaymentStatus @default(PENDING)
+  provider          String?
+  externalReference String?
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   @@unique([tenantId, provider, externalReference])
   @@index([tenantId, branchId])
@@ -743,16 +745,16 @@ model JournalEntryLine {
 }
 
 model ProductCategory {
-  id        String       @id @default(cuid())
+  id        String            @id @default(cuid())
   tenantId  String
-  tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name      String
   parentId  String?
-  parent    ProductCategory? @relation("ProductCategoryTree", fields: [parentId], references: [id])
+  parent    ProductCategory?  @relation("ProductCategoryTree", fields: [parentId], references: [id])
   children  ProductCategory[] @relation("ProductCategoryTree")
-  status    BranchStatus @default(ACTIVE)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  status    BranchStatus      @default(ACTIVE)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 
   products Product[]
 
@@ -761,20 +763,20 @@ model ProductCategory {
 }
 
 model Product {
-  id         String          @id @default(cuid())
+  id         String           @id @default(cuid())
   tenantId   String
-  tenant     Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant     Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   sku        String
   name       String
   categoryId String?
   category   ProductCategory? @relation(fields: [categoryId], references: [id])
-  price      Decimal         @db.Decimal(12, 2)
-  cost       Decimal         @db.Decimal(12, 2)
-  taxRate    Decimal         @db.Decimal(5, 2)
+  price      Decimal          @db.Decimal(12, 2)
+  cost       Decimal          @db.Decimal(12, 2)
+  taxRate    Decimal          @db.Decimal(5, 2)
   imageUrl   String?
-  status     BranchStatus    @default(ACTIVE)
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  status     BranchStatus     @default(ACTIVE)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 
   invoiceItems       InvoiceItem[]
   inventoryItems     InventoryItem[]
@@ -862,20 +864,20 @@ model PosRegister {
 }
 
 model CashSession {
-  id              String            @id @default(cuid())
-  tenantId        String
-  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  registerId      String
-  register        PosRegister       @relation(fields: [registerId], references: [id])
-  openedByUserId  String
-  openedByUser    User              @relation("CashSessionOpenedBy", fields: [openedByUserId], references: [id])
-  closedByUserId  String?
-  closedByUser    User?             @relation("CashSessionClosedBy", fields: [closedByUserId], references: [id])
-  openingAmount   Decimal           @db.Decimal(12, 2)
-  closingAmount   Decimal?          @db.Decimal(12, 2)
-  status          CashSessionStatus @default(OPEN)
-  openedAt        DateTime          @default(now())
-  closedAt        DateTime?
+  id             String            @id @default(cuid())
+  tenantId       String
+  tenant         Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  registerId     String
+  register       PosRegister       @relation(fields: [registerId], references: [id])
+  openedByUserId String
+  openedByUser   User              @relation("CashSessionOpenedBy", fields: [openedByUserId], references: [id])
+  closedByUserId String?
+  closedByUser   User?             @relation("CashSessionClosedBy", fields: [closedByUserId], references: [id])
+  openingAmount  Decimal           @db.Decimal(12, 2)
+  closingAmount  Decimal?          @db.Decimal(12, 2)
+  status         CashSessionStatus @default(OPEN)
+  openedAt       DateTime          @default(now())
+  closedAt       DateTime?
 
   sales Sale[]
 
@@ -885,22 +887,22 @@ model CashSession {
 }
 
 model Sale {
-  id            String       @id @default(cuid())
+  id            String      @id @default(cuid())
   tenantId      String
-  tenant        Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branchId      String
-  branch        Branch       @relation(fields: [branchId], references: [id])
+  branch        Branch      @relation(fields: [branchId], references: [id])
   cashSessionId String
-  cashSession   CashSession  @relation(fields: [cashSessionId], references: [id])
+  cashSession   CashSession @relation(fields: [cashSessionId], references: [id])
   memberId      String?
-  member        Member?      @relation(fields: [memberId], references: [id])
-  status        SaleStatus   @default(DRAFT)
-  subtotal      Decimal      @db.Decimal(12, 2)
-  tax           Decimal      @db.Decimal(12, 2)
-  total         Decimal      @db.Decimal(12, 2)
+  member        Member?     @relation(fields: [memberId], references: [id])
+  status        SaleStatus  @default(DRAFT)
+  subtotal      Decimal     @db.Decimal(12, 2)
+  tax           Decimal     @db.Decimal(12, 2)
+  total         Decimal     @db.Decimal(12, 2)
   paidAt        DateTime?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   items    SaleItem[]
   payments Payment[]
@@ -1027,18 +1029,18 @@ model PayrollPeriod {
 }
 
 model PayrollItem {
-  id              String        @id @default(cuid())
-  tenantId        String
-  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  payrollPeriodId String
-  payrollPeriod   PayrollPeriod @relation(fields: [payrollPeriodId], references: [id], onDelete: Cascade)
-  employeeId      String
-  employee        Employee      @relation(fields: [employeeId], references: [id])
-  baseAmount      Decimal       @db.Decimal(12, 2)
-  overtimeAmount  Decimal       @default(0) @db.Decimal(12, 2)
-  commissionAmount Decimal      @default(0) @db.Decimal(12, 2)
-  deductions      Decimal       @default(0) @db.Decimal(12, 2)
-  netAmount       Decimal       @db.Decimal(12, 2)
+  id               String        @id @default(cuid())
+  tenantId         String
+  tenant           Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payrollPeriodId  String
+  payrollPeriod    PayrollPeriod @relation(fields: [payrollPeriodId], references: [id], onDelete: Cascade)
+  employeeId       String
+  employee         Employee      @relation(fields: [employeeId], references: [id])
+  baseAmount       Decimal       @db.Decimal(12, 2)
+  overtimeAmount   Decimal       @default(0) @db.Decimal(12, 2)
+  commissionAmount Decimal       @default(0) @db.Decimal(12, 2)
+  deductions       Decimal       @default(0) @db.Decimal(12, 2)
+  netAmount        Decimal       @db.Decimal(12, 2)
 
   @@unique([tenantId, payrollPeriodId, employeeId])
   @@map("payroll_items")
@@ -1157,15 +1159,15 @@ model SpecialistSettlement {
 }
 
 model SpecialistSettlementItem {
-  id           String                @id @default(cuid())
+  id           String               @id @default(cuid())
   tenantId     String
-  tenant       Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   settlementId String
-  settlement   SpecialistSettlement  @relation(fields: [settlementId], references: [id], onDelete: Cascade)
+  settlement   SpecialistSettlement @relation(fields: [settlementId], references: [id], onDelete: Cascade)
   sessionId    String?
-  session      SpecialistSession?    @relation(fields: [sessionId], references: [id])
+  session      SpecialistSession?   @relation(fields: [sessionId], references: [id])
   concept      String
-  amount       Decimal               @db.Decimal(12, 2)
+  amount       Decimal              @db.Decimal(12, 2)
 
   @@index([tenantId, settlementId])
   @@map("specialist_settlement_items")
