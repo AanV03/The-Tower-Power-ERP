@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { gsap } from "gsap";
+import Link from "next/link";
 import BackgroundGrid from "../BackgroundGrid";
 import AuroraBackground from "../AuroraBackground";
 
@@ -81,7 +82,11 @@ export default function Hero() {
 
         <Link
           href="/register"
+<<<<<<< HEAD
           className="mt-10 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold uppercase tracking-wider transition-all duration-300 rounded-lg"
+=======
+          className="mt-10 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold uppercase tracking-wider transition-all duration-300 rounded-lg inline-block text-center"
+>>>>>>> dbc9da7f35b34c39a7ebe01a3918bc8940aa20ac
         >
           Start Training
         </Link>
