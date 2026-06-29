@@ -16,6 +16,7 @@ const PUBLIC_AUTH_API_PREFIXES = [
   "/api/auth/login",
   "/api/auth/register",
   "/api/auth/logout",
+  "/api/auth/2fa/generate",
   "/api/auth/2fa/verify",
   "/api/auth/callback",
   "/api/auth/csrf",
@@ -76,14 +77,21 @@ function stripLocale(pathname: string) {
   return stripped.length > 0 ? stripped : "/";
 }
 
-function isLocalizedAuthPage(pathname: string) {
-  return locales.some(
-    (locale) =>
-      pathname === `/${locale}/signin` ||
-      pathname === `/${locale}/signup` ||
-      pathname.startsWith(`/${locale}/signin/`) ||
-      pathname.startsWith(`/${locale}/signup/`),
-  );
+function getLegacyAuthRedirect(pathname: string) {
+  if (pathname === "/signin" || pathname.startsWith("/signin/")) return "/login";
+  if (pathname === "/signup" || pathname.startsWith("/signup/")) return "/register";
+
+  for (const locale of locales) {
+    if (pathname === `/${locale}/signin` || pathname.startsWith(`/${locale}/signin/`)) {
+      return "/login";
+    }
+
+    if (pathname === `/${locale}/signup` || pathname.startsWith(`/${locale}/signup/`)) {
+      return "/register";
+    }
+  }
+
+  return null;
 }
 
 function isPublicAuthApi(pathname: string) {
@@ -201,8 +209,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const isPublicPage =
-    PUBLIC_PAGES.has(pathname) || isLocalizedAuthPage(pathname);
+  const legacyAuthRedirect = getLegacyAuthRedirect(pathname);
+  if (legacyAuthRedirect) {
+    const url = new URL(legacyAuthRedirect, request.url);
+    return NextResponse.redirect(url);
+  }
+
+  const isPublicPage = PUBLIC_PAGES.has(pathname);
+
+  if (!pathname.startsWith("/api") && !isPublicPage && !hasLocale(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${defaultLocale}${pathname}`;
+    return NextResponse.redirect(url);
+  }
 
   if (pathname.startsWith("/api") && isPublicAuthApi(pathname)) {
     return NextResponse.next();
@@ -217,12 +236,6 @@ export async function middleware(request: NextRequest) {
     }
 
     return nextWithTenantHeaders(request, context);
-  }
-
-  if (!pathname.startsWith("/api") && !isPublicPage && !hasLocale(pathname)) {
-    const url = request.nextUrl.clone();
-    url.pathname = `/${defaultLocale}${pathname}`;
-    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();

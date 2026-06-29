@@ -30,7 +30,7 @@ export function AttendancePanel({ records }: { records: HrAttendanceRow[] }) {
               <option value="open">Abiertas</option>
               <option value="closed">Cerradas</option>
             </NativeSelect>
-            <Button variant="outline" size="icon-sm" aria-label="Filtrar asistencia">
+            <Button variant="outline" size="icon-sm" aria-label="Filtrar asistencia" disabled>
               <Filter />
             </Button>
           </div>

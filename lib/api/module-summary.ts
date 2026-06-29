@@ -5,6 +5,7 @@ import { MaintenanceTicket } from "@/lib/db/mongo-models";
 import { formatCurrency } from "@/lib/api/pagination";
 import type { TenantContext } from "@/lib/auth/rbac";
 import type { MetricTone, ModuleMetric, ModuleRow } from "@/data/modules";
+import { DEFAULT_TIME_ZONE, getDayBoundsForTimeZone } from "@/lib/date/timezone";
 
 export type ApiModuleMetric = Omit<ModuleMetric, "label"> & {
   key: string;
@@ -37,6 +38,12 @@ function branchWhere(context: TenantContext) {
 function startOfToday() {
   const date = new Date();
   date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function endOfToday() {
+  const date = startOfToday();
+  date.setHours(23, 59, 59, 999);
   return date;
 }
 
@@ -215,9 +222,17 @@ async function inventorySummary(context: TenantContext): Promise<ApiModuleSummar
 }
 
 async function hrSummary(context: TenantContext): Promise<ApiModuleSummary> {
+  const scopedBranch = context.branchId
+    ? await prisma.branch.findFirst({
+        where: { tenantId: context.tenantId, id: context.branchId },
+        select: { timezone: true },
+      })
+    : null;
+  const today = getDayBoundsForTimeZone(new Date(), scopedBranch?.timezone ?? DEFAULT_TIME_ZONE);
+
   const [employees, attendanceToday, payrollPeriods] = await Promise.all([
     prisma.employee.count({ where: { ...branchWhere(context), status: "ACTIVE" } }),
-    prisma.timeClock.count({ where: { ...branchWhere(context), clockIn: { gte: startOfToday() } } }),
+    prisma.timeClock.count({ where: { ...branchWhere(context), clockIn: { gte: today.start, lt: today.end }, clockOut: null } }),
     prisma.payrollPeriod.count({ where: { ...tenantWhere(context), status: "DRAFT" } }),
   ]);
 
@@ -261,9 +276,18 @@ async function marketingSummary(context: TenantContext): Promise<ApiModuleSummar
 }
 
 async function specialistsSummary(context: TenantContext): Promise<ApiModuleSummary> {
+  const scopedBranch = context.branchId
+    ? await prisma.branch.findFirst({
+        where: { tenantId: context.tenantId, id: context.branchId },
+        select: { timezone: true },
+      })
+    : null;
+  const today = getDayBoundsForTimeZone(new Date(), scopedBranch?.timezone ?? DEFAULT_TIME_ZONE);
   const [specialists, sessionsToday, draftSettlements] = await Promise.all([
     prisma.specialist.count({ where: { ...branchWhere(context), status: "ACTIVE" } }),
-    prisma.specialistSession.count({ where: { ...branchWhere(context), scheduledAt: { gte: startOfToday() } } }),
+    prisma.specialistSession.count({
+      where: { ...branchWhere(context), scheduledAt: { gte: today.start, lt: today.end } },
+    }),
     prisma.specialistSettlement.count({ where: { ...tenantWhere(context), status: "DRAFT" } }),
   ]);
 
@@ -424,10 +448,18 @@ async function accountingSummary(context: TenantContext): Promise<ApiModuleSumma
 }
 
 async function payrollSummary(context: TenantContext): Promise<ApiModuleSummary> {
+  const scopedBranch = context.branchId
+    ? await prisma.branch.findFirst({
+        where: { tenantId: context.tenantId, id: context.branchId },
+        select: { timezone: true },
+      })
+    : null;
+  const today = getDayBoundsForTimeZone(new Date(), scopedBranch?.timezone ?? DEFAULT_TIME_ZONE);
+
   const [draftPeriods, employees, attendanceToday, netPay] = await Promise.all([
     prisma.payrollPeriod.count({ where: { ...tenantWhere(context), status: "DRAFT" } }),
     prisma.employee.count({ where: { ...branchWhere(context), status: "ACTIVE" } }),
-    prisma.timeClock.count({ where: { ...branchWhere(context), clockIn: { gte: startOfToday() } } }),
+    prisma.timeClock.count({ where: { ...branchWhere(context), clockIn: { gte: today.start, lt: today.end }, clockOut: null } }),
     prisma.payrollItem.aggregate({ where: tenantWhere(context), _sum: { netAmount: true } }),
   ]);
 

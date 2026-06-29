@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Edit, Eye, MoreHorizontal, Search, UserX } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Edit, MoreHorizontal, Search } from "lucide-react";
 
 import { EmployeeFormDialog } from "@/components/modules/hr/employee-form-dialog";
 import {
@@ -42,8 +42,31 @@ const statusLabel = {
   INACTIVE: "Inactivo",
 };
 
+type StatusFilter = "ALL" | HrEmployeeRow["status"];
+
+function isStatusFilter(value: string): value is StatusFilter {
+  return value === "ALL" || value === "ACTIVE" || value === "INACTIVE";
+}
+
 export function EmployeeTable({ employees }: { employees: HrEmployeeRow[] }) {
   const [editingEmployee, setEditingEmployee] = useState<HrEmployeeRow | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+
+  const filteredEmployees = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return employees.filter((employee) => {
+      const matchesStatus = statusFilter === "ALL" || employee.status === statusFilter;
+      const matchesSearch =
+        normalizedQuery.length === 0 ||
+        [employee.name, employee.email, employee.position, employee.branch]
+          .filter(Boolean)
+          .some((value) => value.toLowerCase().includes(normalizedQuery));
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [employees, searchQuery, statusFilter]);
 
   function handleEmployeeAction(action: string | null, employee: HrEmployeeRow) {
     if (action === "edit") {
@@ -63,21 +86,32 @@ export function EmployeeTable({ employees }: { employees: HrEmployeeRow[] }) {
           <div className="flex min-w-0 items-center gap-2">
             <div className="relative min-w-0 flex-1 sm:w-64">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input className="pl-8" placeholder="Buscar empleado" aria-label="Buscar empleado" />
+              <Input
+                className="pl-8"
+                placeholder="Buscar empleado"
+                aria-label="Buscar empleado"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+              />
             </div>
             <div className="hidden w-36 sm:block">
-              <Select defaultValue="all">
+              <Select
+                value={statusFilter}
+                onValueChange={(value) => {
+                  if (value && isStatusFilter(value)) setStatusFilter(value);
+                }}
+              >
                 <StandardSelectTrigger aria-label="Filtrar estado">
                   <StandardSelectValue placeholder="Estado" />
                 </StandardSelectTrigger>
                 <StandardSelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="ALL">Todos</SelectItem>
                   <SelectItem value="ACTIVE">Activos</SelectItem>
                   <SelectItem value="INACTIVE">Inactivos</SelectItem>
                 </StandardSelectContent>
               </Select>
             </div>
-            <Button variant="outline" size="icon-sm" aria-label="Mas filtros">
+            <Button variant="outline" size="icon-sm" aria-label="Mas filtros" disabled>
               <MoreHorizontal />
             </Button>
           </div>
@@ -88,6 +122,11 @@ export function EmployeeTable({ employees }: { employees: HrEmployeeRow[] }) {
           <div className="px-6 py-12 text-center">
             <p className="font-medium text-foreground">Sin empleados registrados</p>
             <p className="mt-1 text-sm text-muted-foreground">La plantilla aparecera aqui cuando exista informacion.</p>
+          </div>
+        ) : filteredEmployees.length === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <p className="font-medium text-foreground">Sin resultados</p>
+            <p className="mt-1 text-sm text-muted-foreground">Ajusta la busqueda o el filtro de estado.</p>
           </div>
         ) : (
           <>
@@ -105,7 +144,7 @@ export function EmployeeTable({ employees }: { employees: HrEmployeeRow[] }) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {employees.map((employee) => (
+                  {filteredEmployees.map((employee) => (
                     <TableRow key={employee.id}>
                       <TableCell>
                         <div>
@@ -128,17 +167,9 @@ export function EmployeeTable({ employees }: { employees: HrEmployeeRow[] }) {
                             <StandardSelectValue placeholder="Opciones" />
                           </StandardSelectTrigger>
                           <StandardSelectContent align="end">
-                            <SelectItem value="view">
-                              <Eye />
-                              Ver expediente
-                            </SelectItem>
                             <SelectItem value="edit">
                               <Edit />
                               Editar
-                            </SelectItem>
-                            <SelectItem value="deactivate">
-                              <UserX />
-                              Desactivar
                             </SelectItem>
                           </StandardSelectContent>
                         </Select>
@@ -149,7 +180,7 @@ export function EmployeeTable({ employees }: { employees: HrEmployeeRow[] }) {
               </Table>
             </div>
             <div className="divide-y md:hidden">
-              {employees.map((employee) => (
+              {filteredEmployees.map((employee) => (
                 <div key={employee.id} className="space-y-3 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">

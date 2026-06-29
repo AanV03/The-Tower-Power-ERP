@@ -1,10 +1,11 @@
 import { prisma } from '@/lib/db/prisma';
+import { ApiError } from '@/lib/api/response';
 import { CreateSaleDTO } from '../schemas/pos.schema';
 
 export class PosService {
   static async executeSale(
     tenantId: string,
-    branchId: string,
+    _branchId: string | null,
     cashierId: string,
     payload: CreateSaleDTO
   ) {
@@ -13,11 +14,45 @@ export class PosService {
     const total = subtotal + tax;
 
     return await prisma.$transaction(async (tx) => {
-      
+      const cashSession = await tx.cashSession.findFirst({
+        where: {
+          id: payload.cashSessionId,
+          tenantId,
+          openedByUserId: cashierId,
+          status: 'OPEN',
+        },
+        include: {
+          register: {
+            select: { branchId: true },
+          },
+        },
+      });
+
+      if (!cashSession) {
+        throw new ApiError('La sesion de caja no esta abierta o no pertenece al usuario actual.', 404, 'CASH_SESSION_NOT_FOUND');
+      }
+
+      const saleBranchId = cashSession.register.branchId;
+
+      const warehouse = await tx.warehouse.findFirst({
+        where: {
+          tenantId,
+          branchId: saleBranchId,
+        },
+        select: { id: true },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      if (!warehouse) {
+        throw new ApiError('No hay un almacen asociado a la sucursal de la caja.', 400, 'WAREHOUSE_NOT_FOUND');
+      }
+
+      const warehouseId = warehouse.id;
+
       const sale = await tx.sale.create({
         data: {
           tenantId,
-          branchId,
+          branchId: saleBranchId,
           cashSessionId: payload.cashSessionId,
           memberId: payload.memberId,
           status: 'PAID', 
@@ -40,7 +75,7 @@ export class PosService {
       await tx.payment.create({
         data: {
           tenantId,
-          branchId,
+          branchId: saleBranchId,
           amount: total,
           currency: 'MXN',
           method: payload.paymentMethod,
@@ -54,7 +89,7 @@ export class PosService {
         const inventoryUpdate = await tx.inventoryItem.updateMany({
           where: {
             tenantId,
-            warehouseId: branchId,
+            warehouseId,
             productId: item.productId,
             quantityOnHand: { gte: item.quantity } 
           },
@@ -72,7 +107,7 @@ export class PosService {
         await tx.inventoryMovement.create({
           data: {
             tenantId,
-            warehouseId: branchId,
+            warehouseId,
             productId: item.productId,
             type: 'SALE',
             quantity: item.quantity,

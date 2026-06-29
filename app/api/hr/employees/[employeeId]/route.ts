@@ -72,8 +72,8 @@ export async function PATCH(
                 })
               ).id;
 
-      const updated = await tx.employee.update({
-        where: { id: existing.id },
+      await tx.employee.updateMany({
+        where: { id: existing.id, tenantId: context.tenantId },
         data: {
           firstName: data.firstName,
           lastName: data.lastName,
@@ -106,8 +106,8 @@ export async function PATCH(
         });
       }
 
-      return tx.employee.findUniqueOrThrow({
-        where: { id: updated.id },
+      return tx.employee.findFirstOrThrow({
+        where: { id: existing.id, tenantId: context.tenantId },
         include: { branch: true, position: true, contracts: true },
       });
     });

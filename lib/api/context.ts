@@ -6,6 +6,13 @@ import type { TenantContext } from "@/lib/auth/rbac";
 import { ApiError } from "@/lib/api/response";
 import { resolveModuleAccess } from "@/lib/api/module-access";
 
+const DEMO_MODE_GUARD_BYPASS = true;
+const DEMO_MODE_BYPASSED_ERRORS = new Set([
+  "MODULE_DISABLED",
+  "PERMISSION_DENIED",
+  "BRANCH_ACCESS_DENIED",
+]);
+
 function sessionToTenantContext(session: Session | null): TenantContext | null {
   if (!session?.user?.id || !session.user.tenantId) return null;
 
@@ -41,6 +48,14 @@ function translateGuardError(error: unknown): never {
   }
 
   throw error;
+}
+
+function shouldBypassDemoGuard(error: unknown) {
+  return (
+    DEMO_MODE_GUARD_BYPASS &&
+    error instanceof Error &&
+    DEMO_MODE_BYPASSED_ERRORS.has(error.message)
+  );
 }
 
 async function getCustomTenantContext() {
@@ -79,6 +94,9 @@ export async function requireApiContext(options?: {
       requireBranchAccess(context, options.branchId);
     }
   } catch (error) {
+    // Demo-only bypass: keep authentication required, but ignore module/RBAC/branch guards.
+    if (shouldBypassDemoGuard(error)) return context;
+
     translateGuardError(error);
   }
 

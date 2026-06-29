@@ -115,8 +115,8 @@ export async function POST(request: Request) {
         });
       }
 
-      return tx.employee.findUniqueOrThrow({
-        where: { id: createdEmployee.id },
+      return tx.employee.findFirstOrThrow({
+        where: { id: createdEmployee.id, tenantId: context.tenantId },
         include: { branch: true, position: true, contracts: true },
       });
     });

@@ -35,28 +35,39 @@ export function TimeClockDialog({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const employee = employees.find((item) => item.id === formData.get("employeeId"));
-
+  async function submitClockAction({
+    employeeId,
+    action,
+    source,
+    notes,
+  }: {
+    employeeId: string;
+    action: "CLOCK_IN" | "CLOCK_OUT";
+    source: "APP" | "MANUAL" | "BIOMETRIC";
+    notes?: FormDataEntryValue | null;
+  }) {
+    const employee = employees.find((item) => item.id === employeeId);
     if (!employee) {
       toast.error("Selecciona un empleado valido.");
       return;
     }
 
+    const normalizedNotes = typeof notes === "string" && notes.trim() ? notes.trim() : undefined;
+
     setIsSubmitting(true);
     try {
       const response = await fetch("/api/hr/time-clock", {
         method: "POST",
+        cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           employeeId: employee.id,
           branchId: employee.branchId,
-          action: formData.get("action"),
-          source: formData.get("source"),
-          notes: formData.get("notes") || undefined,
+          action,
+          source,
+          notes: normalizedNotes,
         }),
       });
       const result = await response.json();
@@ -67,12 +78,25 @@ export function TimeClockDialog({
 
       toast.success("Asistencia registrada correctamente.");
       setOpen(false);
+      setSelectedEmployeeId("");
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo registrar la asistencia.");
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+
+    await submitClockAction({
+      employeeId: String(formData.get("employeeId") ?? ""),
+      action: formData.get("action") as "CLOCK_IN" | "CLOCK_OUT",
+      source: formData.get("source") as "APP" | "MANUAL" | "BIOMETRIC",
+      notes: formData.get("notes"),
+    });
   }
 
   return (
@@ -89,7 +113,14 @@ export function TimeClockDialog({
         <form className="grid gap-4" onSubmit={handleSubmit}>
           <label className="grid gap-2 text-sm font-medium">
             Empleado
-            <NativeSelect name="employeeId" required className="w-full" disabled={isSubmitting}>
+            <NativeSelect
+              name="employeeId"
+              required
+              className="w-full"
+              value={selectedEmployeeId}
+              onChange={(event) => setSelectedEmployeeId(event.target.value)}
+              disabled={isSubmitting}
+            >
               <NativeSelectOption value="">Selecciona empleado</NativeSelectOption>
               {employees.map((employee) => (
                 <NativeSelectOption key={employee.id} value={employee.id}>
@@ -102,8 +133,7 @@ export function TimeClockDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-medium">
               Accion
-              <NativeSelect name="action" defaultValue="TOGGLE" className="w-full" disabled={isSubmitting}>
-                <NativeSelectOption value="TOGGLE">Entrada / salida automatica</NativeSelectOption>
+              <NativeSelect name="action" defaultValue="CLOCK_IN" className="w-full" disabled={isSubmitting}>
                 <NativeSelectOption value="CLOCK_IN">Registrar entrada</NativeSelectOption>
                 <NativeSelectOption value="CLOCK_OUT">Registrar salida</NativeSelectOption>
               </NativeSelect>

@@ -39,10 +39,14 @@ export function AttendanceDialog({ employees }: { employees: EmployeeOption[] })
 
     setLoading(true);
     try {
-      const response = await fetch("/api/hr/attendance", {
+      const response = await fetch("/api/hr/time-clock", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ employeeId, action }),
+        body: JSON.stringify({
+          employeeId,
+          action: action === "clock-in" ? "CLOCK_IN" : "CLOCK_OUT",
+          source: "MANUAL",
+        }),
       });
 
       const result = await response.json();

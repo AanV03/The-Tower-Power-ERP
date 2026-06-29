@@ -1,9 +1,10 @@
-import { CalendarClock, Clock, Download, Plus } from "lucide-react";
+import { CalendarClock, Clock, Plus } from "lucide-react";
 
 import { AttendancePanel, type HrAttendanceRow } from "@/components/modules/hr/attendance-panel";
 import { ContractSummary, type HrContractRow } from "@/components/modules/hr/contract-summary";
 import { EmployeeFormDialog } from "@/components/modules/hr/employee-form-dialog";
 import { EmployeeTable, type HrEmployeeRow } from "@/components/modules/hr/employee-table";
+import { HrExportButton } from "@/components/modules/hr/hr-export-button";
 import { TimeClockDialog, type TimeClockEmployeeOption } from "@/components/modules/hr/time-clock-dialog";
 import { BranchScopeSelector } from "@/components/shared/branch-scope-selector";
 import { MetricCard } from "@/components/shared/metric-card";
@@ -11,15 +12,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireApiContext } from "@/lib/api/context";
 import { prisma } from "@/lib/db/prisma";
+import { DEFAULT_TIME_ZONE, getDayBoundsForTimeZone } from "@/lib/date/timezone";
 import type { Locale } from "@/lib/i18n";
 
-function formatDateTime(value: Date | null | undefined, locale: Locale) {
+function formatDateTime(value: Date | null | undefined, locale: Locale, timeZone = DEFAULT_TIME_ZONE) {
   if (!value) return "Pendiente";
   return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone,
   }).format(value);
 }
 
@@ -46,8 +49,16 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
   const branchScopedWhere = context.branchId
     ? { tenantId: context.tenantId, branchId: context.branchId }
     : { tenantId: context.tenantId };
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const scopedBranch = context.branchId
+    ? await prisma.branch.findFirst({
+        where: { tenantId: context.tenantId, id: context.branchId },
+        select: { timezone: true },
+      })
+    : null;
+  const timeZone = scopedBranch?.timezone ?? DEFAULT_TIME_ZONE;
+  const today = getDayBoundsForTimeZone(new Date(), timeZone);
+  const todayClockWhere = { ...branchScopedWhere, clockIn: { gte: today.start, lt: today.end } };
+  const todayOpenClockWhere = { ...todayClockWhere, clockOut: null };
 
   const [employees, timeClocks, activeEmployees, attendanceToday, openAttendance] = await Promise.all([
     prisma.employee.findMany({
@@ -62,14 +73,14 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
       take: 12,
     }),
     prisma.timeClock.findMany({
-      where: { ...branchScopedWhere, clockIn: { gte: today } },
+      where: todayClockWhere,
       include: { employee: true, branch: true },
       orderBy: { clockIn: "desc" },
       take: 8,
     }),
     prisma.employee.count({ where: { ...branchScopedWhere, status: "ACTIVE" } }),
-    prisma.timeClock.count({ where: { ...branchScopedWhere, clockIn: { gte: today } } }),
-    prisma.timeClock.count({ where: { ...branchScopedWhere, clockOut: null } }),
+    prisma.timeClock.count({ where: todayOpenClockWhere }),
+    prisma.timeClock.count({ where: todayOpenClockWhere }),
   ]);
 
   const employeeRows: HrEmployeeRow[] = employees.map((employee) => {
@@ -83,7 +94,7 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
       branch: employee.branch.name,
       contract: contract ? contract.type.replaceAll("_", " ") : "Sin contrato",
       status: employee.status,
-      lastAttendance: formatDateTime(employee.timeClocks[0]?.clockIn, locale),
+      lastAttendance: formatDateTime(employee.timeClocks[0]?.clockIn, locale, timeZone),
     };
   });
 
@@ -91,8 +102,8 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
     id: record.id,
     employee: `${record.employee.firstName} ${record.employee.lastName}`,
     branch: record.branch.name,
-    clockIn: formatDateTime(record.clockIn, locale),
-    clockOut: record.clockOut ? formatDateTime(record.clockOut, locale) : "Abierta",
+    clockIn: formatDateTime(record.clockIn, locale, timeZone),
+    clockOut: record.clockOut ? formatDateTime(record.clockOut, locale, timeZone) : "Abierta",
     source: record.source,
     status: record.clockOut ? "CLOSED" : "OPEN",
   }));
@@ -148,7 +159,7 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
                   </Button>
                 }
               />
-              <Button size="icon-sm" variant="outline" aria-label="Exportar RH"><Download /></Button>
+              <HrExportButton employees={employeeRows} attendance={attendanceRows} contracts={contractRows} />
             </div>
           </div>
         </div>

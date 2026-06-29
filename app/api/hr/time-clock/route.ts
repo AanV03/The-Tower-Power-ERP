@@ -6,12 +6,12 @@ import { parsePagination } from "@/lib/api/pagination";
 import { ApiError, created, fail, ok } from "@/lib/api/response";
 import { prisma } from "@/lib/db/prisma";
 
-const ClockActionSchema = z.enum(["CLOCK_IN", "CLOCK_OUT", "TOGGLE"]);
+const ClockActionSchema = z.enum(["CLOCK_IN", "CLOCK_OUT"]);
 
 const TimeClockSchema = z.object({
   employeeId: z.string().min(1),
   branchId: z.string().optional(),
-  action: ClockActionSchema.default("TOGGLE"),
+  action: ClockActionSchema,
   source: z.enum(AttendanceSource).default(AttendanceSource.APP),
   notes: z.string().trim().max(240).optional(),
 });
@@ -66,6 +66,7 @@ export async function POST(request: Request) {
   try {
     const context = await requireApiContext({ moduleId: "hr" });
     const data = TimeClockSchema.parse(await request.json());
+    const now = new Date();
 
     const clock = await prisma.$transaction(async (tx) => {
       const employee = await tx.employee.findFirst({
@@ -86,45 +87,65 @@ export async function POST(request: Request) {
         throw new ApiError("The selected branch does not match the employee branch.", 400, "EMPLOYEE_BRANCH_MISMATCH");
       }
 
+      const openClockWhere = {
+        tenantId: context.tenantId,
+        employeeId: employee.id,
+        clockOut: null,
+      };
+
       const openClock = await tx.timeClock.findFirst({
-        where: {
-          tenantId: context.tenantId,
-          employeeId: employee.id,
-          clockOut: null,
-        },
+        where: openClockWhere,
         orderBy: { clockIn: "desc" },
       });
 
-      const shouldClockOut =
-        data.action === "CLOCK_OUT" || (data.action === "TOGGLE" && Boolean(openClock));
-
-      if (shouldClockOut) {
-        if (!openClock) {
-          throw new ApiError("Employee does not have an open time clock.", 409, "CLOCK_NOT_OPEN");
+      if (data.action === "CLOCK_IN") {
+        if (openClock) {
+          await tx.timeClock.updateMany({
+            where: openClockWhere,
+            data: {
+              clockOut: now,
+              ...(data.notes ? { notes: data.notes } : {}),
+            },
+          });
         }
 
-        return tx.timeClock.update({
-          where: { id: openClock.id },
+        return tx.timeClock.create({
           data: {
-            clockOut: new Date(),
-            notes: data.notes ?? openClock.notes,
+            tenantId: context.tenantId,
+            employeeId: employee.id,
+            branchId,
+            clockIn: now,
+            clockOut: null,
+            source: data.source,
+            notes: data.notes,
           },
           include: { employee: true, branch: true },
         });
       }
 
-      if (openClock) {
-        throw new ApiError("Employee already has an open time clock.", 409, "CLOCK_ALREADY_OPEN");
+      if (!openClock) {
+        throw new ApiError("No hay turno abierto para cerrar.", 400, "CLOCK_NOT_OPEN");
       }
 
-      return tx.timeClock.create({
-        data: {
+      const closeResult = await tx.timeClock.updateMany({
+        where: {
+          id: openClock.id,
           tenantId: context.tenantId,
           employeeId: employee.id,
-          branchId,
-          source: data.source,
-          notes: data.notes,
+          clockOut: null,
         },
+        data: {
+          clockOut: now,
+          ...(data.notes ? { notes: data.notes } : {}),
+        },
+      });
+
+      if (closeResult.count === 0) {
+        throw new ApiError("The open time clock was already closed.", 409, "CLOCK_ALREADY_CLOSED");
+      }
+
+      return tx.timeClock.findFirstOrThrow({
+        where: { id: openClock.id, tenantId: context.tenantId, employeeId: employee.id },
         include: { employee: true, branch: true },
       });
     });

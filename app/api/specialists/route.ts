@@ -120,8 +120,8 @@ export async function POST(request: Request) {
         });
       }
 
-      return tx.specialist.findUniqueOrThrow({
-        where: { id: createdSpecialist.id },
+      return tx.specialist.findFirstOrThrow({
+        where: { id: createdSpecialist.id, tenantId: context.tenantId },
         include: { branch: true, employee: true, contracts: true, services: true },
       });
     });

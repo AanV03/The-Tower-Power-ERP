@@ -32,6 +32,7 @@ import { requireApiContext } from "@/lib/api/context";
 import { formatCurrency } from "@/lib/api/pagination";
 import { getModuleSummary } from "@/lib/api/module-summary";
 import { prisma } from "@/lib/db/prisma";
+import { DEFAULT_TIME_ZONE, getDayBoundsForTimeZone } from "@/lib/date/timezone";
 import type { Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -357,10 +358,14 @@ function ContractModelPanel({
 
 function SessionTimeline({
   labels,
+  locale,
   sessions,
+  timeZone,
 }: {
   labels: (typeof specialistLabels)[Locale];
+  locale: Locale;
   sessions: SessionRow[];
+  timeZone: string;
 }) {
   return (
     <div className="space-y-4">
@@ -389,7 +394,13 @@ function SessionTimeline({
                     </Badge>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    <span>{session.scheduledAt.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}</span>
+                    <span>
+                      {session.scheduledAt.toLocaleTimeString(locale, {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZone,
+                      })}
+                    </span>
                     <span>{session.branch}</span>
                     <span>{moneyFromString(session.price)}</span>
                   </div>
@@ -539,14 +550,18 @@ function SpecialistDirectory({
 
 function SpecialistWorkTabs({
   labels,
+  locale,
   sessions,
   settlements,
   specialists,
+  timeZone,
 }: {
   labels: (typeof specialistLabels)[Locale];
+  locale: Locale;
   sessions: SessionRow[];
   settlements: SettlementRow[];
   specialists: SpecialistRow[];
+  timeZone: string;
 }) {
   return (
     <Card className="rounded-lg">
@@ -569,7 +584,7 @@ function SpecialistWorkTabs({
         </CardHeader>
         <CardContent className="w-full pt-5">
           <TabsContent value="agenda">
-            <SessionTimeline labels={labels} sessions={sessions} />
+            <SessionTimeline labels={labels} locale={locale} sessions={sessions} timeZone={timeZone} />
           </TabsContent>
           <TabsContent value="liquidaciones">
             <SettlementsPanel labels={labels} settlements={settlements} />
@@ -593,25 +608,31 @@ export default async function SpecialistsPage({
   const labels = specialistLabels[locale] ?? specialistLabels.es;
   const config = moduleConfigs.specialists;
   const context = await requireApiContext({ moduleId: "specialists" });
+  const scopedBranch = context.branchId
+    ? await prisma.branch.findFirst({
+        where: { tenantId: context.tenantId, id: context.branchId },
+        select: { timezone: true },
+      })
+    : null;
   const summary = await getModuleSummary("specialists", context);
   const baseWhere = { tenantId: context.tenantId, ...(context.branchId ? { branchId: context.branchId } : {}) };
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const timeZone = scopedBranch?.timezone ?? DEFAULT_TIME_ZONE;
+  const today = getDayBoundsForTimeZone(new Date(), timeZone);
 
-  const [specialists, sessions, settlements, payout, branches] = await Promise.all([
+  const [specialists, sessions, settlements, payout, branches, members] = await Promise.all([
     prisma.specialist.findMany({
       where: { ...baseWhere },
       include: {
         branch: true,
         contracts: { where: { status: "ACTIVE" }, orderBy: { createdAt: "desc" }, take: 1 },
         services: true,
-        sessions: { where: { scheduledAt: { gte: today } } },
+        sessions: { where: { scheduledAt: { gte: today.start, lt: today.end } } },
       },
       orderBy: { createdAt: "desc" },
       take: 8,
     }),
     prisma.specialistSession.findMany({
-      where: { ...baseWhere, scheduledAt: { gte: today } },
+      where: { ...baseWhere, scheduledAt: { gte: today.start, lt: today.end } },
       include: { specialist: true, service: true, branch: true },
       orderBy: { scheduledAt: "asc" },
       take: 5,
@@ -629,6 +650,11 @@ export default async function SpecialistsPage({
     prisma.branch.findMany({
       where: { tenantId: context.tenantId, ...(context.branchId ? { id: context.branchId } : {}) },
       orderBy: { name: "asc" },
+    }),
+    prisma.member.findMany({
+      where: { ...baseWhere, status: "ACTIVE" },
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
+      take: 50,
     }),
   ]);
 
@@ -692,6 +718,11 @@ export default async function SpecialistsPage({
     id: branch.id,
     label: branch.name,
   }));
+  const memberOptions = members.map((member) => ({
+    id: member.id,
+    label: `${member.firstName} ${member.lastName}`,
+    branchId: member.branchId,
+  }));
 
   return (
     <section className="erp-section space-y-5" role="main" aria-label={config.title[locale]}>
@@ -717,6 +748,7 @@ export default async function SpecialistsPage({
                 labels={labels}
                 specialists={specialistOptions}
                 services={serviceOptions}
+                members={memberOptions}
                 branches={branchOptions}
               />
               <p className="max-w-2xl text-xs leading-5 text-muted-foreground">{labels.sessionPurpose}</p>
@@ -782,9 +814,11 @@ export default async function SpecialistsPage({
 
       <SpecialistWorkTabs
         labels={labels}
+        locale={locale}
         sessions={sessionRows}
         settlements={settlementRows}
         specialists={specialistRows}
+        timeZone={timeZone}
       />
     </section>
   );

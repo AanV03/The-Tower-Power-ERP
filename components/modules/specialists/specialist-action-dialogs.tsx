@@ -29,6 +29,10 @@ type ServiceOption = Option & {
   price: string;
 };
 
+type MemberOption = Option & {
+  branchId: string;
+};
+
 type ActionLabels = {
   generate: string;
   registerSession: string;
@@ -53,7 +57,10 @@ const copy = {
     periodEnd: "Fin del periodo",
     notes: "Notas de revision",
     service: "Servicio",
-    member: "ID de miembro",
+    member: "Miembro",
+    memberOptional: "Miembro (opcional)",
+    selectMember: "Selecciona miembro",
+    walkInMember: "Cliente General / Walk-in",
     branch: "Sucursal",
     date: "Fecha",
     time: "Hora",
@@ -88,7 +95,10 @@ const copy = {
     periodEnd: "Period end",
     notes: "Review notes",
     service: "Service",
-    member: "Member ID",
+    member: "Member",
+    memberOptional: "Member (optional)",
+    selectMember: "Select member",
+    walkInMember: "General client / Walk-in",
     branch: "Branch",
     date: "Date",
     time: "Time",
@@ -123,7 +133,10 @@ const copy = {
     periodEnd: "Fin periode",
     notes: "Notes de revision",
     service: "Service",
-    member: "ID membre",
+    member: "Membre",
+    memberOptional: "Membre (optionnel)",
+    selectMember: "Selectionner membre",
+    walkInMember: "Client general / Walk-in",
     branch: "Succursale",
     date: "Date",
     time: "Heure",
@@ -160,9 +173,28 @@ function Field({
   );
 }
 
-function dateToIso(value: string, endOfDay = false) {
-  if (!value) return "";
-  return new Date(`${value}T${endOfDay ? "23:59:59" : "00:00:00"}`).toISOString();
+function padDatePart(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+function dateInputValue(date = new Date()) {
+  return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`;
+}
+
+function timeInputValue(date = new Date()) {
+  return `${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`;
+}
+
+function monthStartInputValue() {
+  const date = new Date();
+  date.setDate(1);
+  return dateInputValue(date);
+}
+
+function monthEndInputValue() {
+  const date = new Date();
+  date.setMonth(date.getMonth() + 1, 0);
+  return dateInputValue(date);
 }
 
 function dateTimeToIso(dateValue: string, timeValue: string) {
@@ -173,14 +205,15 @@ function dateTimeToIso(dateValue: string, timeValue: string) {
 async function postJson(url: string, payload: Record<string, unknown>) {
   const response = await fetch(url, {
     method: "POST",
+    cache: "no-store",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  const result = await response.json();
+  const result = await response.json().catch(() => null);
 
-  if (!response.ok || !result.ok) {
-    const issue = Array.isArray(result.issues) ? result.issues[0]?.message : undefined;
-    throw new Error(issue ?? result.message ?? "No se pudo completar la operacion.");
+  if (!response.ok || !result?.ok) {
+    const issue = Array.isArray(result?.issues) ? result.issues[0]?.message : undefined;
+    throw new Error(issue ?? result?.message ?? "No se pudo completar la operacion.");
   }
 
   return result.data;
@@ -191,12 +224,14 @@ export function SpecialistActionDialogs({
   labels,
   specialists,
   services,
+  members,
   branches,
 }: {
   locale: Locale;
   labels: ActionLabels;
   specialists: Option[];
   services: ServiceOption[];
+  members: MemberOption[];
   branches: Option[];
 }) {
   const router = useRouter();
@@ -209,14 +244,21 @@ export function SpecialistActionDialogs({
   const [sessionSpecialistId, setSessionSpecialistId] = useState("");
   const [sessionServiceId, setSessionServiceId] = useState("");
   const [sessionPrice, setSessionPrice] = useState("0.00");
+  const [sessionBranchId, setSessionBranchId] = useState(branches[0]?.id ?? "");
   const [settleSpecialistId, setSettleSpecialistId] = useState("");
-  const [settlePeriodStart, setSettlePeriodStart] = useState("");
-  const [settlePeriodEnd, setSettlePeriodEnd] = useState("");
+  const [settlePeriodStart, setSettlePeriodStart] = useState(() => monthStartInputValue());
+  const [settlePeriodEnd, setSettlePeriodEnd] = useState(() => monthEndInputValue());
 
   const filteredServices = useMemo(() => {
     if (!sessionSpecialistId) return [];
     return services.filter((service) => service.specialistId === sessionSpecialistId);
   }, [services, sessionSpecialistId]);
+  const hasSessionServices = filteredServices.length > 0;
+
+  const filteredMembers = useMemo(() => {
+    if (!sessionBranchId) return members;
+    return members.filter((member) => member.branchId === sessionBranchId);
+  }, [members, sessionBranchId]);
 
   async function handleSettlementSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -231,15 +273,15 @@ export function SpecialistActionDialogs({
       const formData = new FormData(event.currentTarget);
       await postJson("/api/specialists/settlements", {
         specialistId: settleSpecialistId,
-        periodStart: dateToIso(settlePeriodStart),
-        periodEnd: dateToIso(settlePeriodEnd, true),
+        periodStart: settlePeriodStart,
+        periodEnd: settlePeriodEnd,
         status: formData.get("status"),
       });
       toast.success("Liquidacion generada correctamente.");
       setSettlementOpen(false);
       setSettleSpecialistId("");
-      setSettlePeriodStart("");
-      setSettlePeriodEnd("");
+      setSettlePeriodStart(monthStartInputValue());
+      setSettlePeriodEnd(monthEndInputValue());
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo generar la liquidacion.");
@@ -254,12 +296,24 @@ export function SpecialistActionDialogs({
     setSubmitting("session");
     try {
       const formData = new FormData(event.currentTarget);
+      const branchId = String(formData.get("branchId") ?? "").trim();
+      const dateValue = String(formData.get("date") ?? "").trim();
+      const timeValue = String(formData.get("time") ?? "").trim();
+
+      if (!sessionSpecialistId || !branchId || !dateValue || !timeValue) {
+        toast.error("Completa especialista, sucursal, fecha y hora.");
+        return;
+      }
+
       await postJson("/api/specialists/sessions", {
         specialistId: sessionSpecialistId,
-        serviceId: sessionServiceId,
-        memberId: formData.get("memberId"),
-        branchId: formData.get("branchId"),
-        scheduledAt: dateTimeToIso(String(formData.get("date") ?? ""), String(formData.get("time") ?? "")),
+        serviceId: sessionServiceId || undefined,
+        serviceName: formData.get("serviceName") || undefined,
+        memberId: String(formData.get("memberId") ?? "").trim() || undefined,
+        branchId,
+        scheduledDate: dateValue,
+        scheduledTime: timeValue,
+        scheduledAt: dateTimeToIso(dateValue, timeValue),
         price: sessionPrice,
         status: formData.get("status"),
       });
@@ -268,6 +322,7 @@ export function SpecialistActionDialogs({
       setSessionSpecialistId("");
       setSessionServiceId("");
       setSessionPrice("0.00");
+      setSessionBranchId(branches[0]?.id ?? "");
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo registrar la sesion.");
@@ -337,7 +392,6 @@ export function SpecialistActionDialogs({
                 <NativeSelect name="status" required aria-label={text.status} defaultValue="DRAFT" disabled={submitting === "settlement"}>
                   <NativeSelectOption value="DRAFT">Draft</NativeSelectOption>
                   <NativeSelectOption value="APPROVED">Approved</NativeSelectOption>
-                  <NativeSelectOption value="PAID">Paid</NativeSelectOption>
                 </NativeSelect>
               </Field>
               <Field label={text.periodStart}>
@@ -391,9 +445,11 @@ export function SpecialistActionDialogs({
                   required
                   value={sessionSpecialistId}
                   onChange={(event) => {
-                    setSessionSpecialistId(event.target.value);
-                    setSessionServiceId("");
-                    setSessionPrice("0.00");
+                    const specialistId = event.target.value;
+                    const firstService = services.find((service) => service.specialistId === specialistId);
+                    setSessionSpecialistId(specialistId);
+                    setSessionServiceId(firstService?.id ?? "");
+                    setSessionPrice(firstService ? Number(firstService.price).toFixed(2) : "650.00");
                   }}
                   aria-label={text.specialist}
                   disabled={submitting === "session"}
@@ -407,31 +463,55 @@ export function SpecialistActionDialogs({
                 </NativeSelect>
               </Field>
               <Field label={text.service}>
-                <NativeSelect
-                  required
-                  value={sessionServiceId}
-                  onChange={(event) => {
-                    const serviceId = event.target.value;
-                    setSessionServiceId(serviceId);
-                    const service = services.find((item) => item.id === serviceId);
-                    if (service) setSessionPrice(Number(service.price).toFixed(2));
-                  }}
-                  disabled={!sessionSpecialistId || submitting === "session"}
-                  aria-label={text.service}
-                >
-                  <NativeSelectOption value="">{text.selectService}</NativeSelectOption>
-                  {filteredServices.map((service) => (
-                    <NativeSelectOption key={service.id} value={service.id}>
-                      {service.label}
+                {hasSessionServices ? (
+                  <NativeSelect
+                    required
+                    value={sessionServiceId}
+                    onChange={(event) => {
+                      const serviceId = event.target.value;
+                      setSessionServiceId(serviceId);
+                      const service = services.find((item) => item.id === serviceId);
+                      if (service) setSessionPrice(Number(service.price).toFixed(2));
+                    }}
+                    disabled={!sessionSpecialistId || submitting === "session"}
+                    aria-label={text.service}
+                  >
+                    <NativeSelectOption value="">{text.selectService}</NativeSelectOption>
+                    {filteredServices.map((service) => (
+                      <NativeSelectOption key={service.id} value={service.id}>
+                        {service.label}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                ) : (
+                  <Input
+                    name="serviceName"
+                    defaultValue="Consulta General"
+                    required
+                    disabled={!sessionSpecialistId || submitting === "session"}
+                    aria-label={text.service}
+                  />
+                )}
+              </Field>
+              <Field label={text.memberOptional}>
+                <NativeSelect name="memberId" aria-label={text.memberOptional} disabled={submitting === "session"}>
+                  <NativeSelectOption value="">{text.walkInMember}</NativeSelectOption>
+                  {filteredMembers.map((member) => (
+                    <NativeSelectOption key={member.id} value={member.id}>
+                      {member.label}
                     </NativeSelectOption>
                   ))}
                 </NativeSelect>
               </Field>
-              <Field label={text.member}>
-                <Input name="memberId" placeholder="member_..." required disabled={submitting === "session"} />
-              </Field>
               <Field label={text.branch}>
-                <NativeSelect name="branchId" required aria-label={text.branch} disabled={submitting === "session"}>
+                <NativeSelect
+                  name="branchId"
+                  required
+                  value={sessionBranchId}
+                  onChange={(event) => setSessionBranchId(event.target.value)}
+                  aria-label={text.branch}
+                  disabled={submitting === "session"}
+                >
                   <NativeSelectOption value="">{text.selectBranch}</NativeSelectOption>
                   {branches.map((branch) => (
                     <NativeSelectOption key={branch.id} value={branch.id}>
@@ -441,10 +521,10 @@ export function SpecialistActionDialogs({
                 </NativeSelect>
               </Field>
               <Field label={text.date}>
-                <Input name="date" type="date" required disabled={submitting === "session"} />
+                <Input name="date" type="date" defaultValue={dateInputValue()} required disabled={submitting === "session"} />
               </Field>
               <Field label={text.time}>
-                <Input name="time" type="time" required disabled={submitting === "session"} />
+                <Input name="time" type="time" defaultValue={timeInputValue()} required disabled={submitting === "session"} />
               </Field>
               <Field label={text.price}>
                 <Input
@@ -458,7 +538,7 @@ export function SpecialistActionDialogs({
                 />
               </Field>
               <Field label={text.status}>
-                <NativeSelect name="status" required aria-label={text.status} defaultValue="SCHEDULED" disabled={submitting === "session"}>
+                <NativeSelect name="status" required aria-label={text.status} defaultValue="COMPLETED" disabled={submitting === "session"}>
                   <NativeSelectOption value="SCHEDULED">Scheduled</NativeSelectOption>
                   <NativeSelectOption value="COMPLETED">Completed</NativeSelectOption>
                   <NativeSelectOption value="CANCELLED">Cancelled</NativeSelectOption>

@@ -1,18 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import {
+  createAuthToken,
+  GERPY_SESSION_COOKIE,
+  GERPY_TWO_FACTOR_COOKIE,
+  GERPY_TWO_FACTOR_SETUP_COOKIE,
+  TWO_FACTOR_SETUP_MAX_AGE_SECONDS,
+} from '@/lib/auth/session';
 import { registerSchema } from '@/modules/auth/schemas/auth.schema';
 import { AuthService } from '@/modules/auth/services/auth.service';
+
+const secureCookie = process.env.NODE_ENV === 'production';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const validatedData = registerSchema.parse(body);
     const result = await AuthService.registerNewTenant(validatedData);
-
-    return NextResponse.json(
-      { ok: true, message: 'Gimnasio y cuenta creados exitosamente', data: result },
+    const setupPayload = await AuthService.createSessionPayloadForUser(result.userId, '2fa_setup');
+    const setupToken = await createAuthToken(setupPayload, TWO_FACTOR_SETUP_MAX_AGE_SECONDS);
+    const response = NextResponse.json(
+      {
+        ok: true,
+        message: 'Gimnasio y cuenta creados exitosamente. Configura 2FA para continuar.',
+        twoFactorSetupRequired: true,
+        data: result,
+      },
       { status: 201 },
     );
+
+    response.cookies.delete(GERPY_SESSION_COOKIE);
+    response.cookies.delete(GERPY_TWO_FACTOR_COOKIE);
+    response.cookies.set(GERPY_TWO_FACTOR_SETUP_COOKIE, setupToken, {
+      httpOnly: true,
+      secure: secureCookie,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: TWO_FACTOR_SETUP_MAX_AGE_SECONDS,
+    });
+
+    return response;
   } catch (error: any) {
     if (error.name === 'ZodError') {
       return NextResponse.json(
