@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -272,6 +273,7 @@ export function MembershipsClient({
 }) {
   const t = membershipsLabels[locale] ?? membershipsLabels.es;
   const formId = useId();
+  const router = useRouter();
 
   // State lists
   const [members, setMembers] = useState<Member[]>(initialMembers);
@@ -297,6 +299,7 @@ export function MembershipsClient({
     branchId: branches[0]?.id ?? "",
   });
   const [isSavingMember, setIsSavingMember] = useState(false);
+  const [isCreatingDemoMember, setIsCreatingDemoMember] = useState(false);
 
   const [planForm, setPlanForm] = useState({
     name: "",
@@ -417,6 +420,73 @@ export function MembershipsClient({
       toast.error(error.message);
     } finally {
       setIsSavingMember(false);
+    }
+  };
+
+  const handleCreateDemoMember = async () => {
+    setIsCreatingDemoMember(true);
+    try {
+      const res = await fetch("/api/memberships/demo-member", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          branchId: branches[0]?.id,
+        }),
+      });
+      const result = await res.json();
+
+      if (!res.ok || !result?.data) {
+        throw new Error(result?.message || "No se pudo crear el miembro demo.");
+      }
+
+      const memberData = result.data.member;
+      const planData = result.data.plan;
+      const subscriptionData = result.data.subscription;
+      const newMember: Member = {
+        id: memberData.id,
+        firstName: memberData.firstName,
+        lastName: memberData.lastName,
+        name: `${memberData.firstName} ${memberData.lastName}`,
+        email: memberData.email ?? "",
+        phone: memberData.phone ?? "",
+        birthDate: memberData.birthDate ?? null,
+        status: memberData.status,
+        branchId: memberData.branchId,
+        branchName: memberData.branch?.name ?? branches.find((b) => b.id === memberData.branchId)?.name ?? "Consolidada",
+      };
+      const newPlan: Plan = {
+        id: planData.id,
+        name: planData.name,
+        price: parseFloat(planData.price),
+        billingPeriod: planData.billingPeriod,
+        status: planData.status,
+      };
+      const newSubscription: Subscription = {
+        id: subscriptionData.id,
+        memberId: subscriptionData.memberId,
+        memberName: `${subscriptionData.member.firstName} ${subscriptionData.member.lastName}`,
+        planId: subscriptionData.planId,
+        planName: subscriptionData.plan.name,
+        status: subscriptionData.status,
+        startDate: subscriptionData.startDate,
+        endDate: subscriptionData.endDate,
+        autoRenew: subscriptionData.autoRenew,
+      };
+
+      setMembers((prev) => [newMember, ...prev.filter((member) => member.id !== newMember.id)]);
+      setPlans((prev) => [newPlan, ...prev.filter((plan) => plan.id !== newPlan.id)]);
+      setSubscriptions((prev) => [
+        newSubscription,
+        ...prev.filter((subscription) => subscription.id !== newSubscription.id),
+      ]);
+      setSimMemberId(newMember.id);
+      setSubForm((prev) => ({ ...prev, memberId: newMember.id, planId: newPlan.id }));
+      toast.success(`Miembro demo activo creado. Codigo: ${newMember.email || newMember.id}`);
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo crear el miembro demo.");
+    } finally {
+      setIsCreatingDemoMember(false);
     }
   };
 
@@ -630,9 +700,21 @@ export function MembershipsClient({
                 />
 
                 {activeTab === "members" && (
-                  <Dialog open={memberDialogOpen} onOpenChange={setMemberDialogOpen}>
-                    <DialogTrigger render={<Button size="sm">{t.addMember}</Button>} />
-                    <StandardDialogContent>
+                  <>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={handleCreateDemoMember}
+                      disabled={isCreatingDemoMember}
+                      className="border-emerald-500/25 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-300"
+                    >
+                      {isCreatingDemoMember ? <Loader2 className="mr-1.5 size-4 animate-spin" /> : <User className="mr-1.5 size-4" />}
+                      Demo activo
+                    </Button>
+                    <Dialog open={memberDialogOpen} onOpenChange={setMemberDialogOpen}>
+                      <DialogTrigger render={<Button size="sm">{t.addMember}</Button>} />
+                      <StandardDialogContent>
                       <StandardDialogHeader>
                         <StandardDialogTitle>{t.addMember}</StandardDialogTitle>
                         <StandardDialogDescription>
@@ -720,8 +802,9 @@ export function MembershipsClient({
                           </Button>
                         </StandardDialogFooter>
                       </form>
-                    </StandardDialogContent>
-                  </Dialog>
+                      </StandardDialogContent>
+                    </Dialog>
+                  </>
                 )}
 
                 {activeTab === "plans" && (

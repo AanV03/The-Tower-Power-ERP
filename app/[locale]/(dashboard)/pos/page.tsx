@@ -7,17 +7,24 @@ export default async function PosPage({ params }: { params: Promise<{ locale: st
   const { locale } = await params;
   const context = await requireApiContext({ moduleId: "pos" });
 
-  const [activeSession, registers, products, members] = await Promise.all([
-    prisma.cashSession.findFirst({
-      where: {
-        tenantId: context.tenantId,
-        openedByUserId: context.userId,
-        status: "OPEN",
-      },
-      include: {
-        register: true,
-      },
-    }),
+  const activeSession = await prisma.cashSession.findFirst({
+    where: {
+      tenantId: context.tenantId,
+      openedByUserId: context.userId,
+      status: "OPEN",
+      ...(context.branchId ? { register: { branchId: context.branchId } } : {}),
+    },
+    include: {
+      register: true,
+    },
+  });
+  const productBranchId = activeSession?.register.branchId ?? context.branchId ?? undefined;
+  const productInventoryWhere = {
+    quantityOnHand: { gt: 0 },
+    ...(productBranchId ? { warehouse: { branchId: productBranchId } } : {}),
+  };
+
+  const [registers, products, members] = await Promise.all([
     prisma.posRegister.findMany({
       where: {
         tenantId: context.tenantId,
@@ -29,15 +36,14 @@ export default async function PosPage({ params }: { params: Promise<{ locale: st
       where: {
         tenantId: context.tenantId,
         status: "ACTIVE",
+        inventoryItems: {
+          some: productInventoryWhere,
+        },
       },
       include: {
         category: true,
         inventoryItems: {
-          where: {
-            warehouse: {
-              branchId: context.branchId ?? undefined,
-            },
-          },
+          where: productInventoryWhere,
         },
       },
     }),
@@ -71,6 +77,7 @@ export default async function PosPage({ params }: { params: Promise<{ locale: st
 
   const serializedActiveSession = activeSession ? {
     id: activeSession.id,
+    branchId: activeSession.register.branchId,
     registerName: activeSession.register.name,
     openingAmount: activeSession.openingAmount.toNumber(),
     openedAt: activeSession.openedAt.toISOString(),

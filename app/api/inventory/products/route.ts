@@ -6,11 +6,11 @@ import { parsePagination } from "@/lib/api/pagination";
 import { created, fail, ok } from "@/lib/api/response";
 
 const CreateProductSchema = z.object({
-  sku: z.string().trim().min(2).max(80),
+  sku: z.string().trim().min(2).max(80).optional(),
   name: z.string().trim().min(2).max(160),
-  categoryId: z.string().optional(),
+  categoryId: z.string().trim().min(1).optional(),
   price: z.coerce.number().nonnegative(),
-  cost: z.coerce.number().nonnegative(),
+  cost: z.coerce.number().nonnegative().optional(),
   taxRate: z.coerce.number().min(0).max(100).default(0),
   status: z.enum(BranchStatus).default(BranchStatus.ACTIVE),
 });
@@ -52,14 +52,15 @@ export async function POST(request: Request) {
     const product = await prisma.product.create({
       data: {
         tenantId: context.tenantId,
-        sku: data.sku,
+        sku: data.sku ?? `SKU-${Date.now().toString(36).toUpperCase()}`,
         name: data.name,
         categoryId: data.categoryId,
         price: new Prisma.Decimal(data.price),
-        cost: new Prisma.Decimal(data.cost),
+        cost: new Prisma.Decimal(data.cost ?? data.price),
         taxRate: new Prisma.Decimal(data.taxRate),
         status: data.status,
       },
+      include: { category: true, inventoryItems: { include: { warehouse: true } } },
     });
 
     return created(product);

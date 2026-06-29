@@ -1,11 +1,20 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
-import { prisma } from "@/lib/db/prisma";
+
+import { resolveWritableBranchId } from "@/lib/api/branch";
 import { requireApiContext } from "@/lib/api/context";
-import { created, fail, ok } from "@/lib/api/response";
+import { ApiError, created, fail, ok } from "@/lib/api/response";
+import { prisma } from "@/lib/db/prisma";
 
 const OpenSessionSchema = z.object({
-  registerId: z.string().min(1),
+  registerId: z.preprocess(
+    (value) => value === "" || value === null ? undefined : value,
+    z.string().min(1).optional(),
+  ),
+  branchId: z.preprocess(
+    (value) => value === "" || value === null ? undefined : value,
+    z.string().min(1).optional(),
+  ),
   openingAmount: z.coerce.number().nonnegative("El monto de apertura no puede ser negativo"),
 });
 
@@ -16,7 +25,7 @@ const CloseSessionSchema = z.object({
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const context = await requireApiContext({ moduleId: "pos" });
 
@@ -25,6 +34,7 @@ export async function GET(request: Request) {
         tenantId: context.tenantId,
         openedByUserId: context.userId,
         status: "OPEN",
+        ...(context.branchId ? { register: { branchId: context.branchId } } : {}),
       },
       include: {
         register: true,
@@ -40,39 +50,91 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const context = await requireApiContext({ moduleId: "pos" });
-    const body = await request.json();
-    const data = OpenSessionSchema.parse(body);
+    const data = OpenSessionSchema.parse(await request.json());
+    const fallbackBranchId = data.registerId
+      ? undefined
+      : await resolveWritableBranchId(context, data.branchId);
 
-    // Check if there is already an open session for this user
-    const existingSession = await prisma.cashSession.findFirst({
-      where: {
-        tenantId: context.tenantId,
-        openedByUserId: context.userId,
-        status: "OPEN",
-      },
+    const sessionResult = await prisma.$transaction(async (tx) => {
+      const existingSession = await tx.cashSession.findFirst({
+        where: {
+          tenantId: context.tenantId,
+          openedByUserId: context.userId,
+          status: "OPEN",
+          ...(context.branchId ? { register: { branchId: context.branchId } } : {}),
+        },
+        include: {
+          register: true,
+        },
+      });
+
+      if (existingSession) {
+        return { session: existingSession, created: false };
+      }
+
+      let registerId = data.registerId;
+
+      if (registerId) {
+        const register = await tx.posRegister.findFirst({
+          where: {
+            id: registerId,
+            tenantId: context.tenantId,
+            status: "ACTIVE",
+            ...(context.branchId ? { branchId: context.branchId } : {}),
+          },
+        });
+
+        if (!register) {
+          throw new ApiError(
+            "La caja seleccionada no existe o no pertenece a la sucursal activa.",
+            400,
+            "REGISTER_NOT_FOUND",
+          );
+        }
+      } else {
+        if (!fallbackBranchId) {
+          throw new ApiError("Se requiere una sucursal activa para generar la caja principal.", 400, "BRANCH_REQUIRED");
+        }
+
+        const fallbackRegister = await tx.posRegister.upsert({
+          where: {
+            tenantId_branchId_name: {
+              tenantId: context.tenantId,
+              branchId: fallbackBranchId,
+              name: "Caja Principal - Generada",
+            },
+          },
+          create: {
+            tenantId: context.tenantId,
+            branchId: fallbackBranchId,
+            name: "Caja Principal - Generada",
+            status: "ACTIVE",
+          },
+          update: {
+            status: "ACTIVE",
+          },
+        });
+
+        registerId = fallbackRegister.id;
+      }
+
+      const session = await tx.cashSession.create({
+        data: {
+          tenantId: context.tenantId,
+          registerId,
+          openedByUserId: context.userId,
+          openingAmount: new Prisma.Decimal(data.openingAmount),
+          status: "OPEN",
+        },
+        include: {
+          register: true,
+        },
+      });
+
+      return { session, created: true };
     });
 
-    if (existingSession) {
-      return Response.json(
-        { ok: false, error: "SESSION_ALREADY_OPEN", message: "Ya tienes una sesión de caja abierta." },
-        { status: 400 }
-      );
-    }
-
-    const session = await prisma.cashSession.create({
-      data: {
-        tenantId: context.tenantId,
-        registerId: data.registerId,
-        openedByUserId: context.userId,
-        openingAmount: new Prisma.Decimal(data.openingAmount),
-        status: "OPEN",
-      },
-      include: {
-        register: true,
-      },
-    });
-
-    return created(session);
+    return sessionResult.created ? created(sessionResult.session) : ok(sessionResult.session);
   } catch (error) {
     return fail(error);
   }
@@ -81,8 +143,7 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const context = await requireApiContext({ moduleId: "pos" });
-    const body = await request.json();
-    const data = CloseSessionSchema.parse(body);
+    const data = CloseSessionSchema.parse(await request.json());
 
     const session = await prisma.cashSession.update({
       where: {
@@ -96,6 +157,9 @@ export async function PATCH(request: Request) {
         closingAmount: new Prisma.Decimal(data.closingAmount),
         closedAt: new Date(),
         closedByUserId: context.userId,
+      },
+      include: {
+        register: true,
       },
     });
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -71,6 +72,7 @@ type CartItem = {
 
 type ActiveSession = {
   id: string;
+  branchId?: string;
   registerName: string;
   openingAmount: number;
   openedAt: string;
@@ -255,6 +257,7 @@ export function PosClient({
   members: Member[];
 }) {
   const t = posLabels[locale] ?? posLabels.es;
+  const router = useRouter();
 
   // Active Session State
   const [activeSession, setActiveSession] = useState<ActiveSession>(initialActiveSession);
@@ -319,8 +322,10 @@ export function PosClient({
   }, [cart]);
 
   const cartTax = useMemo(() => {
-    return cartSubtotal * 0.16; // 16% standard IVA (Mexican Tax)
-  }, [cartSubtotal]);
+    return cart.reduce((acc, item) => {
+      return acc + item.product.price * item.quantity * (item.product.taxRate / 100);
+    }, 0);
+  }, [cart]);
 
   const cartTotal = useMemo(() => {
     return cartSubtotal + cartTax;
@@ -396,7 +401,6 @@ export function PosClient({
   // Open Register Session Handler
   const handleOpenSession = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!openSessionForm.registerId) return;
 
     setIsOpeningSession(true);
     try {
@@ -404,7 +408,7 @@ export function PosClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          registerId: openSessionForm.registerId,
+          registerId: openSessionForm.registerId || undefined,
           openingAmount: parseFloat(openSessionForm.openingAmount) || 0,
         }),
       });
@@ -414,11 +418,13 @@ export function PosClient({
 
       setActiveSession({
         id: result.data.id,
+        branchId: result.data.register.branchId,
         registerName: result.data.register.name,
         openingAmount: parseFloat(result.data.openingAmount),
         openedAt: result.data.openedAt,
       });
       toast.success(t.openSessionButton);
+      router.refresh();
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -450,6 +456,7 @@ export function PosClient({
       setClosingAmount("");
       setCart([]);
       toast.success(t.closeSessionTitle);
+      router.refresh();
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -478,7 +485,7 @@ export function PosClient({
 
     setIsCheckingOut(true);
     try {
-      const res = await fetch("/api/pos/sales", {
+      const res = await fetch("/api/pos/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -517,18 +524,10 @@ export function PosClient({
         })),
       });
 
-      // Clear Cart and Cash state
       setCart([]);
       setSelectedMemberId("");
       setCashReceived("");
-
-      // Modifying products local stock state immediately to mirror db decrement without reloading
-      cart.forEach((c) => {
-        const prod = products.find((p) => p.id === c.product.id);
-        if (prod) {
-          prod.stock = Math.max(0, prod.stock - c.quantity);
-        }
-      });
+      router.refresh();
     } catch (error: any) {
       toast.error(error.message || "Ocurrió un error al procesar el cobro.");
     } finally {
@@ -562,13 +561,18 @@ export function PosClient({
                   onChange={(e) =>
                     setOpenSessionForm((prev) => ({ ...prev, registerId: e.target.value }))
                   }
-                  required
                 >
-                  {registers.map((r) => (
-                    <option key={r.id} value={r.id} className="text-foreground bg-background">
-                      {r.name}
+                  {registers.length === 0 ? (
+                    <option value="" className="text-foreground bg-background">
+                      Caja Principal - Generada
                     </option>
-                  ))}
+                  ) : (
+                    registers.map((r) => (
+                      <option key={r.id} value={r.id} className="text-foreground bg-background">
+                        {r.name}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 
@@ -581,7 +585,8 @@ export function PosClient({
                   type="number"
                   step="0.01"
                   min="0"
-                  className="glass-control w-full px-3.5 py-2.5 rounded-lg border text-sm"
+                  inputMode="decimal"
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:text-white"
                   value={openSessionForm.openingAmount}
                   onChange={(e) =>
                     setOpenSessionForm((prev) => ({ ...prev, openingAmount: e.target.value }))
@@ -592,7 +597,7 @@ export function PosClient({
 
               <Button
                 type="submit"
-                disabled={isOpeningSession || registers.length === 0}
+                disabled={isOpeningSession}
                 className="w-full py-6 rounded-lg bg-[var(--brand-orange)] hover:bg-[var(--brand-orange)]/90 text-white font-bold text-sm transition-all duration-200 shadow-lg hover:shadow-primary/20 cursor-pointer disabled:opacity-50"
               >
                 {isOpeningSession ? "..." : t.openSessionButton}
@@ -1068,7 +1073,8 @@ export function PosClient({
                 type="number"
                 step="0.01"
                 min="0"
-                className="glass-control w-full px-3.5 py-2.5 rounded-lg border text-sm"
+                inputMode="decimal"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:text-white"
                 value={closingAmount}
                 onChange={(e) => setClosingAmount(e.target.value)}
                 required

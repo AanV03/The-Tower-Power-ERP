@@ -1,10 +1,10 @@
-import type { Locale } from "@/lib/i18n";
-import { getDictionary } from "@/lib/i18n";
+import { AddStockModal } from "@/components/inventory/add-stock-modal";
+import { moduleConfigs } from "@/data/modules";
 import { requireApiContext } from "@/lib/api/context";
 import { getModuleSummary } from "@/lib/api/module-summary";
-import { moduleConfigs } from "@/data/modules";
-// Structural Warehouse dashboard (no state/logic - layout only)
-import { Fragment } from "react";
+import { formatCurrency } from "@/lib/api/pagination";
+import { type Locale } from "@/lib/i18n";
+import { prisma } from "@/lib/db/prisma";
 
 function mergeMetrics(moduleId: string, locale: Locale, summary: Awaited<ReturnType<typeof getModuleSummary>>) {
   const config = moduleConfigs[moduleId as keyof typeof moduleConfigs];
@@ -17,147 +17,152 @@ function mergeMetrics(moduleId: string, locale: Locale, summary: Awaited<ReturnT
       value: apiMetric?.value ?? fallbackMetric.value,
       change: apiMetric?.change ?? fallbackMetric.change,
       tone: apiMetric?.tone ?? fallbackMetric.tone,
-      raw: apiMetric,
     };
   });
 }
 
 export default async function WarehousePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const dict = getDictionary(locale as Locale);
+  const typedLocale = locale as Locale;
   const context = await requireApiContext({ moduleId: "warehouse" });
   const summary = await getModuleSummary("warehouse", context);
-  const metrics = mergeMetrics("warehouse", locale as Locale, summary);
+  const metrics = mergeMetrics("warehouse", typedLocale, summary);
+  const branchWhere = context.branchId ? { branchId: context.branchId } : {};
+
+  const [products, warehouses, items] = await Promise.all([
+    prisma.product.findMany({
+      where: { tenantId: context.tenantId, status: "ACTIVE" },
+      orderBy: { name: "asc" },
+      take: 100,
+    }),
+    prisma.warehouse.findMany({
+      where: { tenantId: context.tenantId, ...branchWhere },
+      include: { branch: true, inventoryItems: { include: { product: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
+    prisma.inventoryItem.findMany({
+      where: { tenantId: context.tenantId, warehouse: branchWhere },
+      include: { product: true, warehouse: { include: { branch: true } } },
+      orderBy: { updatedAt: "desc" },
+      take: 50,
+    }),
+  ]);
 
   return (
-    <div className="min-h-[calc(100vh-64px)] p-6 bg-background">
-      {/* Topbar */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <nav className="text-sm text-muted">Almacén</nav>
-          <h1 className="text-lg font-medium">{moduleConfigs.warehouse.title[locale as Locale]}</h1>
-          <div className="ml-4 inline-flex items-center gap-2 text-sm">
-            <button className="px-3 py-1 rounded-md glass-control">Todos</button>
-            <button className="px-3 py-1 rounded-md AssetBadge">Maquinaria</button>
-            <button className="px-3 py-1 rounded-md ConsumableBadge">Consumo</button>
-            <button className="px-2 py-1 rounded-md glass-control">Split View</button>
-          </div>
+    <section className="min-h-[calc(100vh-64px)] space-y-6 bg-background p-6 text-foreground">
+      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <nav className="text-sm text-muted-foreground">Almacenes</nav>
+          <h1 className="mt-1 text-3xl font-semibold tracking-normal text-foreground">
+            {moduleConfigs.warehouse.title[typedLocale]}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">Existencias por almacen, sucursal y producto.</p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <label htmlFor="sucursal-select" className="text-sm text-muted">Sucursal</label>
-            <select id="sucursal-select" className="glass-control px-2 py-1 rounded-md">
-              <option>Principal</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <input type="text" placeholder="Buscar SKU / Nombre" className="glass-control px-3 py-1 rounded-md" />
-            <button className="glass-control px-3 py-1 rounded-md">Filtros</button>
-            <button className="glass-control px-3 py-1 rounded-md">Exportar</button>
-          </div>
+        <div className="flex flex-wrap gap-2">
+          <AddStockModal products={products.map((product) => ({ id: product.id, name: product.name, sku: product.sku }))} />
+          <button className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted">
+            Exportar
+          </button>
         </div>
       </div>
 
-      {/* Main grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Table area */}
-        <section className="col-span-2 bg-card rounded-lg shadow p-4 flex flex-col">
-          <div className="sticky top-4 z-10 bg-card/80 backdrop-blur py-2 px-2 rounded-md flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <button className="glass-control px-3 py-1 rounded-md">Crear movimiento</button>
-              <button className="glass-control px-3 py-1 rounded-md">Ajuste</button>
-              <button className="glass-control px-3 py-1 rounded-md">Traspaso</button>
-            </div>
-            <div className="ml-auto flex items-center gap-2">
-              <span className="text-sm text-muted">Densidad</span>
-              <div className="inline-flex gap-1">
-                <button className="glass-control px-2 py-1 rounded-md">Compact</button>
-                <button className="glass-control px-2 py-1 rounded-md">Detalle</button>
-              </div>
-            </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {metrics.slice(0, 4).map((metric) => (
+          <div key={metric.label} className="rounded-xl border border-border bg-card p-4 text-foreground">
+            <div className="text-sm text-muted-foreground">{metric.label}</div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">{metric.value}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Cambio: {metric.change ?? "-"}</div>
           </div>
+        ))}
+      </div>
 
-          <div className="mt-3 overflow-auto flex-1 min-h-[48vh]">
-            {/* InventoryDataTable placeholder */}
-            <table className="table-fixed w-full divide-y divide-border">
-              <thead className="text-sm text-muted">
-                <tr className="text-left">
-                  <th className="w-[220px] px-3 py-2">Item</th>
-                  <th className="w-[120px] px-3 py-2">Tipo</th>
-                  <th className="w-[140px] px-3 py-2">Sucursal</th>
-                  <th className="w-[100px] px-3 py-2">Ubicación</th>
-                  <th className="w-[100px] px-3 py-2">Cantidad</th>
-                  <th className="w-[100px] px-3 py-2">Umbral</th>
-                  <th className="w-[120px] px-3 py-2">Valor</th>
-                  <th className="px-3 py-2">Acciones</th>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
+        <section className="overflow-hidden rounded-xl border border-border bg-card text-foreground">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+            <h2 className="font-semibold text-foreground">Inventario por almacen</h2>
+            <input
+              type="text"
+              placeholder="Buscar SKU / Nombre"
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
+            />
+          </div>
+          <div className="overflow-auto">
+            <table className="w-full min-w-[820px] text-sm text-foreground">
+              <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                <tr>
+                  <th className="px-5 py-3">Item</th>
+                  <th className="px-5 py-3">SKU</th>
+                  <th className="px-5 py-3">Sucursal</th>
+                  <th className="px-5 py-3">Almacen</th>
+                  <th className="px-5 py-3 text-right">Cantidad</th>
+                  <th className="px-5 py-3 text-right">Umbral</th>
+                  <th className="px-5 py-3 text-right">Valor</th>
                 </tr>
               </thead>
-              <tbody className="text-sm">
-                {/* Example rows (structural only) */}
-                <tr className="group flex items-center px-3 py-2 border-b border-border/50 hover:bg-accent/3">
-                  <td className="px-3 py-2">Cinta de correr - SN: 001</td>
-                  <td className="px-3 py-2"><span className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full text-xs font-medium bg-brand-navy text-white">Maquinaria</span></td>
-                  <td className="px-3 py-2">Principal</td>
-                  <td className="px-3 py-2">Bodega A</td>
-                  <td className="px-3 py-2">1</td>
-                  <td className="px-3 py-2">0</td>
-                  <td className="px-3 py-2">$2,500</td>
-                  <td className="px-3 py-2">...</td>
-                </tr>
-                <tr className="group flex items-center px-3 py-2 border-b border-border/50 hover:bg-accent/3">
-                  <td className="px-3 py-2">Toalla pequeña - SKU: TOW-01</td>
-                  <td className="px-3 py-2"><span className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full text-xs font-medium bg-brand-orange text-black">Consumo</span></td>
-                  <td className="px-3 py-2">Principal</td>
-                  <td className="px-3 py-2">Estantería 3</td>
-                  <td className="px-3 py-2">120</td>
-                  <td className="px-3 py-2">30</td>
-                  <td className="px-3 py-2">$360</td>
-                  <td className="px-3 py-2">...</td>
-                </tr>
+              <tbody className="divide-y divide-border">
+                {items.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-5 py-10 text-center text-muted-foreground">
+                      Sin inventario registrado. Usa Crear movimiento para agregar stock.
+                    </td>
+                  </tr>
+                ) : (
+                  items.map((item) => (
+                    <tr key={item.id} className="hover:bg-muted/30">
+                      <td className="px-5 py-4 font-medium text-foreground">{item.product.name}</td>
+                      <td className="px-5 py-4 font-mono text-xs text-muted-foreground">{item.product.sku}</td>
+                      <td className="px-5 py-4 text-foreground">{item.warehouse.branch.name}</td>
+                      <td className="px-5 py-4 text-foreground">{item.warehouse.name}</td>
+                      <td className="px-5 py-4 text-right font-semibold text-foreground">{item.quantityOnHand.toString()}</td>
+                      <td className="px-5 py-4 text-right text-muted-foreground">{item.reorderPoint.toString()}</td>
+                      <td className="px-5 py-4 text-right text-foreground">
+                        {formatCurrency(Number(item.quantityOnHand) * Number(item.product.cost))}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </section>
 
-        {/* Right: KPIs and actions */}
-        <aside className="col-span-1 flex flex-col gap-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* KPI Cards (structural) */}
-            {metrics.slice(0, 4).map((m: any, i: number) => (
-              <div key={i} className="p-4 rounded-lg glass-panel-strong">
-                <div className="text-xs text-muted">{m.label}</div>
-                <div className="mt-2 text-xl font-semibold">{m.value}</div>
-                <div className="text-sm text-muted">Cambio: {m.change ?? "-"}</div>
-              </div>
-            ))}
+        <aside className="space-y-4">
+          <div className="rounded-xl border border-border bg-card p-5 text-foreground">
+            <h2 className="font-semibold text-foreground">Almacenes</h2>
+            <div className="mt-4 divide-y divide-border">
+              {warehouses.length === 0 ? (
+                <p className="py-4 text-sm text-muted-foreground">Se creara un almacen Principal automaticamente al primer movimiento.</p>
+              ) : (
+                warehouses.map((warehouse) => (
+                  <div key={warehouse.id} className="py-3">
+                    <p className="font-medium text-foreground">{warehouse.name}</p>
+                    <p className="text-sm text-muted-foreground">{warehouse.branch.name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{warehouse.inventoryItems.length} productos con stock</p>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="glass-panel p-3">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-medium">Alertas</div>
-                <button className="glass-control px-2 py-1 rounded-md">Ver todas</button>
-              </div>
-              <div className="mt-2">
-                <div className="p-2 rounded-md bg-destructive/10">Toalla pequeña <span className="text-sm text-destructive">Bajo stock</span></div>
-                <div className="p-2 rounded-md bg-accent/5 mt-2">Cinta de correr <span className="text-sm text-muted">Mantenimiento programado</span></div>
-              </div>
-            </div>
-
-            <div className="glass-panel p-3">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-medium">Resumen</div>
-                <button className="glass-control px-2 py-1 rounded-md">Exportar PDF</button>
-              </div>
-              <div className="mt-3">
-                {/* InventoryChart placeholder */}
-                <div className="h-40 rounded-md bg-[linear-gradient(90deg,#f4f4f4,#fff)] flex items-center justify-center text-sm text-muted">Inventory Chart</div>
-              </div>
+          <div className="rounded-xl border border-border bg-card p-5 text-foreground">
+            <h2 className="font-semibold text-foreground">Alertas</h2>
+            <div className="mt-3 space-y-2">
+              {items.filter((item) => Number(item.quantityOnHand) <= Number(item.reorderPoint)).length === 0 ? (
+                <p className="text-sm text-muted-foreground">Sin alertas de bajo stock.</p>
+              ) : (
+                items
+                  .filter((item) => Number(item.quantityOnHand) <= Number(item.reorderPoint))
+                  .map((item) => (
+                    <div key={item.id} className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                      {item.product.name} bajo stock
+                    </div>
+                  ))
+              )}
             </div>
           </div>
         </aside>
       </div>
-    </div>
+    </section>
   );
 }
