@@ -3,11 +3,12 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
-import { created, fail, ok } from "@/lib/api/response";
+import { ApiError, created, fail, ok } from "@/lib/api/response";
+import { DEFAULT_TIME_ZONE, getDayBoundsForLocalDate } from "@/lib/date/timezone";
 
 const CreatePayrollPeriodSchema = z.object({
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime(),
+  startDate: z.string().min(1),
+  endDate: z.string().min(1),
   status: z.enum(PayrollStatus).default(PayrollStatus.DRAFT),
 });
 
@@ -44,12 +45,39 @@ export async function POST(request: Request) {
   try {
     const context = await requireApiContext({ moduleId: "payroll" });
     const data = CreatePayrollPeriodSchema.parse(await request.json());
+    const scopedBranch = context.branchId
+      ? await prisma.branch.findFirst({
+          where: { tenantId: context.tenantId, id: context.branchId },
+          select: { timezone: true },
+        })
+      : null;
+    const timeZone = scopedBranch?.timezone ?? DEFAULT_TIME_ZONE;
+    const startDate = getDayBoundsForLocalDate(data.startDate, timeZone).start;
+    const endDate = new Date(getDayBoundsForLocalDate(data.endDate, timeZone).end.getTime() - 1);
+
+    if (endDate < startDate) {
+      throw new ApiError("Period end must be greater than or equal to period start.", 400, "INVALID_PERIOD");
+    }
+
+    const existingPeriod = await prisma.payrollPeriod.findUnique({
+      where: {
+        tenantId_startDate_endDate: {
+          tenantId: context.tenantId,
+          startDate,
+          endDate,
+        },
+      },
+    });
+
+    if (existingPeriod) {
+      return ok(existingPeriod);
+    }
 
     const period = await prisma.payrollPeriod.create({
       data: {
         tenantId: context.tenantId,
-        startDate: new Date(data.startDate),
-        endDate: new Date(data.endDate),
+        startDate,
+        endDate,
         status: data.status,
       },
     });

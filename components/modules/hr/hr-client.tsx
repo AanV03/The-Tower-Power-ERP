@@ -1,7 +1,7 @@
 "use client";
 
-import { useId, useMemo, useState, useEffect } from "react";
-import { Download, Plus, Search, UsersRound, Clock, FileText, CalendarClock, Edit, AlertTriangle } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { Plus, Search, UsersRound, Clock, FileText, CalendarClock, Edit, AlertTriangle } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,8 @@ import { EmployeeTable, type HrEmployeeRow } from "@/components/modules/hr/emplo
 import { AttendancePanel, type HrAttendanceRow } from "@/components/modules/hr/attendance-panel";
 import { ContractSummary, type HrContractRow } from "@/components/modules/hr/contract-summary";
 import { EmployeeFormDialog } from "@/components/modules/hr/employee-form-dialog";
-import { AttendanceDialog } from "@/components/modules/hr/attendance-dialog";
+import { HrExportButton } from "@/components/modules/hr/hr-export-button";
+import { TimeClockDialog, type TimeClockEmployeeOption } from "@/components/modules/hr/time-clock-dialog";
 
 const hrLabels = {
   es: {
@@ -143,12 +144,14 @@ export function HrClient({
   initialEmployees,
   initialAttendances,
   initialContracts,
+  timeClockEmployees,
   metrics,
 }: {
   locale: Locale;
   initialEmployees: HrEmployeeRow[];
   initialAttendances: HrAttendanceRow[];
   initialContracts: HrContractRow[];
+  timeClockEmployees: TimeClockEmployeeOption[];
   metrics: {
     activeEmployees: number;
     attendanceToday: number;
@@ -242,15 +245,16 @@ export function HrClient({
                 </Button>
               }
             />
-            <AttendanceDialog
-              employees={initialEmployees.map((emp) => ({
-                id: emp.id,
-                name: emp.name,
-              }))}
+            <TimeClockDialog
+              employees={timeClockEmployees}
+              trigger={
+                <Button size="sm" variant="outline">
+                  <Clock className="size-4" />
+                  {t.registerAttendance}
+                </Button>
+              }
             />
-            <Button size="icon-sm" variant="outline" aria-label={t.exportHr}>
-              <Download className="size-4" />
-            </Button>
+            <HrExportButton employees={initialEmployees} attendance={initialAttendances} contracts={initialContracts} />
           </div>
         </div>
       </div>

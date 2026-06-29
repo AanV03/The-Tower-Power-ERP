@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import QRCode from 'qrcode';
 
+import {
+  GERPY_TWO_FACTOR_SETUP_COOKIE,
+  type TwoFactorSetupPayload,
+  verifyAuthToken,
+} from '@/lib/auth/session';
 import { getTenantContextFromRequest } from '@/lib/auth/server-session';
 import { AuthService } from '@/modules/auth/services/auth.service';
 
 export async function POST(req: NextRequest) {
   try {
-    const context = await getTenantContextFromRequest(req);
+    const setupToken = req.cookies.get(GERPY_TWO_FACTOR_SETUP_COOKIE)?.value;
+    const setupPayload = await verifyAuthToken<TwoFactorSetupPayload>(setupToken, '2fa_setup');
+    const context = setupPayload ?? (await getTenantContextFromRequest(req));
 
     if (!context) {
       return NextResponse.json(

@@ -2,11 +2,13 @@ import type { TenantContext } from "@/lib/auth/rbac";
 
 export const GERPY_SESSION_COOKIE = "gerpy_session";
 export const GERPY_TWO_FACTOR_COOKIE = "gerpy_2fa_challenge";
+export const GERPY_TWO_FACTOR_SETUP_COOKIE = "gerpy_2fa_setup";
 
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 export const TWO_FACTOR_CHALLENGE_MAX_AGE_SECONDS = 60 * 5;
+export const TWO_FACTOR_SETUP_MAX_AGE_SECONDS = 60 * 10;
 
-type TokenType = "session" | "2fa";
+type TokenType = "session" | "2fa" | "2fa_setup";
 
 type BaseTokenPayload = {
   typ: TokenType;
@@ -30,7 +32,11 @@ export type TwoFactorChallengePayload = BaseTokenPayload & {
   typ: "2fa";
 };
 
-export type AuthTokenPayload = SessionTokenPayload | TwoFactorChallengePayload;
+export type TwoFactorSetupPayload = BaseTokenPayload & {
+  typ: "2fa_setup";
+};
+
+export type AuthTokenPayload = SessionTokenPayload | TwoFactorChallengePayload | TwoFactorSetupPayload;
 
 export function getAuthSecret() {
   const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? process.env.JWT_SECRET;

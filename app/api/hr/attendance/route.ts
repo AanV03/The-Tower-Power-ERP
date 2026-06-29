@@ -95,17 +95,30 @@ export async function POST(request: Request) {
         );
       }
 
-      const record = await prisma.attendanceRecord.update({
-        where: {
-          id: openRecord.id,
-        },
-        data: {
-          clockOut: new Date(),
-        },
-        include: {
-          employee: true,
-          branch: true,
-        },
+      const record = await prisma.$transaction(async (tx) => {
+        await tx.attendanceRecord.updateMany({
+          where: {
+            id: openRecord.id,
+            tenantId: context.tenantId,
+            employeeId: data.employeeId,
+            clockOut: null,
+          },
+          data: {
+            clockOut: new Date(),
+          },
+        });
+
+        return tx.attendanceRecord.findFirstOrThrow({
+          where: {
+            id: openRecord.id,
+            tenantId: context.tenantId,
+            employeeId: data.employeeId,
+          },
+          include: {
+            employee: true,
+            branch: true,
+          },
+        });
       });
 
       return ok(record);

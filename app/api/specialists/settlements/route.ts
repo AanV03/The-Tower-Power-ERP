@@ -1,159 +1,79 @@
-import { SettlementStatus, Prisma } from "@prisma/client";
+import { SettlementStatus } from "@prisma/client";
 import { z } from "zod";
-import { prisma } from "@/lib/db/prisma";
+
 import { requireApiContext } from "@/lib/api/context";
-import { created, fail, ok } from "@/lib/api/response";
+import { parsePagination } from "@/lib/api/pagination";
+import { ApiError, created, fail, ok } from "@/lib/api/response";
+import { prisma } from "@/lib/db/prisma";
+import { DEFAULT_TIME_ZONE, getDayBoundsForLocalDate } from "@/lib/date/timezone";
+import {
+  createSpecialistSettlement,
+  transitionSpecialistSettlementStatus,
+} from "@/modules/specialists/services/commission.service";
 
-const CalculateQuerySchema = z.object({
-  specialistId: z.string().min(1),
-  periodStart: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
-  periodEnd: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
-});
+const SettlementStatusSchema = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim().toUpperCase() : value),
+  z.enum(SettlementStatus),
+);
 
-const CreateSettlementSchema = z.object({
+const SpecialistSettlementSchema = z.object({
   specialistId: z.string().min(1),
   periodStart: z.string().min(1),
   periodEnd: z.string().min(1),
-  status: z.enum(["DRAFT", "APPROVED", "PAID"]).default("DRAFT"),
-  notes: z.string().optional(),
+  status: SettlementStatusSchema.default(SettlementStatus.DRAFT),
+});
+
+const UpdateSpecialistSettlementSchema = z.object({
+  settlementId: z.string().min(1),
+  status: SettlementStatusSchema,
 });
 
 export const runtime = "nodejs";
 
-// Helper function to calculate settlement figures on the server
-async function computeSettlement(
-  tenantId: string,
-  specialistId: string,
-  start: Date,
-  end: Date
-) {
-  // 1. Fetch specialist and contract
-  const specialist = await prisma.specialist.findFirst({
-    where: { id: specialistId, tenantId },
-    include: {
-      contracts: {
-        where: {
-          status: "ACTIVE",
-          startDate: { lte: end },
-          OR: [
-            { endDate: null },
-            { endDate: { gte: start } },
-          ],
-        },
-        orderBy: { createdAt: "desc" },
-        take: 1,
-      },
-    },
-  });
-
-  if (!specialist) {
-    throw new Error("SPECIALIST_NOT_FOUND");
+function parsePeriodBoundary(value: string, timeZone: string) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return getDayBoundsForLocalDate(value, timeZone).start;
   }
 
-  const contract = specialist.contracts[0];
-  const model = contract?.model ?? "UNASSIGNED";
-
-  // 2. Fetch completed sessions in the range that are NOT already in another settlement
-  const sessions = await prisma.specialistSession.findMany({
-    where: {
-      tenantId,
-      specialistId,
-      status: "COMPLETED",
-      scheduledAt: {
-        gte: start,
-        lte: end,
-      },
-      settlementItems: {
-        none: {}, // not included in any settlement items
-      },
-    },
-    include: {
-      service: true,
-    },
-  });
-
-  // 3. Compute sums
-  const grossAmount = sessions.reduce((sum, s) => sum + Number(s.price), 0);
-  let rentAmount = 0;
-  let commissionAmount = 0;
-  let netPayout = 0;
-
-  if (model === "FIXED_RENT") {
-    rentAmount = contract?.fixedRentAmount ? Number(contract.fixedRentAmount) : 0;
-    netPayout = Math.max(0, grossAmount - rentAmount);
-  } else if (model === "COMMISSION") {
-    const rate = contract?.commissionRate ? Number(contract.commissionRate) : 0;
-    commissionAmount = grossAmount * (rate / 100);
-    netPayout = commissionAmount;
-  } else if (model === "HYBRID") {
-    rentAmount = contract?.fixedRentAmount ? Number(contract.fixedRentAmount) : 0;
-    const rate = contract?.commissionRate ? Number(contract.commissionRate) : 0;
-    commissionAmount = grossAmount * (rate / 100);
-    netPayout = Math.max(0, commissionAmount - rentAmount);
-  } else {
-    // UNASSIGNED
-    netPayout = grossAmount;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new ApiError("Settlement period date is invalid.", 400, "INVALID_PERIOD_DATE");
   }
 
-  return {
-    specialist,
-    contract,
-    model,
-    sessions,
-    grossAmount,
-    rentAmount,
-    commissionAmount,
-    netPayout,
-  };
+  return date;
 }
 
 export async function GET(request: Request) {
   try {
     const context = await requireApiContext({ moduleId: "specialists" });
     const { searchParams } = new URL(request.url);
+    const pagination = parsePagination(searchParams);
+    const where = {
+      tenantId: context.tenantId,
+      ...(searchParams.get("specialistId") ? { specialistId: searchParams.get("specialistId") ?? undefined } : {}),
+      ...(searchParams.get("status") ? { status: searchParams.get("status") as SettlementStatus } : {}),
+      ...(context.branchId
+        ? {
+            specialist: {
+              branchId: context.branchId,
+            },
+          }
+        : {}),
+    };
 
-    const parsed = CalculateQuerySchema.safeParse({
-      specialistId: searchParams.get("specialistId") || undefined,
-      periodStart: searchParams.get("periodStart") || undefined,
-      periodEnd: searchParams.get("periodEnd") || undefined,
-    });
+    const [items, total] = await Promise.all([
+      prisma.specialistSettlement.findMany({
+        where,
+        include: { specialist: true, items: true, commissions: true },
+        orderBy: { periodStart: "desc" },
+        skip: pagination.skip,
+        take: pagination.take,
+      }),
+      prisma.specialistSettlement.count({ where }),
+    ]);
 
-    if (!parsed.success) {
-      return Response.json(
-        { ok: false, error: "INVALID_PARAMS", message: "Parámetros de consulta inválidos." },
-        { status: 400 }
-      );
-    }
-
-    const { specialistId, periodStart, periodEnd } = parsed.data;
-    const start = new Date(periodStart);
-    const end = new Date(periodEnd);
-    end.setHours(23, 59, 59, 999);
-
-    const calc = await computeSettlement(context.tenantId, specialistId, start, end);
-
-    return ok({
-      specialistId,
-      model: calc.model,
-      grossAmount: calc.grossAmount,
-      rentAmount: calc.rentAmount,
-      commissionAmount: calc.commissionAmount,
-      netPayout: calc.netPayout,
-      sessionsCount: calc.sessions.length,
-      sessions: calc.sessions.map((s) => ({
-        id: s.id,
-        serviceName: s.service.name,
-        price: s.price.toString(),
-        scheduledAt: s.scheduledAt,
-      })),
-    });
-  } catch (error: any) {
-    if (error.message === "SPECIALIST_NOT_FOUND") {
-      return Response.json(
-        { ok: false, error: "SPECIALIST_NOT_FOUND", message: "Especialista no encontrado." },
-        { status: 404 }
-      );
-    }
+    return ok({ items, total, pagination });
+  } catch (error) {
     return fail(error);
   }
 }
@@ -161,90 +81,85 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const context = await requireApiContext({ moduleId: "specialists" });
-    const data = CreateSettlementSchema.parse(await request.json());
+    const data = SpecialistSettlementSchema.parse(await request.json());
 
-    const start = new Date(data.periodStart);
-    const end = new Date(data.periodEnd);
-    end.setHours(23, 59, 59, 999);
-
-    const calc = await computeSettlement(context.tenantId, data.specialistId, start, end);
-
-    if (calc.sessions.length === 0 && calc.rentAmount === 0) {
-      return Response.json(
-        {
-          ok: false,
-          error: "NO_ITEMS_TO_SETTLE",
-          message: "No hay sesiones ni cargos de renta para liquidar en este periodo.",
-        },
-        { status: 400 }
-      );
+    if (data.status === SettlementStatus.PAID) {
+      throw new ApiError("Settlements must be approved before they can be marked as paid.", 409, "INVALID_SETTLEMENT_TRANSITION");
     }
 
-    // Persist settlement in transaction
-    const settlement = await prisma.$transaction(async (tx) => {
-      // 1. Create settlement
-      const sett = await tx.specialistSettlement.create({
-        data: {
-          tenantId: context.tenantId,
-          specialistId: data.specialistId,
-          periodStart: start,
-          periodEnd: end,
-          grossAmount: new Prisma.Decimal(calc.grossAmount),
-          rentAmount: new Prisma.Decimal(calc.rentAmount),
-          commissionAmount: new Prisma.Decimal(calc.commissionAmount),
-          netPayout: new Prisma.Decimal(calc.netPayout),
-          status: data.status as SettlementStatus,
-        },
-      });
-
-      // 2. Create items for each session
-      for (const session of calc.sessions) {
-        await tx.specialistSettlementItem.create({
-          data: {
-            tenantId: context.tenantId,
-            settlementId: sett.id,
-            sessionId: session.id,
-            concept: `Sesión: ${session.service.name}`,
-            amount: session.price,
-          },
-        });
-      }
-
-      // 3. Create fixed rent item if applicable
-      if (calc.rentAmount > 0) {
-        await tx.specialistSettlementItem.create({
-          data: {
-            tenantId: context.tenantId,
-            settlementId: sett.id,
-            concept: "Deducción de Renta Fija",
-            amount: new Prisma.Decimal(-calc.rentAmount),
-          },
-        });
-      }
-
-      // 4. Create commission item if applicable
-      if (calc.commissionAmount > 0) {
-        await tx.specialistSettlementItem.create({
-          data: {
-            tenantId: context.tenantId,
-            settlementId: sett.id,
-            concept: `Comisión ganada (${calc.contract?.commissionRate?.toString() || "0"}%)`,
-            amount: new Prisma.Decimal(calc.commissionAmount),
-          },
-        });
-      }
-
-      return sett;
+    const specialist = await prisma.specialist.findFirst({
+      where: {
+        id: data.specialistId,
+        tenantId: context.tenantId,
+        ...(context.branchId
+          ? {
+              OR: [{ branchId: context.branchId }, { branchId: null }],
+            }
+          : {}),
+      },
+      include: { branch: { select: { timezone: true } } },
     });
 
-    return created(settlement);
-  } catch (error: any) {
-    if (error.message === "SPECIALIST_NOT_FOUND") {
-      return Response.json(
-        { ok: false, error: "SPECIALIST_NOT_FOUND", message: "Especialista no encontrado." },
-        { status: 404 }
-      );
+    if (!specialist) {
+      throw new ApiError("Specialist was not found for this branch.", 404, "SPECIALIST_NOT_FOUND");
     }
+
+    const timeZone = specialist.branch?.timezone ?? DEFAULT_TIME_ZONE;
+    const periodStart = parsePeriodBoundary(data.periodStart, timeZone);
+    const periodEnd = parsePeriodBoundary(data.periodEnd, timeZone);
+
+    if (periodEnd < periodStart) {
+      throw new ApiError("Period end must be greater than or equal to period start.", 400, "INVALID_PERIOD");
+    }
+
+    const settlement = await prisma.$transaction((tx) =>
+      createSpecialistSettlement(tx, {
+        tenantId: context.tenantId,
+        specialistId: data.specialistId,
+        periodStart,
+        periodEnd,
+        status: data.status,
+      }),
+    );
+
+    return created(settlement);
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const context = await requireApiContext({ moduleId: "specialists" });
+    const data = UpdateSpecialistSettlementSchema.parse(await request.json());
+
+    if (context.branchId) {
+      const settlement = await prisma.specialistSettlement.findFirst({
+        where: {
+          id: data.settlementId,
+          tenantId: context.tenantId,
+          specialist: {
+            OR: [{ branchId: context.branchId }, { branchId: null }],
+          },
+        },
+        select: { id: true },
+      });
+
+      if (!settlement) {
+        throw new ApiError("Settlement was not found for this branch.", 404, "SETTLEMENT_NOT_FOUND");
+      }
+    }
+
+    const settlement = await prisma.$transaction((tx) =>
+      transitionSpecialistSettlementStatus(tx, {
+        tenantId: context.tenantId,
+        settlementId: data.settlementId,
+        status: data.status,
+      }),
+    );
+
+    return ok(settlement);
+  } catch (error) {
     return fail(error);
   }
 }

@@ -43,7 +43,7 @@ export default async function DashboardLayout({
   }
 
   if (!customContext?.tenantId && !session?.user?.tenantId) {
-    redirect(`/${locale}/signin`);
+    redirect("/login");
   }
 
   return (

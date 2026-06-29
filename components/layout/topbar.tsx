@@ -74,7 +74,7 @@ export function Topbar({ locale }: { locale: Locale }) {
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => null);
-    await signOut({ callbackUrl: `/${locale}/signin` });
+    await signOut({ callbackUrl: "/login" });
   };
 
   return (

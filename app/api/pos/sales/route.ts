@@ -10,18 +10,11 @@ export async function POST(req: NextRequest) {
   try {
     const ctx = await requireApiContext({ moduleId: 'pos' });
 
-    if (!ctx.branchId) {
-      return NextResponse.json(
-        { error: 'Sucursal requerida para procesar venta' },
-        { status: 400 },
-      );
-    }
-
     const body = await req.json();
     const validatedPayload = createSaleSchema.parse(body);
     const sale = await PosService.executeSale(
       ctx.tenantId,
-      ctx.branchId,
+      ctx.branchId ?? null,
       ctx.userId,
       validatedPayload,
     );

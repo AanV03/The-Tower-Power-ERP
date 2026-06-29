@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
-import { created, fail, ok } from "@/lib/api/response";
+import { ApiError, created, fail, ok } from "@/lib/api/response";
 
 const CreatePayrollItemSchema = z.object({
   payrollPeriodId: z.string(),
@@ -47,19 +47,67 @@ export async function POST(request: Request) {
   try {
     const context = await requireApiContext({ moduleId: "payroll" });
     const data = CreatePayrollItemSchema.parse(await request.json());
-    const netAmount = data.baseAmount + data.overtimeAmount + data.commissionAmount - data.deductions;
+    const baseAmount = new Prisma.Decimal(data.baseAmount).toDecimalPlaces(2);
+    const overtimeAmount = new Prisma.Decimal(data.overtimeAmount).toDecimalPlaces(2);
+    const commissionAmount = new Prisma.Decimal(data.commissionAmount).toDecimalPlaces(2);
+    const deductions = new Prisma.Decimal(data.deductions).toDecimalPlaces(2);
+    const netAmount = baseAmount.plus(overtimeAmount).plus(commissionAmount).minus(deductions).toDecimalPlaces(2);
 
-    const item = await prisma.payrollItem.create({
-      data: {
-        tenantId: context.tenantId,
-        payrollPeriodId: data.payrollPeriodId,
-        employeeId: data.employeeId,
-        baseAmount: new Prisma.Decimal(data.baseAmount),
-        overtimeAmount: new Prisma.Decimal(data.overtimeAmount),
-        commissionAmount: new Prisma.Decimal(data.commissionAmount),
-        deductions: new Prisma.Decimal(data.deductions),
-        netAmount: new Prisma.Decimal(netAmount),
-      },
+    const item = await prisma.$transaction(async (tx) => {
+      const [period, employee] = await Promise.all([
+        tx.payrollPeriod.findFirst({
+          where: {
+            id: data.payrollPeriodId,
+            tenantId: context.tenantId,
+            status: "DRAFT",
+          },
+          select: { id: true },
+        }),
+        tx.employee.findFirst({
+          where: {
+            id: data.employeeId,
+            tenantId: context.tenantId,
+            ...(context.branchId ? { branchId: context.branchId } : {}),
+          },
+          select: { id: true },
+        }),
+      ]);
+
+      if (!period) {
+        throw new ApiError("Payroll period was not found or is locked.", 404, "PAYROLL_PERIOD_NOT_FOUND");
+      }
+
+      if (!employee) {
+        throw new ApiError("Employee was not found in this tenant.", 404, "EMPLOYEE_NOT_FOUND");
+      }
+
+      return tx.payrollItem.upsert({
+        where: {
+          tenantId_payrollPeriodId_employeeId: {
+            tenantId: context.tenantId,
+            payrollPeriodId: period.id,
+            employeeId: employee.id,
+          },
+        },
+        create: {
+          tenantId: context.tenantId,
+          payrollPeriodId: period.id,
+          employeeId: employee.id,
+          baseAmount,
+          overtimeAmount,
+          commissionAmount,
+          deductions,
+          netAmount,
+        },
+        update: {
+          baseAmount,
+          overtimeAmount,
+          commissionAmount,
+          deductions,
+          netAmount,
+        },
+        include: { employee: true, payrollPeriod: true },
+      });
     });
 
     return created(item);

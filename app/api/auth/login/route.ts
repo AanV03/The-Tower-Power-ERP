@@ -6,8 +6,9 @@ import {
   createAuthToken,
   GERPY_SESSION_COOKIE,
   GERPY_TWO_FACTOR_COOKIE,
-  SESSION_MAX_AGE_SECONDS,
+  GERPY_TWO_FACTOR_SETUP_COOKIE,
   TWO_FACTOR_CHALLENGE_MAX_AGE_SECONDS,
+  TWO_FACTOR_SETUP_MAX_AGE_SECONDS,
 } from '@/lib/auth/session';
 
 const secureCookie = process.env.NODE_ENV === 'production';
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
       );
 
       response.cookies.delete(GERPY_SESSION_COOKIE);
+      response.cookies.delete(GERPY_TWO_FACTOR_SETUP_COOKIE);
       response.cookies.set(GERPY_TWO_FACTOR_COOKIE, challengeToken, {
         httpOnly: true,
         secure: secureCookie,
@@ -44,31 +46,37 @@ export async function POST(req: NextRequest) {
       return response;
     }
 
-    const sessionToken = await createAuthToken(result.payload, SESSION_MAX_AGE_SECONDS);
-    const response = NextResponse.json(
-      {
-        ok: true,
-        twoFactorRequired: false,
-        user: result.user,
-        session: {
-          userId: result.payload.userId,
-          tenantId: result.payload.tenantId,
-          role: result.payload.role,
+    if (result.status === 'TWO_FACTOR_SETUP_REQUIRED') {
+      const setupToken = await createAuthToken(
+        result.payload,
+        TWO_FACTOR_SETUP_MAX_AGE_SECONDS,
+      );
+      const response = NextResponse.json(
+        {
+          ok: true,
+          twoFactorSetupRequired: true,
+          message: 'Configura 2FA para completar el acceso.',
         },
-      },
-      { status: 200 },
+        { status: 200 },
+      );
+
+      response.cookies.delete(GERPY_SESSION_COOKIE);
+      response.cookies.delete(GERPY_TWO_FACTOR_COOKIE);
+      response.cookies.set(GERPY_TWO_FACTOR_SETUP_COOKIE, setupToken, {
+        httpOnly: true,
+        secure: secureCookie,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: TWO_FACTOR_SETUP_MAX_AGE_SECONDS,
+      });
+
+      return response;
+    }
+
+    return NextResponse.json(
+      { ok: false, error: 'INVALID_LOGIN_STATE', message: 'No se pudo completar el flujo de autenticacion.' },
+      { status: 500 },
     );
-
-    response.cookies.delete(GERPY_TWO_FACTOR_COOKIE);
-    response.cookies.set(GERPY_SESSION_COOKIE, sessionToken, {
-      httpOnly: true,
-      secure: secureCookie,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: SESSION_MAX_AGE_SECONDS,
-    });
-
-    return response;
   } catch (error: any) {
     if (error.name === 'ZodError') {
       return NextResponse.json(

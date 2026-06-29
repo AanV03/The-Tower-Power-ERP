@@ -128,7 +128,7 @@ export default function Hero() {
               View dashboard
             </Link>
             <Link
-              href={"/en/signup" as Route}
+              href={"/register" as Route}
               className="inline-flex min-h-12 items-center justify-center rounded-lg border border-white/15 bg-white/5 px-6 py-3 text-sm font-bold uppercase tracking-wider text-white transition-colors duration-300 hover:border-amber-400/50 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300"
             >
               Start setup

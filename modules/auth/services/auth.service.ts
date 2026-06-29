@@ -138,6 +138,21 @@ export class AuthService {
     });
   }
 
+  static async createSessionPayloadForUser(userId: string, typ: 'session' | '2fa' | '2fa_setup' = 'session') {
+    const context = assertActiveTenantContext(await getTenantContext(userId));
+
+    return {
+      typ,
+      userId: context.userId,
+      tenantId: context.tenantId,
+      branchId: context.branchId,
+      role: context.role,
+      roles: context.roles,
+      permissions: context.permissions,
+      modules: context.modules,
+    } satisfies SessionPayloadInput;
+  }
+
   static async login(payload: LoginDTO) {
     const email = normalizeEmail(payload.email);
     const user = await prisma.user.findUnique({
@@ -162,16 +177,7 @@ export class AuthService {
       throw new Error('INVALID_CREDENTIALS');
     }
 
-    const context = assertActiveTenantContext(await getTenantContext(user.id));
-    const basePayload = {
-      userId: context.userId,
-      tenantId: context.tenantId,
-      branchId: context.branchId,
-      role: context.role,
-      roles: context.roles,
-      permissions: context.permissions,
-      modules: context.modules,
-    };
+    const basePayload = await AuthService.createSessionPayloadForUser(user.id);
 
     if (user.twoFactorEnabled) {
       if (!user.twoFactorSecret) {
@@ -193,7 +199,7 @@ export class AuthService {
     }
 
     return {
-      status: 'AUTHENTICATED' as const,
+      status: 'TWO_FACTOR_SETUP_REQUIRED' as const,
       user: {
         id: user.id,
         email: user.email,
@@ -201,8 +207,36 @@ export class AuthService {
       },
       payload: {
         ...basePayload,
-        typ: 'session' as const,
+        typ: '2fa_setup' as const,
       } satisfies SessionPayloadInput,
+    };
+  }
+
+  static async createAuthenticatedResult(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        status: true,
+      },
+    });
+
+    if (!user || user.status !== 'ACTIVE') {
+      throw new Error('INVALID_CREDENTIALS');
+    }
+
+    const payload = await AuthService.createSessionPayloadForUser(user.id, 'session');
+
+    return {
+      status: 'AUTHENTICATED' as const,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+      payload,
     };
   }
 

@@ -9,6 +9,7 @@ import { PayrollSummaryPanel } from "@/components/modules/payroll/payroll-summar
 import { requireApiContext } from "@/lib/api/context";
 import { formatCurrency } from "@/lib/api/pagination";
 import { prisma } from "@/lib/db/prisma";
+import { DEFAULT_TIME_ZONE, getDayBoundsForTimeZone } from "@/lib/date/timezone";
 import type { Locale } from "@/lib/i18n";
 
 export type PayrollStatusLabel = "DRAFT" | "APPROVED" | "PAID";
@@ -78,18 +79,41 @@ function formatPeriodLabel(startDate: Date, endDate: Date) {
   return `${formatter.format(startDate)} · ${formatPeriodRange(startDate, endDate)}`;
 }
 
-export async function PayrollDashboard({ locale }: { locale: Locale }) {
+export async function PayrollDashboard({
+  locale,
+  selectedPeriodId,
+}: {
+  locale: Locale;
+  selectedPeriodId?: string;
+}) {
   const context = await requireApiContext({ moduleId: "payroll" });
   const employeeWhere = {
     tenantId: context.tenantId,
     ...(context.branchId ? { branchId: context.branchId } : {}),
   };
+  const scopedBranch = context.branchId
+    ? await prisma.branch.findFirst({
+        where: { tenantId: context.tenantId, id: context.branchId },
+        select: { timezone: true },
+      })
+    : null;
+  const today = getDayBoundsForTimeZone(new Date(), scopedBranch?.timezone ?? DEFAULT_TIME_ZONE);
 
   const [periods, activeEmployees, openAttendances] = await Promise.all([
     prisma.payrollPeriod.findMany({
       where: { tenantId: context.tenantId },
       include: {
         items: {
+          where: {
+            tenantId: context.tenantId,
+            ...(context.branchId
+              ? {
+                  employee: {
+                    branchId: context.branchId,
+                  },
+                }
+              : {}),
+          },
           include: {
             employee: {
               include: {
@@ -112,18 +136,25 @@ export async function PayrollDashboard({ locale }: { locale: Locale }) {
       where: {
         ...employeeWhere,
         status: "ACTIVE",
+        NOT: {
+          email: {
+            startsWith: "specialist-",
+            endsWith: "@gerpy.demo",
+          },
+        },
       },
     }),
-    prisma.attendanceRecord.count({
+    prisma.timeClock.count({
       where: {
         tenantId: context.tenantId,
         ...(context.branchId ? { branchId: context.branchId } : {}),
+        clockIn: { gte: today.start, lt: today.end },
         clockOut: null,
       },
     }),
   ]);
 
-  const activePeriod = periods.find((period) => period.status === "DRAFT") ?? periods[0];
+  const activePeriod = periods.find((period) => period.id === selectedPeriodId) ?? periods.find((period) => period.status === "DRAFT") ?? periods[0];
   const visibleItems =
     activePeriod?.items.filter((item) => !context.branchId || item.employee.branchId === context.branchId) ?? [];
 
@@ -219,7 +250,7 @@ export async function PayrollDashboard({ locale }: { locale: Locale }) {
             Recibos, comisiones, deducciones y cierre operativo del periodo.
           </p>
         </div>
-        <PayrollActionBar periods={periodViews} />
+        <PayrollActionBar periods={periodViews} activePeriodId={activePeriod?.id} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">

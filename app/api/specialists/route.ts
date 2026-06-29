@@ -1,23 +1,26 @@
-import { BranchStatus, SpecialistType, SpecialistContractModel, Prisma } from "@prisma/client";
+import { BranchStatus, Prisma, SpecialistContractModel, SpecialistType } from "@prisma/client";
 import { z } from "zod";
-import { prisma } from "@/lib/db/prisma";
+
 import { resolveWritableBranchId, scopedBranchWhere } from "@/lib/api/branch";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
-import { created, fail, ok } from "@/lib/api/response";
+import { ApiError, created, fail, ok } from "@/lib/api/response";
+import { prisma } from "@/lib/db/prisma";
 
 const CreateSpecialistSchema = z.object({
   branchId: z.string().nullable().optional(),
   employeeId: z.string().nullable().optional(),
   name: z.string().trim().min(2).max(140),
   specialty: z.string().trim().min(2).max(120),
-  type: z.enum(["INTERNAL", "EXTERNAL", "CLINIC"]),
-  status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
-  model: z.enum(["FIXED_RENT", "COMMISSION", "HYBRID"]).optional(),
-  fixedRent: z.coerce.number().nonnegative().optional(),
+  type: z.enum(SpecialistType),
+  status: z.enum(BranchStatus).default(BranchStatus.ACTIVE),
+  contractModel: z.enum(SpecialistContractModel).optional(),
+  fixedRentAmount: z.coerce.number().nonnegative().optional(),
   commissionRate: z.coerce.number().min(0).max(100).optional(),
-  serviceName: z.string().trim().optional(),
+  contractStartDate: z.string().datetime().optional(),
+  serviceName: z.string().trim().min(2).max(120).optional(),
   servicePrice: z.coerce.number().nonnegative().optional(),
+  durationMinutes: z.coerce.number().int().positive().default(60),
 });
 
 export const runtime = "nodejs";
@@ -53,51 +56,74 @@ export async function POST(request: Request) {
   try {
     const context = await requireApiContext({ moduleId: "specialists" });
     const data = CreateSpecialistSchema.parse(await request.json());
-    const branchId = data.branchId === null ? null : await resolveWritableBranchId(context, data.branchId);
+    const branchId =
+      data.branchId === null && !context.branchId
+        ? null
+        : await resolveWritableBranchId(context, data.branchId ?? undefined);
 
     const specialist = await prisma.$transaction(async (tx) => {
-      // 1. Create specialist
-      const spec = await tx.specialist.create({
+      if (data.employeeId) {
+        const employee = await tx.employee.findFirst({
+          where: {
+            id: data.employeeId,
+            tenantId: context.tenantId,
+            ...(context.branchId ? { branchId: context.branchId } : {}),
+          },
+          select: { id: true },
+        });
+
+        if (!employee) {
+          throw new ApiError("Employee was not found in this tenant.", 404, "EMPLOYEE_NOT_FOUND");
+        }
+      }
+
+      const createdSpecialist = await tx.specialist.create({
         data: {
           tenantId: context.tenantId,
           branchId,
           employeeId: data.employeeId ?? undefined,
           name: data.name,
           specialty: data.specialty,
-          type: data.type as SpecialistType,
-          status: data.status as BranchStatus,
+          type: data.type,
+          status: data.status,
         },
       });
 
-      // 2. Create contract if model provided
-      if (data.model) {
+      if (data.contractModel) {
         await tx.specialistContract.create({
           data: {
             tenantId: context.tenantId,
-            specialistId: spec.id,
-            model: data.model as SpecialistContractModel,
-            fixedRentAmount: data.fixedRent !== undefined ? new Prisma.Decimal(data.fixedRent) : null,
-            commissionRate: data.commissionRate !== undefined ? new Prisma.Decimal(data.commissionRate) : null,
-            startDate: new Date(),
-            status: BranchStatus.ACTIVE,
+            specialistId: createdSpecialist.id,
+            model: data.contractModel,
+            fixedRentAmount:
+              data.contractModel === SpecialistContractModel.COMMISSION
+                ? undefined
+                : new Prisma.Decimal(data.fixedRentAmount ?? 0),
+            commissionRate:
+              data.contractModel === SpecialistContractModel.FIXED_RENT
+                ? undefined
+                : new Prisma.Decimal(data.commissionRate ?? 0),
+            startDate: data.contractStartDate ? new Date(data.contractStartDate) : new Date(),
           },
         });
       }
 
-      // 3. Create service if serviceName provided
-      if (data.serviceName) {
+      if (data.serviceName && data.servicePrice !== undefined) {
         await tx.specialistService.create({
           data: {
             tenantId: context.tenantId,
-            specialistId: spec.id,
+            specialistId: createdSpecialist.id,
             name: data.serviceName,
-            durationMinutes: 60,
-            price: data.servicePrice !== undefined ? new Prisma.Decimal(data.servicePrice) : new Prisma.Decimal(0),
+            durationMinutes: data.durationMinutes,
+            price: new Prisma.Decimal(data.servicePrice),
           },
         });
       }
 
-      return spec;
+      return tx.specialist.findFirstOrThrow({
+        where: { id: createdSpecialist.id, tenantId: context.tenantId },
+        include: { branch: true, employee: true, contracts: true, services: true },
+      });
     });
 
     return created(specialist);
