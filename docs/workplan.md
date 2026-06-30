@@ -1,5 +1,6 @@
 # Gerpy ERP - Workplan 2.0 Implementation Guide
 
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Complete the missing Gerpy ERP implementation work against `workplan2.0.pdf`, using the current software state as the baseline.
