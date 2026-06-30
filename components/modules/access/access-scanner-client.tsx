@@ -177,7 +177,6 @@ export function AccessScannerClient({
                 <Input
                   ref={inputRef}
                   id="access-code"
-                  autoFocus
                   value={scanValue}
                   onChange={(event) => setScanValue(event.target.value)}
                   placeholder={t.placeholder}

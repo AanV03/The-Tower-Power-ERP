@@ -111,9 +111,10 @@ export function TimeClockDialog({
         </StandardDialogHeader>
 
         <form className="grid gap-4" onSubmit={handleSubmit}>
-          <label className="grid gap-2 text-sm font-medium">
+          <label htmlFor="time-clock-employee" className="grid gap-2 text-sm font-medium">
             Empleado
             <NativeSelect
+              id="time-clock-employee"
               name="employeeId"
               required
               className="w-full"
@@ -131,16 +132,16 @@ export function TimeClockDialog({
           </label>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-2 text-sm font-medium">
+            <label htmlFor="time-clock-action" className="grid gap-2 text-sm font-medium">
               Accion
-              <NativeSelect name="action" defaultValue="CLOCK_IN" className="w-full" disabled={isSubmitting}>
+              <NativeSelect id="time-clock-action" name="action" defaultValue="CLOCK_IN" className="w-full" disabled={isSubmitting}>
                 <NativeSelectOption value="CLOCK_IN">Registrar entrada</NativeSelectOption>
                 <NativeSelectOption value="CLOCK_OUT">Registrar salida</NativeSelectOption>
               </NativeSelect>
             </label>
-            <label className="grid gap-2 text-sm font-medium">
+            <label htmlFor="time-clock-source" className="grid gap-2 text-sm font-medium">
               Origen
-              <NativeSelect name="source" defaultValue="APP" className="w-full" disabled={isSubmitting}>
+              <NativeSelect id="time-clock-source" name="source" defaultValue="APP" className="w-full" disabled={isSubmitting}>
                 <NativeSelectOption value="APP">App</NativeSelectOption>
                 <NativeSelectOption value="MANUAL">Manual</NativeSelectOption>
                 <NativeSelectOption value="BIOMETRIC">Biometrico</NativeSelectOption>
@@ -148,9 +149,9 @@ export function TimeClockDialog({
             </label>
           </div>
 
-          <label className="grid gap-2 text-sm font-medium">
+          <label htmlFor="time-clock-notes" className="grid gap-2 text-sm font-medium">
             Notas
-            <Input name="notes" maxLength={240} placeholder="Comentario opcional" disabled={isSubmitting} />
+            <Input id="time-clock-notes" name="notes" maxLength={240} placeholder="Comentario opcional" disabled={isSubmitting} />
           </label>
 
           <StandardDialogFooter>
