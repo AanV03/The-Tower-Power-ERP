@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { ImagePlus, RotateCcw, Upload } from "lucide-react";
 
 import {
   applyBrandColors,
@@ -10,7 +12,15 @@ import {
   normalizeBrandColors,
   type BrandColors,
 } from "@/components/branding/brand-color-applier";
+import {
+  DEFAULT_BRAND_IDENTITY,
+  loadBrandIdentity,
+  persistBrandIdentity,
+  resetBrandIdentity,
+  type BrandIdentity,
+} from "@/components/branding/brand-identity";
 import { defaultLocale, formatMessage, getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { Trash2, Image as ImageIcon } from "lucide-react";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -35,9 +45,17 @@ function hasCompletePalette(colors: BrandColors) {
   );
 }
 
-function persistColors(colors: BrandColors) {
+async function persistColors(colors: BrandColors) {
   if (!hasCompletePalette(colors)) return;
   localStorage.setItem(BRAND_STORAGE_KEY, JSON.stringify(colors));
+
+  if (typeof window !== "undefined") {
+    await fetch("/api/admin/tenant", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ brandColors: colors }),
+    }).catch(() => {});
+  }
 }
 
 // ─── Color Card ───────────────────────────────────────────────────────────────
@@ -158,31 +176,30 @@ interface BrandingPanelProps {
 export function BrandingPanel({ locale }: BrandingPanelProps) {
   const l: Locale = isLocale(locale) ? locale : defaultLocale;
   const t = getDictionary(l).branding;
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const [colors, setColors] = useState<BrandColors>(loadSaved);
+  const [identity, setIdentity] = useState<BrandIdentity>(DEFAULT_BRAND_IDENTITY);
+  const [logoError, setLogoError] = useState("");
   const [savedFlash, setSavedFlash] = useState(false);
 
   useEffect(() => {
     const saved = loadSaved();
     setColors(saved);
     applyBrandColors(saved);
+    setIdentity(loadBrandIdentity());
   }, []);
 
   // Live preview: apply brand colors to :root whenever the user changes any value
   useEffect(() => {
     applyBrandColors(colors);
-    try {
-      persistColors(colors);
-    } catch { /* ignore */ }
   }, [colors]);
 
   const handleChange = useCallback((key: keyof BrandColors, value: string) => {
     setColors((prev) => {
       const next = { ...prev, [key]: value };
-      try {
-        persistColors(next);
-        document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
-      } catch { /* ignore */ }
+      document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
       return next;
     });
   }, []);
@@ -190,10 +207,7 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
   const handleContrastChange = (contrast: "normal" | "medium" | "high") => {
     setColors((prev) => {
       const next = { ...prev, contrast };
-      try {
-        persistColors(next);
-        document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
-      } catch { /* ignore */ }
+      document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
       return next;
     });
   };
@@ -201,33 +215,92 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
   const handleFontChange = (font: "default" | "serif" | "mono" | "elegant") => {
     setColors((prev) => {
       const next = { ...prev, font };
-      try {
-        persistColors(next);
-        document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
-      } catch { /* ignore */ }
+      document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
       return next;
     });
   };
 
-  const handleSave = () => {
+  const handleIdentityChange = useCallback((key: keyof BrandIdentity, value: string) => {
+    setIdentity((prev) => {
+      const next = { ...prev, [key]: value };
+      document.dispatchEvent(new CustomEvent("brand:identity:update", { detail: next }));
+      return next;
+    });
+  }, []);
+
+  const handleLogoUpload = useCallback((file: File | undefined) => {
+    setLogoError("");
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setLogoError(l === "es" ? "Sube un archivo de imagen." : "Upload an image file.");
+      return;
+    }
+
+    if (file.size > 350 * 1024) {
+      setLogoError(l === "es" ? "Usa un logo menor a 350 KB." : "Use a logo under 350 KB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const logoDataUrl = typeof reader.result === "string" ? reader.result : "";
+      setIdentity((prev) => {
+        const next = { ...prev, logoDataUrl };
+        document.dispatchEvent(new CustomEvent("brand:identity:update", { detail: next }));
+        return next;
+      });
+    };
+    reader.readAsDataURL(file);
+  }, [l]);
+
+  const clearLogo = useCallback(() => {
+    setIdentity((prev) => {
+      const next = { ...prev, logoDataUrl: undefined };
+      document.dispatchEvent(new CustomEvent("brand:identity:update", { detail: next }));
+      return next;
+    });
+    if (logoInputRef.current) logoInputRef.current.value = "";
+  }, []);
+
+  const handleSave = async () => {
     try {
-      persistColors(colors);
+      await Promise.all([
+        persistColors(colors),
+        persistBrandIdentity(identity)
+      ]);
       applyBrandColors(colors);
       document.dispatchEvent(new CustomEvent("brand:update", { detail: colors }));
+      router.refresh();
     } catch { /* ignore */ }
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 2000);
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     const defaults = { ...DEFAULT_BRAND_COLORS };
     setColors(defaults);
     try {
       localStorage.removeItem(BRAND_STORAGE_KEY);
     } catch { /* ignore */ }
     resetBrandColors();
+    resetBrandIdentity();
+    setIdentity(DEFAULT_BRAND_IDENTITY);
+    setLogoError("");
+    if (logoInputRef.current) logoInputRef.current.value = "";
     document.dispatchEvent(new CustomEvent("brand:reset"));
+    
+    // Also reset in DB
+    try {
+      await Promise.all([
+        persistColors(defaults),
+        persistBrandIdentity(DEFAULT_BRAND_IDENTITY)
+      ]);
+      router.refresh();
+    } catch { /* ignore */ }
   };
+
+
 
   return (
     <section
@@ -274,8 +347,107 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
         </span>
       </div>
 
-      {/* ── Grid 1 col en mobile, 2 en sm, 4 en lg ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-6 w-full">
+      <div className="grid gap-4 border-b border-border p-6 lg:grid-cols-[0.8fr_1.2fr]">
+        <div className="rounded-xl border border-border bg-background/60 p-4">
+          <div className="flex items-center gap-4">
+            <div
+              className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border text-lg font-black shadow-sm"
+              style={{ backgroundColor: "var(--brand-yellow)", color: "var(--brand-ink)" }}
+            >
+              {identity.logoDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={identity.logoDataUrl} alt="" className="h-full w-full object-cover" aria-hidden="true" />
+              ) : (
+                <span>{identity.logoText.slice(0, 3).toUpperCase()}</span>
+              )}
+            </div>
+
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-card-foreground">
+                {l === "es" ? "Logo del cliente" : l === "en" ? "Client logo" : "Logo client"}
+              </h3>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                {l === "es"
+                  ? "Se muestra en el sidebar y navbar. Usa PNG, JPG o WebP ligero."
+                  : l === "en"
+                    ? "Shown in the sidebar and navbar. Use a lightweight PNG, JPG, or WebP."
+                    : "Affiche dans le sidebar et la barre superieure."}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              className="sr-only"
+              onChange={(event) => handleLogoUpload(event.target.files?.[0])}
+            />
+            <button
+              type="button"
+              onClick={() => logoInputRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <Upload className="size-4" aria-hidden="true" />
+              {l === "es" ? "Subir logo" : l === "en" ? "Upload logo" : "Importer"}
+            </button>
+            <button
+              type="button"
+              onClick={clearLogo}
+              className="inline-flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <ImagePlus className="size-4" aria-hidden="true" />
+              {l === "es" ? "Usar iniciales" : l === "en" ? "Use initials" : "Initiales"}
+            </button>
+          </div>
+
+          {logoError && (
+            <p className="mt-3 text-xs font-medium text-destructive">{logoError}</p>
+          )}
+        </div>
+
+        <div className="grid gap-3 rounded-xl border border-border bg-background/60 p-4 sm:grid-cols-2">
+          <label className="space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              {l === "es" ? "Nombre visible" : l === "en" ? "Display name" : "Nom affiche"}
+            </span>
+            <input
+              value={identity.name}
+              onChange={(event) => handleIdentityChange("name", event.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground transition-colors focus:border-[var(--sidebar-accent-active)] focus:outline-none focus:ring-1 focus:ring-[var(--sidebar-accent-active)]"
+              maxLength={36}
+            />
+          </label>
+
+          <label className="space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              {l === "es" ? "Iniciales" : l === "en" ? "Initials" : "Initiales"}
+            </span>
+            <input
+              value={identity.logoText}
+              onChange={(event) => handleIdentityChange("logoText", event.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground transition-colors focus:border-[var(--sidebar-accent-active)] focus:outline-none focus:ring-1 focus:ring-[var(--sidebar-accent-active)]"
+              maxLength={3}
+            />
+          </label>
+
+          <label className="space-y-2 sm:col-span-2">
+            <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              {l === "es" ? "Subtitulo del sidebar" : l === "en" ? "Sidebar subtitle" : "Sous-titre"}
+            </span>
+            <input
+              value={identity.subtitle}
+              onChange={(event) => handleIdentityChange("subtitle", event.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground transition-colors focus:border-[var(--sidebar-accent-active)] focus:outline-none focus:ring-1 focus:ring-[var(--sidebar-accent-active)]"
+              maxLength={48}
+            />
+          </label>
+        </div>
+      </div>
+
+      {/* ── Grid 2×2 en desktop, 1 col en mobile ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6">
         {COLOR_FIELDS.map((f) => (
           <ColorCard
             key={f.key}
@@ -290,6 +462,8 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
           />
         ))}
       </div>
+
+
 
       {/* ── Contraste y Fuentes ── */}
       <div className="border-t border-border bg-muted/20 px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -1,4 +1,4 @@
-import { ModulePage } from "@/components/shared/module-page";
+import { AccountingDashboard } from "./components/AccountingDashboard";
 import type { Locale } from "@/lib/i18n";
 
 export default async function AccountingPage({
@@ -7,5 +7,5 @@ export default async function AccountingPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  return <ModulePage moduleId="accounting" locale={locale as Locale} chartType="bar" />;
+  return <AccountingDashboard locale={locale as Locale} />;
 }

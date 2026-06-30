@@ -14,6 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { LayoutDashboard, Users, PackageOpen, CreditCard, Truck } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 
 type PurchaseStatus = "draft" | "received" | "paid" | "overdue";
@@ -609,93 +611,123 @@ function DashboardSummary({ locale }: { locale: Locale }) {
 export function PurchasesWorkflow({ locale }: { locale: Locale }) {
   return (
     <section className="erp-section space-y-6" role="main" aria-label={copy[locale].title}>
-      <div className="overflow-hidden rounded-[28px] border border-border/70 bg-[linear-gradient(135deg,rgba(2,48,71,0.06),rgba(251,133,0,0.08),rgba(255,255,255,0.78))] p-6 shadow-sm ring-1 ring-foreground/5 dark:bg-[linear-gradient(135deg,rgba(2,48,71,0.22),rgba(251,133,0,0.16),rgba(15,23,42,0.88))] sm:p-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">Supply Chain</Badge>
-              <Badge variant="outline">CxP</Badge>
-              <Badge variant="outline">Recepción</Badge>
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                {copy[locale].title}
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                {copy[locale].subtitle}
-              </p>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-border/70 bg-background/90 px-4 py-3 shadow-xs backdrop-blur-sm">
-            <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{copy[locale].stepLabel}</p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
-              {workflowSteps[0].label[locale]} → {workflowSteps[1].label[locale]} → {workflowSteps[2].label[locale]}
-            </p>
-          </div>
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-1">
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
+            <Truck className="size-7 text-primary" aria-hidden="true" />
+            {copy[locale].title}
+          </h1>
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
+            {copy[locale].subtitle}
+          </p>
         </div>
       </div>
 
-      <DashboardSummary locale={locale} />
+      <Tabs defaultValue="dashboard" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 !h-auto sm:!h-10 bg-muted/60 p-1 rounded-lg border">
+          <TabsTrigger value="dashboard" className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold cursor-pointer">
+            <LayoutDashboard className="size-4 shrink-0" />
+            <span>Dashboard</span>
+          </TabsTrigger>
+          <TabsTrigger value="vendors" className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold cursor-pointer">
+            <Users className="size-4 shrink-0" />
+            <span>Proveedores</span>
+          </TabsTrigger>
+          <TabsTrigger value="orders" className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold cursor-pointer">
+            <PackageOpen className="size-4 shrink-0" />
+            <span>Órdenes & Stock</span>
+          </TabsTrigger>
+          <TabsTrigger value="invoicing" className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold cursor-pointer">
+            <CreditCard className="size-4 shrink-0" />
+            <span>Facturación (CxP)</span>
+          </TabsTrigger>
+        </TabsList>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-        <div className="space-y-4">
+        {/* TAB 1: Dashboard */}
+        <TabsContent value="dashboard" className="space-y-4 mt-0">
+          <DashboardSummary locale={locale} />
+          <div className="grid gap-4 xl:grid-cols-2">
+            <TaxInvoicePanel />
+            <ReceivingTable />
+          </div>
+        </TabsContent>
+
+        {/* TAB 2: Proveedores */}
+        <TabsContent value="vendors" className="space-y-4 mt-0">
           <StepIndicator locale={locale} />
-          <VendorSearchPanel locale={locale} />
-          <PurchaseItemsList locale={locale} />
-          <ReceivingTable />
-          <StockImpactView locale={locale} />
-        </div>
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+            <VendorSearchPanel locale={locale} />
+            <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
+              <Card className="border-border/70 bg-card/80 shadow-xs ring-1 ring-foreground/5">
+                <CardHeader className="space-y-2">
+                  <CardTitle>Perfil del proveedor</CardTitle>
+                  <CardDescription>Historial, trazabilidad fiscal y contacto en una sola vista.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-xs">
+                    <p className="text-sm font-semibold text-foreground">Distribuidora Atlas</p>
+                    <p className="mt-1 text-sm text-muted-foreground">RFC ALA-980421-9Z3 · ventas@atlas.mx</p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-xs">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Compras</p>
+                      <p className="mt-2 text-xl font-semibold text-foreground">124</p>
+                    </div>
+                    <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-xs">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">OTD</p>
+                      <p className="mt-2 text-xl font-semibold text-foreground">98.2%</p>
+                    </div>
+                    <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-xs">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Incidencias</p>
+                      <p className="mt-2 text-xl font-semibold text-foreground">2</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </aside>
+          </div>
+        </TabsContent>
 
-        <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
-          <Card className="border-border/70 bg-card/80 shadow-xs ring-1 ring-foreground/5">
-            <CardHeader className="space-y-2">
-              <CardTitle>{copy[locale].actionTitle}</CardTitle>
-              <CardDescription>{copy[locale].actionSubtitle}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <button type="button" className="w-full rounded-xl bg-primary px-4 py-3 text-left text-sm font-medium text-primary-foreground shadow-xs">
-                Guardar borrador
-              </button>
-              <button type="button" className="w-full rounded-xl border border-border bg-background px-4 py-3 text-left text-sm font-medium text-foreground shadow-xs">
-                Marcar recepción
-              </button>
-              <button type="button" className="w-full rounded-xl border border-border bg-background px-4 py-3 text-left text-sm font-medium text-foreground shadow-xs">
-                Finalizar compra
-              </button>
-            </CardContent>
-          </Card>
+        {/* TAB 3: Órdenes & Stock */}
+        <TabsContent value="orders" className="space-y-4 mt-0">
+          <StepIndicator locale={locale} />
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+            <PurchaseItemsList locale={locale} />
+            <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
+              <StockImpactView locale={locale} />
+            </aside>
+          </div>
+        </TabsContent>
 
-          <InvoicingSummary locale={locale} />
-          <TaxInvoicePanel />
+        {/* TAB 4: Facturación (CxP) */}
+        <TabsContent value="invoicing" className="space-y-4 mt-0">
+          <StepIndicator locale={locale} />
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+            <InvoicingSummary locale={locale} />
+            <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
+              <Card className="border-border/70 bg-card/80 shadow-xs ring-1 ring-foreground/5">
+                <CardHeader className="space-y-2">
+                  <CardTitle>{copy[locale].actionTitle}</CardTitle>
+                  <CardDescription>{copy[locale].actionSubtitle}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <button type="button" className="w-full rounded-xl bg-primary px-4 py-3 text-left text-sm font-medium text-primary-foreground shadow-xs">
+                    Guardar borrador
+                  </button>
+                  <button type="button" className="w-full rounded-xl border border-border bg-background px-4 py-3 text-left text-sm font-medium text-foreground shadow-xs">
+                    Marcar recepción
+                  </button>
+                  <button type="button" className="w-full rounded-xl border border-border bg-background px-4 py-3 text-left text-sm font-medium text-foreground shadow-xs">
+                    Finalizar compra
+                  </button>
+                </CardContent>
+              </Card>
+            </aside>
+          </div>
+        </TabsContent>
 
-          <Card className="border-border/70 bg-card/80 shadow-xs ring-1 ring-foreground/5">
-            <CardHeader className="space-y-2">
-              <CardTitle>Perfil del proveedor</CardTitle>
-              <CardDescription>Historial, trazabilidad fiscal y contacto en una sola vista.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-xs">
-                <p className="text-sm font-semibold text-foreground">Distribuidora Atlas</p>
-                <p className="mt-1 text-sm text-muted-foreground">RFC ALA-980421-9Z3 · ventas@atlas.mx</p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-xs">
-                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Compras</p>
-                  <p className="mt-2 text-xl font-semibold text-foreground">124</p>
-                </div>
-                <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-xs">
-                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">OTD</p>
-                  <p className="mt-2 text-xl font-semibold text-foreground">98.2%</p>
-                </div>
-                <div className="rounded-2xl border border-border/70 bg-background p-4 shadow-xs">
-                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Incidencias</p>
-                  <p className="mt-2 text-xl font-semibold text-foreground">2</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </aside>
-      </section>
+      </Tabs>
     </section>
   );
 }

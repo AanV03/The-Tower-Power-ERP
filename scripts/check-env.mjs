@@ -60,16 +60,18 @@ export function parseEnvText(text) {
 }
 
 function loadDocumentedEnv() {
-  const envPath = resolve(process.cwd(), ".env");
-  const examplePath = resolve(process.cwd(), ".env.example");
-  const path = existsSync(envPath) ? envPath : examplePath;
+  const env = {};
 
-  if (!existsSync(path)) {
-    return process.env;
+  for (const name of [".env.example", ".env", ".env.local"]) {
+    const path = resolve(process.cwd(), name);
+
+    if (existsSync(path)) {
+      Object.assign(env, parseEnvText(readFileSync(path, "utf8")));
+    }
   }
 
   return {
-    ...parseEnvText(readFileSync(path, "utf8")),
+    ...env,
     ...process.env,
   };
 }

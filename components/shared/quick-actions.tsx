@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { getDictionary, type Locale } from "@/lib/i18n";
+import { cn, headerPrimaryActionClass } from "@/lib/utils";
 
 export function QuickActions({
   primaryLabel,
@@ -37,7 +38,7 @@ export function QuickActions({
     <div className="flex shrink-0 items-center gap-2" role="group" aria-label={dictionary.quickActions.groupLabel}>
       <Button
         onClick={handlePrimaryAction}
-        className="focus-visible:ring-2 focus-visible:ring-offset-2"
+        className={cn(headerPrimaryActionClass, "focus-visible:ring-2 focus-visible:ring-offset-2")}
         aria-label={primaryLabel}
       >
         <Plus className="mr-2" aria-hidden="true" />

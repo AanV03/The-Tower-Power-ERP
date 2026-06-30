@@ -1,31 +1,39 @@
-import React from "react";
+import { Download, Save, SlidersHorizontal } from "lucide-react";
+
+import { cn, headerPrimaryActionClass } from "@/lib/utils";
 
 export default function FilterBar() {
   return (
-    <div className="w-full z-10 relative">
-      <div className="bg-card text-card-foreground p-3 rounded-xl border border-border shadow-xs flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <label htmlFor="rango-select" className="text-sm text-muted-foreground" aria-hidden>
-            Rango
-          </label>
-          <select
-            id="rango-select"
-            className="text-sm bg-transparent border-none outline-none focus:ring-0 cursor-pointer font-medium text-foreground"
-          >
-            <option className="bg-card text-foreground">Últimos 7 días</option>
-            <option className="bg-card text-foreground">Últimos 30 días</option>
-            <option className="bg-card text-foreground">Este año</option>
-          </select>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium cursor-pointer">
-            Exportar
-          </button>
-          <button className="text-sm text-primary hover:brightness-110 font-semibold transition-all cursor-pointer">
-            Guardar vista
-          </button>
-        </div>
+    <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:justify-end" aria-label="Dashboard filters">
+      <div className="flex min-w-0 items-center gap-2 text-card-foreground">
+        <SlidersHorizontal className="size-4 shrink-0 text-primary" aria-hidden="true" />
+        <label htmlFor="range-select" className="text-sm font-medium text-muted-foreground">
+          Range
+        </label>
+        <select
+          id="range-select"
+          className="h-11 cursor-pointer rounded-lg border border-input bg-background px-3 text-sm font-semibold text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30"
+        >
+          <option>Last 7 days</option>
+          <option>Last 30 days</option>
+          <option>This year</option>
+        </select>
       </div>
+
+      <button
+        className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted"
+        type="button"
+      >
+        <Download className="size-4" aria-hidden="true" />
+        Export
+      </button>
+      <button
+        className={cn(headerPrimaryActionClass, "inline-flex h-11 items-center gap-2 rounded-lg px-3 text-sm")}
+        type="button"
+      >
+        <Save className="size-4" aria-hidden="true" />
+        Save view
+      </button>
     </div>
   );
 }

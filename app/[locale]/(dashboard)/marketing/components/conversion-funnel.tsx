@@ -1,6 +1,5 @@
 "use client";
 
-import { useTransition } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingDown, ArrowDown } from "lucide-react";
 
@@ -8,7 +7,6 @@ type FunnelStage = {
   key: "leads" | "tours" | "trials" | "paid";
   label: string;
   value: number;
-  color: string;
 };
 
 export function ConversionFunnel({
@@ -28,10 +26,20 @@ export function ConversionFunnel({
   };
 }) {
   const stages: FunnelStage[] = [
-    { key: "leads", label: translations.stages.leads, value: 1086, color: "bg-[var(--color-primary)]" },
-    { key: "tours", label: translations.stages.tours, value: 610, color: "bg-[var(--color-primary)]/80" },
-    { key: "trials", label: translations.stages.trials, value: 420, color: "bg-[var(--color-primary)]/60" },
-    { key: "paid", label: translations.stages.paid, value: 270, color: "bg-[var(--color-primary)]/40" },
+    { key: "leads", label: translations.stages.leads, value: 1086 },
+    { key: "tours", label: translations.stages.tours, value: 610 },
+    { key: "trials", label: translations.stages.trials, value: 420 },
+    { key: "paid", label: translations.stages.paid, value: 270 },
+  ];
+
+  const maxValue = stages[0].value;
+
+  // Gradient colors for bars from rich blue → amber
+  const barColors = [
+    { bg: "bg-blue-500", text: "text-blue-500" },
+    { bg: "bg-violet-500", text: "text-violet-500" },
+    { bg: "bg-amber-500", text: "text-amber-500" },
+    { bg: "bg-emerald-500", text: "text-emerald-500" },
   ];
 
   return (
@@ -40,55 +48,58 @@ export function ConversionFunnel({
         <CardTitle>{translations.title}</CardTitle>
         <CardDescription>{translations.description}</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center gap-2 py-4">
+      <CardContent className="flex flex-col gap-3">
         {stages.map((stage, idx) => {
           const nextStage = stages[idx + 1];
-          const widthPercent = 100 - idx * 15; // Decreasing width
-          const overallRate = ((stage.value / stages[0].value) * 100).toFixed(1);
+          const barWidth = (stage.value / maxValue) * 100;
+          const overallRate = ((stage.value / maxValue) * 100).toFixed(1);
+          const stepConvRate = nextStage
+            ? ((nextStage.value / stage.value) * 100).toFixed(1)
+            : null;
+          const stepDropoff = nextStage
+            ? (100 - (nextStage.value / stage.value) * 100).toFixed(1)
+            : null;
+          const color = barColors[idx];
 
           return (
-            <div key={stage.key} className="w-full flex flex-col items-center">
-              {/* Funnel Stage block */}
+            <div key={stage.key} className="space-y-1.5">
+              {/* Stage row */}
               <div
-                style={{ width: `${widthPercent}%` }}
-                className="group relative flex items-center justify-between px-6 py-4 rounded-xl border border-foreground/10 bg-[rgba(var(--glass-bg),0.02)] backdrop-blur-xs shadow-xs hover:border-[var(--color-primary)] hover:bg-[rgba(var(--glass-bg),0.05)] transition-all duration-300 min-h-[60px]"
+                className="group relative overflow-hidden rounded-xl border border-border/60 bg-card/50 hover:border-border transition-all duration-300 min-h-[56px] flex items-center"
                 role="group"
                 aria-label={`${stage.label}: ${stage.value}`}
               >
-                {/* Visual fill indicator */}
-                <div className="absolute inset-y-0 left-0 rounded-l-xl w-2 transition-all duration-300 group-hover:w-3" style={{ backgroundColor: `var(--color-primary)` }} />
-                
-                <div className="flex flex-col pl-2">
-                  <span className="font-medium text-foreground">{stage.label}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {overallRate}% del total
-                  </span>
-                </div>
+                {/* Animated progress bar fill */}
+                <div
+                  className={`absolute inset-y-0 left-0 ${color.bg} opacity-10 rounded-xl transition-all duration-700 ease-out group-hover:opacity-15`}
+                  style={{ width: `${barWidth}%` }}
+                />
+                {/* Left accent stripe */}
+                <div className={`absolute inset-y-0 left-0 w-1 ${color.bg} rounded-l-xl`} />
 
-                <div className="text-right">
-                  <span className="text-lg font-semibold text-foreground font-mono">
+                <div className="relative flex items-center justify-between px-4 py-3 w-full">
+                  <div className="pl-2 flex flex-col">
+                    <span className="font-semibold text-sm text-foreground">{stage.label}</span>
+                    <span className={`text-xs font-bold ${color.text}`}>{overallRate}%</span>
+                  </div>
+                  <span className="text-xl font-extrabold text-foreground tabular-nums">
                     {stage.value.toLocaleString()}
                   </span>
                 </div>
               </div>
 
-              {/* Conversion/Dropoff Indicator */}
-              {nextStage && (
-                <div className="flex items-center gap-3 my-2 text-xs text-muted-foreground animate-fade-in">
-                  <div className="flex items-center gap-1 bg-secondary/50 px-2 py-0.5 rounded-full border border-foreground/5">
-                    <ArrowDown className="w-3.5 h-3.5 text-[var(--color-success)]" aria-hidden="true" />
-                    <span className="font-semibold text-foreground">
-                      {((nextStage.value / stage.value) * 100).toFixed(1)}%
-                    </span>
-                    <span>{translations.conversionRate}</span>
+              {/* Conversion / dropoff indicator */}
+              {nextStage && stepConvRate && stepDropoff && (
+                <div className="flex items-center justify-center gap-3 py-0.5 text-xs">
+                  <div className="flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                    <ArrowDown className="size-3" aria-hidden="true" />
+                    <span className="font-bold">{stepConvRate}%</span>
+                    <span className="text-muted-foreground">{translations.conversionRate}</span>
                   </div>
-                  
-                  <div className="flex items-center gap-1 bg-destructive/10 text-destructive px-2 py-0.5 rounded-full border border-destructive/10">
-                    <TrendingDown className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span className="font-semibold">
-                      {(100 - (nextStage.value / stage.value) * 100).toFixed(1)}%
-                    </span>
-                    <span>{translations.dropoff}</span>
+                  <div className="flex items-center gap-1 bg-red-500/10 text-red-600 dark:text-red-400 px-2.5 py-1 rounded-full border border-red-500/20">
+                    <TrendingDown className="size-3" aria-hidden="true" />
+                    <span className="font-bold">{stepDropoff}%</span>
+                    <span className="text-muted-foreground">{translations.dropoff}</span>
                   </div>
                 </div>
               )}

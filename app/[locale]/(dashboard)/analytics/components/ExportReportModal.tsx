@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { X, FileText, Download, CheckCircle, Loader2 } from "lucide-react";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { cn, headerPrimaryActionClass } from "@/lib/utils";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 type ExportReportModalProps = {
   locale: Locale;
@@ -186,7 +186,7 @@ export function ExportReportModal({ locale, isOpen, onClose }: ExportReportModal
               </Button>
               <Button
                 type="submit"
-                className="bg-[var(--brand-orange)] text-white hover:bg-[var(--brand-orange)]/90 transition-all font-semibold flex items-center gap-2"
+                className={cn(headerPrimaryActionClass, "flex items-center gap-2")}
               >
                 <Download className="w-4 h-4" />
                 <span>{dictionary.analytics.export.submit}</span>

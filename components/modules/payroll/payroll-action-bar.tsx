@@ -9,6 +9,7 @@ import type { PayrollPeriodView } from "@/components/modules/payroll/payroll-das
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { headerPrimaryActionClass } from "@/lib/utils";
 
 function padDatePart(value: number) {
   return String(value).padStart(2, "0");
@@ -146,7 +147,7 @@ export function PayrollActionBar({
   return (
     <div className="flex w-full flex-col gap-3 lg:max-w-3xl lg:items-end">
       <div className="flex flex-wrap gap-2">
-        <Button type="button" onClick={handleCreatePeriod} disabled={loadingAction !== null}>
+        <Button type="button" onClick={handleCreatePeriod} disabled={loadingAction !== null} className={headerPrimaryActionClass}>
           <Plus className="size-4" aria-hidden="true" />
           {loadingAction === "period" ? "Creando..." : "Crear periodo"}
         </Button>

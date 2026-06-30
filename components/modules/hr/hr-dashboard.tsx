@@ -1,19 +1,12 @@
-import { CalendarClock, Clock, Plus } from "lucide-react";
-
-import { AttendancePanel, type HrAttendanceRow } from "@/components/modules/hr/attendance-panel";
-import { ContractSummary, type HrContractRow } from "@/components/modules/hr/contract-summary";
-import { EmployeeFormDialog } from "@/components/modules/hr/employee-form-dialog";
-import { EmployeeTable, type HrEmployeeRow } from "@/components/modules/hr/employee-table";
-import { HrExportButton } from "@/components/modules/hr/hr-export-button";
-import { TimeClockDialog, type TimeClockEmployeeOption } from "@/components/modules/hr/time-clock-dialog";
-import { BranchScopeSelector } from "@/components/shared/branch-scope-selector";
-import { MetricCard } from "@/components/shared/metric-card";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { requireApiContext } from "@/lib/api/context";
 import { prisma } from "@/lib/db/prisma";
 import { DEFAULT_TIME_ZONE, getDayBoundsForTimeZone } from "@/lib/date/timezone";
 import type { Locale } from "@/lib/i18n";
+import { HrClient } from "@/components/modules/hr/hr-client";
+import type { HrEmployeeRow } from "@/components/modules/hr/employee-table";
+import type { HrAttendanceRow } from "@/components/modules/hr/attendance-panel";
+import type { HrContractRow } from "@/components/modules/hr/contract-summary";
+import type { TimeClockEmployeeOption } from "@/components/modules/hr/time-clock-dialog";
 
 function formatDateTime(value: Date | null | undefined, locale: Locale, timeZone = DEFAULT_TIME_ZONE) {
   if (!value) return "Pendiente";
@@ -79,7 +72,7 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
       take: 8,
     }),
     prisma.employee.count({ where: { ...branchScopedWhere, status: "ACTIVE" } }),
-    prisma.timeClock.count({ where: todayOpenClockWhere }),
+    prisma.timeClock.count({ where: todayClockWhere }),
     prisma.timeClock.count({ where: todayOpenClockWhere }),
   ]);
 
@@ -130,73 +123,17 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
   });
 
   return (
-    <section className="erp-section space-y-6" role="main" aria-label="RH y asistencia">
-      <div className="rounded-lg border border-white/10 bg-card/80 p-4 shadow-sm backdrop-blur-xl dark:bg-zinc-950/50">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-semibold tracking-normal text-foreground">RH y asistencia</h1>
-            <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-              Plantilla, contratos y asistencia diaria con una vista operativa para sucursales.
-            </p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <BranchScopeSelector locale={locale} />
-            <div className="flex gap-2">
-              <EmployeeFormDialog
-                trigger={
-                  <Button size="sm">
-                    <Plus />
-                    Alta empleado
-                  </Button>
-                }
-              />
-              <TimeClockDialog
-                employees={timeClockEmployees}
-                trigger={
-                  <Button size="sm" variant="outline">
-                    <Clock />
-                    Registrar
-                  </Button>
-                }
-              />
-              <HrExportButton employees={employeeRows} attendance={attendanceRows} contracts={contractRows} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="erp-page-grid">
-        <MetricCard label="Personal activo" value={String(activeEmployees)} change="Actual" locale={locale} />
-        <MetricCard label="Presentes hoy" value={String(attendanceToday)} change="Hoy" tone="success" locale={locale} />
-        <MetricCard label="Incidencias" value={String(openAttendance)} change="Abiertas" tone={openAttendance > 0 ? "warning" : "success"} locale={locale} />
-        <MetricCard label="Asistencias abiertas" value={String(openAttendance)} change="Clock" tone={openAttendance > 0 ? "warning" : "default"} locale={locale} />
-      </div>
-
-      <Card className="rounded-lg border-white/10 bg-card/80 backdrop-blur-xl dark:bg-zinc-950/50">
-        <CardContent className="flex flex-wrap gap-2 p-3">
-          <a href="#empleados" className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground">Empleados</a>
-          <a href="#asistencia" className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">Asistencia</a>
-          <a href="#contratos" className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">Contratos</a>
-        </CardContent>
-      </Card>
-
-      <div id="empleados">
-        <EmployeeTable employees={employeeRows} />
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)]">
-        <div id="asistencia">
-          <AttendancePanel records={attendanceRows} />
-        </div>
-        <div id="contratos">
-          <ContractSummary contracts={contractRows} />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-muted/30 px-4 py-3 text-sm text-muted-foreground backdrop-blur-xl">
-        <CalendarClock className="size-4" />
-        Acciones de captura y exportacion preparadas para integrarse con endpoints operativos.
-      </div>
-    </section>
+    <HrClient
+      locale={locale}
+      initialEmployees={employeeRows}
+      initialAttendances={attendanceRows}
+      initialContracts={contractRows}
+      timeClockEmployees={timeClockEmployees}
+      metrics={{
+        activeEmployees,
+        attendanceToday,
+        openAttendance,
+      }}
+    />
   );
 }

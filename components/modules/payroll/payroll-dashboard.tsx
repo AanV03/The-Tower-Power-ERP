@@ -1,4 +1,4 @@
-import { AlertCircle, BadgeDollarSign, Banknote, CalendarDays, ReceiptText } from "lucide-react";
+import { AlertCircle, BadgeDollarSign, Banknote, ReceiptText } from "lucide-react";
 
 import { MetricCard } from "@/components/shared/metric-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -239,14 +239,11 @@ export async function PayrollDashboard({
     <div className="space-y-6 p-4 sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <CalendarDays className="size-4" aria-hidden="true" />
-            <span>{activePeriodLabel}</span>
-          </div>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-foreground">
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
+            <ReceiptText className="size-7 text-primary" aria-hidden="true" />
             Nómina y comisiones
           </h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
             Recibos, comisiones, deducciones y cierre operativo del periodo.
           </p>
         </div>

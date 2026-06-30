@@ -10,7 +10,7 @@ const CreateMovementSchema = z.object({
   warehouseId: z.string().optional(),
   branchId: z.string().optional(),
   productId: z.string(),
-  type: z.enum(InventoryMovementType).default(InventoryMovementType.PURCHASE),
+  type: z.nativeEnum(InventoryMovementType).default(InventoryMovementType.PURCHASE),
   quantity: z.coerce.number().positive(),
   unitCost: z.coerce.number().nonnegative().optional(),
   sourceType: z.string().trim().max(80).optional(),

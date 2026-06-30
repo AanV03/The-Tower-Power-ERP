@@ -8,8 +8,7 @@ import { Lightbulb } from "lucide-react";
 // Local component imports
 import { AnalyticsHeaderControls } from "./components/AnalyticsHeaderControls";
 import { AnalyticsMetricCard } from "./components/AnalyticsMetricCard";
-import { AnalyticsMultiChart } from "./components/AnalyticsMultiChart";
-import { AnalyticsTable } from "./components/AnalyticsTable";
+import { AnalyticsTabs } from "./components/AnalyticsTabs";
 
 export default async function AnalyticsPage({
   params,
@@ -56,15 +55,28 @@ export default async function AnalyticsPage({
     };
   });
 
+  const biMessage = locale === "es"
+    ? "La tasa de retención se mantiene un 3% arriba en comparación con el mes anterior. Se recomienda incentivar renovaciones tempranas y lanzar campañas de reactivación enfocadas en la sucursal Centro."
+    : locale === "fr"
+    ? "Le taux de rétention reste supérieur de 3% à celui du mois dernier. Il est recommandé d'encourager les renouvellements anticipés et de lancer des campagnes de réactivation ciblées sur la succursale Centre."
+    : "The retention rate remains 3% higher than last month. It is recommended to incentivize early membership renewals and launch targeted reactivation campaigns for the Downtown Branch.";
+
+  const biTitle = locale === "es"
+    ? "Recomendación de Inteligencia de Negocio (BI)"
+    : locale === "fr"
+    ? "Recommandation de Business Intelligence"
+    : "BI Recommendation";
+
   return (
     <section className="erp-section space-y-6" role="main" aria-label={config.title[locale as Locale]}>
       {/* Header with inline controls */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/40 pb-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
+            <Lightbulb className="size-7 text-primary" aria-hidden="true" />
             {config.title[locale as Locale]}
           </h1>
-          <p className="text-sm leading-6 text-muted-foreground">
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
             {config.subtitle[locale as Locale]}
           </p>
         </div>
@@ -77,25 +89,16 @@ export default async function AnalyticsPage({
         </div>
       </div>
 
-      {/* BI Recommendation Banner (Callout message style) */}
+      {/* BI Recommendation Banner */}
       <div className="rounded-xl border border-[var(--brand-orange)]/30 bg-[var(--brand-orange)]/5 p-4 flex items-start gap-3 shadow-xs">
         <Lightbulb className="w-5 h-5 text-[var(--brand-orange)] shrink-0 mt-0.5" aria-hidden="true" />
         <div className="space-y-1">
-          <h4 className="text-sm font-bold text-foreground">
-            {locale === "es" ? "Recomendación de Inteligencia de Negocio (BI)" : locale === "fr" ? "Recommandation de Business Intelligence" : "BI Recommendation"}
-          </h4>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {locale === "es" 
-              ? "La tasa de retención se mantiene un 3% arriba en comparación con el mes anterior. Se recomienda incentivar renovaciones tempranas y lanzar campañas de reactivación enfocadas en la sucursal Centro."
-              : locale === "fr"
-              ? "Le taux de rétention reste supérieur de 3% à celui du mois dernier. Il est recommandé d'encourager les renouvellements anticipés et de lancer des campagnes de réactivation ciblées sur la succursale Centre."
-              : "The retention rate remains 3% higher than last month. It is recommended to incentivize early membership renewals and launch targeted reactivation campaigns for the Downtown Branch."
-            }
-          </p>
+          <h4 className="text-sm font-bold text-foreground">{biTitle}</h4>
+          <p className="text-sm text-muted-foreground leading-relaxed">{biMessage}</p>
         </div>
       </div>
 
-      {/* 2x2 Grid Layout for KPI Cards */}
+      {/* KPI Metric Cards — always visible above tabs */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         {metrics.map((metric) => (
           <AnalyticsMetricCard
@@ -107,23 +110,19 @@ export default async function AnalyticsPage({
             tone={metric.tone}
             locale={locale as Locale}
             sparklineData={metric.sparkline}
-            isDoubleWidth={false} // Clean 2x2 grid layout
+            isDoubleWidth={false}
           />
         ))}
       </div>
 
-      {/* Composed Chart (Full-width for readability, AuditFeed removed) */}
-      <div className="w-full">
-        <AnalyticsMultiChart
-          title={dictionary.analytics.charts.mainTitle}
-          description={dictionary.analytics.charts.mainDesc}
-          data={summary.chart as any}
-          locale={locale as Locale}
-        />
-      </div>
-
-      {/* Custom Improved Table */}
-      <AnalyticsTable rows={summary.rows} locale={locale as Locale} />
+      {/* Tabbed sections: Resumen / Sucursales / Reportes */}
+      <AnalyticsTabs
+        locale={locale as Locale}
+        chartTitle={dictionary.analytics.charts.mainTitle}
+        chartDesc={dictionary.analytics.charts.mainDesc}
+        chartData={summary.chart as any}
+        tableRows={summary.rows}
+      />
     </section>
   );
 }

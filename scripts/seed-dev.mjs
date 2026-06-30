@@ -11,6 +11,7 @@ export const DEFAULT_SUPERADMIN_PASSWORD = "GerpyDemo!2026";
 
 const MODULES = [
   "DASHBOARD",
+  "MEMBERSHIPS",
   "POS",
   "ACCESS",
   "CATALOG",
@@ -31,6 +32,7 @@ const MODULES = [
 
 const PERMISSIONS = [
   "dashboard.read",
+  "memberships.manage",
   "pos.manage",
   "access.manage",
   "catalog.manage",

@@ -2,13 +2,15 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Play, Sparkles, Clock, Mail, ShieldAlert, ArrowRight, ArrowDown } from "lucide-react";
+import { Sparkles, Clock, Mail, ShieldAlert, ArrowDown, Users } from "lucide-react";
 
 type FlowStep = {
   id: string;
   type: "trigger" | "delay" | "action" | "condition";
   label: string;
-  stats?: string;
+  activeUsers?: number;
+  subLabel?: string;
+  delivered?: string;
 };
 
 export function AutomationFlow({
@@ -30,16 +32,43 @@ export function AutomationFlow({
     };
   };
 }) {
-  const getStepIcon = (type: FlowStep["type"]) => {
+  const steps: FlowStep[] = [
+    { id: "trigger", type: "trigger", label: "Trigger", activeUsers: 1086, subLabel: translations.steps.trigger },
+    { id: "delay", type: "delay", label: "Delay", activeUsers: 892, subLabel: translations.steps.delay },
+    { id: "action", type: "action", label: "Action", activeUsers: 756, subLabel: translations.steps.email, delivered: "98.4% entregados" },
+    { id: "condition", type: "condition", label: "Condition", activeUsers: 420, subLabel: translations.steps.condition },
+  ];
+
+  const getStepStyles = (type: FlowStep["type"]) => {
     switch (type) {
       case "trigger":
-        return <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" aria-hidden="true" />;
+        return {
+          icon: <Sparkles className="size-4 text-amber-500" aria-hidden="true" />,
+          border: "border-amber-500/30 bg-amber-500/5",
+          labelColor: "text-amber-500",
+          pulse: "bg-amber-500",
+        };
       case "delay":
-        return <Clock className="w-4 h-4 text-blue-500" aria-hidden="true" />;
+        return {
+          icon: <Clock className="size-4 text-blue-500" aria-hidden="true" />,
+          border: "border-blue-500/30 bg-blue-500/5",
+          labelColor: "text-blue-500",
+          pulse: "bg-blue-500",
+        };
       case "action":
-        return <Mail className="w-4 h-4 text-[var(--color-primary)]" aria-hidden="true" />;
+        return {
+          icon: <Mail className="size-4 text-primary" aria-hidden="true" />,
+          border: "border-primary/30 bg-primary/5",
+          labelColor: "text-primary",
+          pulse: "bg-primary",
+        };
       case "condition":
-        return <ShieldAlert className="w-4 h-4 text-purple-500" aria-hidden="true" />;
+        return {
+          icon: <ShieldAlert className="size-4 text-purple-500" aria-hidden="true" />,
+          border: "border-purple-500/30 bg-purple-500/5",
+          labelColor: "text-purple-500",
+          pulse: "bg-purple-500",
+        };
     }
   };
 
@@ -50,74 +79,75 @@ export function AutomationFlow({
           <CardTitle>{translations.title}</CardTitle>
           <CardDescription>{translations.description}</CardDescription>
         </div>
-        <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 gap-1 select-none">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+        <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 gap-1.5 select-none">
+          <span className="size-1.5 rounded-full bg-emerald-500 animate-ping" />
           Live
         </Badge>
       </CardHeader>
-      <CardContent className="flex flex-col items-center py-4">
-        {/* Step 1: Trigger */}
-        <div className="flex flex-col items-center w-full">
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-foreground/10 bg-[rgba(var(--glass-bg),0.02)] min-w-[200px] justify-center shadow-xs">
-            {getStepIcon("trigger")}
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Trigger</div>
-              <div className="text-sm font-semibold text-foreground">{translations.steps.trigger}</div>
-            </div>
-          </div>
-          <ArrowDown className="w-4 h-4 my-2 text-muted-foreground/50" aria-hidden="true" />
-        </div>
+      <CardContent className="flex flex-col items-center py-2 gap-0">
+        {steps.map((step, idx) => {
+          const styles = getStepStyles(step.type);
+          return (
+            <div key={step.id} className="flex flex-col items-center w-full">
+              {/* Step node */}
+              <div
+                className={`relative flex items-center gap-3 px-4 py-3 rounded-xl border w-full max-w-[340px] ${styles.border} shadow-xs`}
+              >
+                {/* Pulsing active indicator */}
+                <div className="relative shrink-0">
+                  <div className={`absolute inset-0 rounded-full ${styles.pulse} opacity-20 animate-ping`} />
+                  <div className={`relative p-1.5 rounded-lg ${styles.border}`}>
+                    {styles.icon}
+                  </div>
+                </div>
 
-        {/* Step 2: Delay */}
-        <div className="flex flex-col items-center w-full">
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-foreground/10 bg-[rgba(var(--glass-bg),0.02)] min-w-[200px] justify-center shadow-xs">
-            {getStepIcon("delay")}
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Delay</div>
-              <div className="text-sm font-semibold text-foreground">{translations.steps.delay}</div>
-            </div>
-          </div>
-          <ArrowDown className="w-4 h-4 my-2 text-muted-foreground/50" aria-hidden="true" />
-        </div>
+                <div className="flex-1 min-w-0">
+                  <div className={`text-[10px] uppercase font-bold tracking-wider ${styles.labelColor}`}>
+                    {step.label}
+                  </div>
+                  <div className="text-sm font-semibold text-foreground truncate">{step.subLabel}</div>
+                  {step.delivered && (
+                    <div className="text-[10px] text-emerald-500 font-medium">{step.delivered}</div>
+                  )}
+                </div>
 
-        {/* Step 3: Action Email */}
-        <div className="flex flex-col items-center w-full">
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-foreground/10 bg-[rgba(var(--glass-bg),0.02)] min-w-[200px] justify-center shadow-xs">
-            {getStepIcon("action")}
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Action</div>
-              <div className="text-sm font-semibold text-foreground">{translations.steps.email}</div>
-              <div className="text-[10px] text-emerald-500 font-medium">98.4% delivered</div>
-            </div>
-          </div>
-          <ArrowDown className="w-4 h-4 my-2 text-muted-foreground/50" aria-hidden="true" />
-        </div>
+                {/* Active users count */}
+                {step.activeUsers !== undefined && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+                    <Users className="size-3" />
+                    <span className="tabular-nums font-semibold text-foreground">{step.activeUsers.toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
 
-        {/* Step 4: Condition */}
-        <div className="flex flex-col items-center w-full">
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-purple-500/20 bg-purple-500/5 min-w-[200px] justify-center shadow-xs">
-            {getStepIcon("condition")}
-            <div className="text-center">
-              <div className="text-xs text-purple-500 uppercase font-bold tracking-wider">Condition</div>
-              <div className="text-sm font-semibold text-foreground">{translations.steps.condition}</div>
+              {/* Arrow connector (except after last) */}
+              {idx < steps.length - 1 && (
+                <ArrowDown className="size-4 my-2 text-muted-foreground/40" aria-hidden="true" />
+              )}
             </div>
-          </div>
-        </div>
+          );
+        })}
 
         {/* Yes / No branches */}
-        <div className="grid grid-cols-2 gap-4 w-full mt-4 border-t border-dashed border-foreground/10 pt-4">
-          <div className="flex flex-col items-center">
-            <div className="text-xs text-[var(--color-success)] font-semibold mb-1">Yes</div>
-            <div className="p-3 rounded-xl border border-foreground/10 bg-[rgba(var(--glass-bg),0.02)] text-center text-xs w-full max-w-[140px] shadow-xs">
+        <div className="grid grid-cols-2 gap-4 w-full max-w-[340px] mt-4 border-t border-dashed border-border/40 pt-4">
+          <div className="flex flex-col items-center gap-1.5">
+            <span className="text-xs text-emerald-500 font-bold">✓ Sí — Abrió</span>
+            <div className="p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-center text-xs w-full shadow-xs">
               <div className="font-semibold text-foreground truncate">{translations.steps.yes}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">342 {translations.stats.activeUsers}</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
+                <Users className="size-2.5" />
+                342 {translations.stats.activeUsers}
+              </div>
             </div>
           </div>
-          <div className="flex flex-col items-center">
-            <div className="text-xs text-[var(--color-danger)] font-semibold mb-1">No</div>
-            <div className="p-3 rounded-xl border border-foreground/10 bg-[rgba(var(--glass-bg),0.02)] text-center text-xs w-full max-w-[140px] shadow-xs">
+          <div className="flex flex-col items-center gap-1.5">
+            <span className="text-xs text-red-500 font-bold">✗ No — Ignoró</span>
+            <div className="p-3 rounded-xl border border-red-500/20 bg-red-500/5 text-center text-xs w-full shadow-xs">
               <div className="font-semibold text-foreground truncate">{translations.steps.no}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">744 {translations.stats.activeUsers}</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
+                <Users className="size-2.5" />
+                744 {translations.stats.activeUsers}
+              </div>
             </div>
           </div>
         </div>

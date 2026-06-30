@@ -20,12 +20,24 @@ Este documento sirve como contexto rapido para continuar el rediseño frontend d
 |---|---|---|---|
 | Nomina y comisiones | `/[locale]/payroll` | Mejorado | Usa `PayrollDashboard` y componentes propios en `components/modules/payroll/`. Ya no depende de `ModulePage`. |
 | Especialistas | `/[locale]/specialists` | Mejorado | Rediseñado en rama `especialistas`. Incluye control center, dialogs de acciones, modelos de contrato, KPIs compactos y tabs para agenda/liquidaciones/directorio. |
+| Punto de venta | `/[locale]/pos` | Mejorado | Pantalla de caja operativa: caja activa, búsqueda de productos, carrito de compras, cálculo de cambio, comisión de tarjeta, checkout en tiempo real y decremento de stock. |
+| Membresias | `/[locale]/memberships` | Mejorado | CRUD completo para miembros, planes, renovaciones y suspensiones. Incorpora simulador interactivo de molinete y dropdowns responsivos de sucursales. |
+| Control de acceso | `/[locale]/access` | Mejorado | Monitor de accesos en tiempo real con estados online/offline de dispositivos y validador de suscripción activa. |
+| Finanzas | `/[locale]/finance` | Mejorado | Listado de facturas y transacciones con controles de scroll fijos en modales y paginación responsiva de tarjetas. |
+| RH | `/[locale]/hr` | Mejorado | Expedientes de colaboradores, control de asistencia time clock manual y listado de contratos vigentes/vencidos. |
+| Inventario | `/[locale]/inventory` | Mejorado | Control de existencias físicas por almacén, tablero Kanban de niveles críticos (Suficiente, Bajo, Sin Stock), gráficos de distribución con Recharts e impacto transaccional atómico en el Kardex. |
+| Almacenes | `/[locale]/warehouse` | Mejorado | CRUD completo de almacenes/bodegas físicas, vinculación por sucursal, KPIs consolidados, gráficos de capacidad y paginación unificada. |
+| Catálogo | `/[locale]/catalog` | Mejorado | CRUD completo de productos y categorías con biblioteca de imágenes deportivas predefinidas, vista de catálogo visual en tarjetas e integración de gráficos y KPIs. |
+| Marketing | `/[locale]/marketing` | Mejorado | Gráfico de área multi-serie de rendimiento de campañas, panel de churn con intervenciones, embudo de conversión con barras animadas, tarjetas de campaña con sparklines y flujo de automatización con nodos pulsantes. |
+| Analytics | `/[locale]/analytics` | Mejorado | 3 tabs (Resumen/Sucursales/Reportes), gráfico de barras comparativo por sucursal, panel de snapshots de periodos (MoM/WoW/DoD) con deltas visuales, KPI cards con sparklines siempre visibles. |
+| Compras | `/[locale]/purchases` | Mejorado | Flujo modularizado en 4 tabs: Dashboard, Proveedores, Órdenes & Stock, Facturación (CxP). Se eliminó el scroll infinito y se mantuvo trazabilidad en cada paso. |
+| Contabilidad | `/[locale]/accounting` | Mejorado | Editor interactivo de pólizas con validación de cuadre (Débito/Crédito) en tiempo real, soporte multi-línea, y un panel lateral con historial de pólizas. |
+| SaaS Admin | `/[locale]/admin` | Mejorado | Panel `BrandingPanel` para custom colors y subida de Logo dinámico, tabla de Inquilinos con sparklines, drawer con panel simulado de consumo de recursos y consola `AuditLogsConsole`. |
 
 ## Modulos parcialmente personalizados
 
 | Modulo | Ruta | Estado | Notas |
 |---|---|---|---|
-| SaaS Admin | `/[locale]/admin` | Parcial | Usa `ModulePage`, pero agrega `BrandingPanel`. Pendiente convertirlo en consola SaaS completa para tenants, plan, modulos y white-label persistente. |
 
 ## Modulos pendientes
 
@@ -33,39 +45,9 @@ Estos modulos siguen usando `ModulePage` directamente y por eso se ven estandari
 
 | Modulo | Ruta | Prioridad sugerida | Rediseño recomendado |
 |---|---|---:|---|
-| Punto de venta | `/[locale]/pos` | Alta | Pantalla de caja real: busqueda de producto, carrito, totales, pago, recibo, estado de caja. |
-| Membresias | `/[locale]/memberships` | Alta | CRUD operativo para miembros, planes, renovaciones, pausas y cobranza. |
-| Control de acceso | `/[locale]/access` | Alta | Monitor de accesos, validacion QR/biometria, denegados, dispositivos online/offline. |
-| Finanzas | `/[locale]/finance` | Alta | CxC/CxP, conciliacion, facturas, pagos, alertas de vencimiento. |
-| RH | `/[locale]/hr` | Media-alta | Expedientes, asistencia, turnos, contratos y acciones de personal. |
-| Inventario | `/[locale]/inventory` | Media-alta | Stock por sucursal, alertas, ajustes, mermas y traspasos. |
-| Catalogo | `/[locale]/catalog` | Media | CRUD de productos/categorias/SKU/costos/impuestos. |
-| Compras | `/[locale]/purchases` | Media | Flujo proveedor -> factura -> recepcion -> stock. |
-| Almacenes | `/[locale]/warehouse` | Media | Vista de almacenes, movimientos, transferencias y stock critico. |
-| Contabilidad | `/[locale]/accounting` | Media | Editor de polizas con debito/credito, cuadre y estados. |
-| Marketing | `/[locale]/marketing` | Media | Embudo CRM, segmentos, campanas y churn/intervenciones. |
-| Analytics | `/[locale]/analytics` | Media | BI con filtros, comparativos, reportes y snapshots. |
 | Integraciones | `/[locale]/integrations` | Baja-media | Consola tecnica de eventos, outbox, reintentos y webhooks. |
 | Mantenimiento | `/[locale]/maintenance` | Baja-media | Tablero de tickets, prioridad, asignacion y estados. |
 | Panel operativo | `/[locale]/dashboard` | Media | Dashboard ejecutivo con alertas reales, drill-downs y comparativos por sucursal. |
-
-## Contexto de la rama `especialistas`
-
-Commit de referencia: `e591e6a Redesign specialists dashboard`
-
-Cambios principales:
-
-- `app/[locale]/(dashboard)/specialists/page.tsx` deja de usar `ModulePage`.
-- `components/modules/specialists/specialist-action-dialogs.tsx` agrega dialogs para:
-  - Generar liquidacion.
-  - Registrar sesion.
-  - Nuevo empleado/especialista.
-- `components/ui/tabs.tsx` se agrego desde shadcn y se ajusto para el layout actual.
-- La seccion de especialistas usa:
-  - Header operativo de liquidacion del periodo.
-  - KPIs compactos.
-  - Panel de modelos de contrato.
-  - Tabs: Agenda del dia, Liquidaciones pendientes, Directorio de especialistas.
 
 ## Notas funcionales para continuar
 

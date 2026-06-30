@@ -23,12 +23,40 @@ function MobileDrawer({
 }) {
   const dictionary = getDictionary(locale);
 
+  const [logoUrl, setLogoUrl] = useState<string>("");
+
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [open]);
+
+  useEffect(() => {
+    const onBrandUpdate = (e: Event) => {
+      if (e instanceof CustomEvent && e.detail) {
+        setLogoUrl(e.detail.logoUrl || "");
+      }
+    };
+
+    const onBrandReset = () => setLogoUrl("");
+
+    // Load initial logo
+    try {
+      const raw = localStorage.getItem("gerpy-brand-colors");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.logoUrl) setLogoUrl(parsed.logoUrl);
+      }
+    } catch { /* ignore */ }
+
+    document.addEventListener("brand:update", onBrandUpdate);
+    document.addEventListener("brand:reset", onBrandReset);
+    return () => {
+      document.removeEventListener("brand:update", onBrandUpdate);
+      document.removeEventListener("brand:reset", onBrandReset);
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -45,24 +73,32 @@ function MobileDrawer({
 
   return (
     <div
-          className="glass-panel-strong glass-sidebar fixed inset-0 z-50 flex flex-col rounded-none border-0 text-[var(--sidebar-text-primary)] md:hidden"
+          className="glass-panel-strong glass-sidebar fixed inset-0 z-50 flex flex-col rounded-none border-0 text-[var(--shell-sidebar-foreground)] md:hidden"
       role="dialog"
       aria-modal="true"
       aria-labelledby="mobile-module-menu-title"
     >
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--sidebar-border-color)] px-5">
+      <div className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--shell-sidebar-border-color)] px-5">
         <div className="flex items-center gap-3">
-          <div
-            className="flex h-10 w-12 items-center justify-center rounded-none text-sm font-bold"
-            style={{ backgroundColor: "var(--brand-yellow)", color: "var(--brand-ink)" }}
-          >
-            {defaultBrand.logoText}
-          </div>
+          {logoUrl ? (
+            <img 
+              src={logoUrl} 
+              alt="Brand Logo" 
+              className="h-10 w-12 object-contain" 
+            />
+          ) : (
+            <div
+              className="flex h-10 w-12 items-center justify-center rounded-none text-sm font-bold"
+              style={{ backgroundColor: "var(--brand-yellow)", color: "var(--brand-ink)" }}
+            >
+              {defaultBrand.logoText}
+            </div>
+          )}
           <div>
             <p id="mobile-module-menu-title" className="text-sm font-semibold">
               {defaultBrand.name}
             </p>
-            <p className="text-xs" style={{ color: "var(--sidebar-text-secondary)" }}>
+            <p className="text-xs" style={{ color: "var(--shell-sidebar-foreground-secondary)" }}>
               {dictionary.common.productCategory}
             </p>
           </div>
@@ -83,7 +119,7 @@ function MobileDrawer({
             <li key={group.id} className="pt-3 first:pt-0">
               <p
                 className="px-4 pb-1 text-xs font-semibold uppercase tracking-wide"
-                style={{ color: "var(--sidebar-text-secondary)" }}
+                style={{ color: "var(--shell-sidebar-foreground-secondary)" }}
               >
                 {group.labels[locale]}
               </p>
@@ -105,8 +141,8 @@ function MobileDrawer({
                         )}
                         style={
                           isActive
-                            ? { backgroundColor: "var(--sidebar-accent-active)", color: "#0f172a" }
-                            : { color: "var(--sidebar-text-primary)" }
+                            ? { backgroundColor: "var(--sidebar-accent-active)", color: "var(--sidebar-accent-active-foreground, #ffffff)" }
+                            : { color: "var(--shell-sidebar-foreground)" }
                         }
                       >
                         <Icon className="size-5 shrink-0" aria-hidden="true" />
@@ -121,8 +157,8 @@ function MobileDrawer({
         </ul>
       </nav>
 
-      <div className="shrink-0 border-t border-[var(--sidebar-border-color)] px-5 py-4">
-        <p className="text-xs" style={{ color: "var(--sidebar-text-secondary)" }}>
+      <div className="shrink-0 border-t border-[var(--shell-sidebar-border-color)] px-5 py-4">
+        <p className="text-xs" style={{ color: "var(--shell-sidebar-foreground-secondary)" }}>
           (c) {new Date().getFullYear()} Gerpy
         </p>
       </div>

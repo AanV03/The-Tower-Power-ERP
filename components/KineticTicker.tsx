@@ -41,12 +41,21 @@ export default function KineticTicker() {
         ref={textRef}
         className="whitespace-nowrap text-[12vw] md:text-[10vw] font-black uppercase tracking-tighter text-zinc-950 will-change-transform flex gap-8 md:gap-16 px-4"
       >
-        {/* Repeat the text enough times so it never runs out of runway */}
-        <span>No Pain. No Gain.</span>
-        <span className="text-transparent" style={{ WebkitTextStroke: "2px #09090b" }}>No Pain. No Gain.</span>
-        <span>No Pain. No Gain.</span>
-        <span className="text-transparent" style={{ WebkitTextStroke: "2px #09090b" }}>No Pain. No Gain.</span>
-        <span>No Pain. No Gain.</span>
+        <span>Members. Payments. Access. Stock. Payroll.</span>
+        <span
+          className="text-transparent"
+          style={{ WebkitTextStroke: "2px #09090b" }}
+        >
+          One gym operating system.
+        </span>
+        <span>Members. Payments. Access. Stock. Payroll.</span>
+        <span
+          className="text-transparent"
+          style={{ WebkitTextStroke: "2px #09090b" }}
+        >
+          One gym operating system.
+        </span>
+        <span>Members. Payments. Access. Stock. Payroll.</span>
       </div>
     </section>
   );

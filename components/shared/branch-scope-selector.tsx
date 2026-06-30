@@ -19,8 +19,8 @@ export function BranchScopeSelector({
     ? "pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-white/70"
     : "pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground";
 
-  const tenantClass = cn(inHeader ? "pl-9 bg-transparent border border-white/10 text-white" : "pl-9");
-  const scopeClass = cn(inHeader ? "bg-transparent border border-white/10 text-white" : undefined);
+  const tenantClass = cn("w-36 md:w-40", inHeader ? "pl-9 bg-transparent border border-white/10 text-white" : "pl-9");
+  const scopeClass = cn("w-36 md:w-40", inHeader ? "bg-transparent border border-white/10 text-white" : undefined);
 
   return (
     <div className="grid gap-2 sm:grid-cols-2">

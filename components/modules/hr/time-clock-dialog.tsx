@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Clock } from "lucide-react";
 import { toast } from "sonner";
@@ -33,6 +33,7 @@ export function TimeClockDialog({
   trigger: React.ReactElement;
 }) {
   const router = useRouter();
+  const formId = useId();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
@@ -111,10 +112,10 @@ export function TimeClockDialog({
         </StandardDialogHeader>
 
         <form className="grid gap-4" onSubmit={handleSubmit}>
-          <label htmlFor="time-clock-employee" className="grid gap-2 text-sm font-medium">
+          <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-employee`}>
             Empleado
             <NativeSelect
-              id="time-clock-employee"
+              id={`${formId}-employee`}
               name="employeeId"
               required
               className="w-full"
@@ -132,16 +133,16 @@ export function TimeClockDialog({
           </label>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label htmlFor="time-clock-action" className="grid gap-2 text-sm font-medium">
+            <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-action`}>
               Accion
-              <NativeSelect id="time-clock-action" name="action" defaultValue="CLOCK_IN" className="w-full" disabled={isSubmitting}>
+              <NativeSelect id={`${formId}-action`} name="action" defaultValue="CLOCK_IN" className="w-full" disabled={isSubmitting}>
                 <NativeSelectOption value="CLOCK_IN">Registrar entrada</NativeSelectOption>
                 <NativeSelectOption value="CLOCK_OUT">Registrar salida</NativeSelectOption>
               </NativeSelect>
             </label>
-            <label htmlFor="time-clock-source" className="grid gap-2 text-sm font-medium">
+            <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-source`}>
               Origen
-              <NativeSelect id="time-clock-source" name="source" defaultValue="APP" className="w-full" disabled={isSubmitting}>
+              <NativeSelect id={`${formId}-source`} name="source" defaultValue="APP" className="w-full" disabled={isSubmitting}>
                 <NativeSelectOption value="APP">App</NativeSelectOption>
                 <NativeSelectOption value="MANUAL">Manual</NativeSelectOption>
                 <NativeSelectOption value="BIOMETRIC">Biometrico</NativeSelectOption>
@@ -149,9 +150,9 @@ export function TimeClockDialog({
             </label>
           </div>
 
-          <label htmlFor="time-clock-notes" className="grid gap-2 text-sm font-medium">
+          <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-notes`}>
             Notas
-            <Input id="time-clock-notes" name="notes" maxLength={240} placeholder="Comentario opcional" disabled={isSubmitting} />
+            <Input id={`${formId}-notes`} name="notes" maxLength={240} placeholder="Comentario opcional" disabled={isSubmitting} />
           </label>
 
           <StandardDialogFooter>

@@ -23,6 +23,24 @@ export default async function DashboardLayout({
   const { locale } = await params;
   const customContext = await getTenantContextFromCookies().catch(() => null);
   const session = customContext ? null : await auth();
+  const tenantId = customContext?.tenantId || session?.user?.tenantId;
+  
+  let brandColors = null;
+  let brandIdentity = null;
+  
+  if (tenantId) {
+    try {
+      const { prisma } = await import("@/lib/db/prisma");
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId },
+        select: { brandColors: true, brandIdentity: true },
+      });
+      if (tenant) {
+        brandColors = tenant.brandColors;
+        brandIdentity = tenant.brandIdentity;
+      }
+    } catch { /* ignore */ }
+  }
 
   if (!customContext?.tenantId && !session?.user?.tenantId) {
     redirect("/login");
@@ -30,11 +48,9 @@ export default async function DashboardLayout({
 
   return (
     <div className="h-screen overflow-hidden flex bg-background">
-      <BrandColorScript />
-      {/* Applies persisted brand colors from localStorage to :root */}
       <BrandColorApplier />
       {/* Sidebar - Left Panel, full height */}
-      <AppSidebar locale={locale as Locale} />
+      <AppSidebar locale={locale as Locale} serverIdentity={brandIdentity as any} />
 
       {/* Right Container - Topbar + Content Column */}
       <div className="flex-1 flex flex-col overflow-hidden">
