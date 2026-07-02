@@ -6,7 +6,9 @@ import { Topbar } from "@/components/layout/topbar";
 import { MobileModuleNav } from "@/components/layout/mobile-module-nav";
 import { BrandColorApplier } from "@/components/branding/brand-color-applier";
 import { BrandColorScript } from "@/components/branding/brand-color-script";
+import { RbacProvider } from "@/components/auth/rbac-provider";
 import { getTenantContextFromCookies } from "@/lib/auth/server-session";
+import type { TenantContext } from "@/lib/auth/rbac";
 import type { Locale } from "@/lib/i18n";
 
 export const runtime = "nodejs";
@@ -46,24 +48,39 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const tenantContext: TenantContext | null =
+    customContext ??
+    (session?.user?.tenantId
+      ? {
+          userId: session.user.id,
+          tenantId: session.user.tenantId,
+          branchId: session.user.branchId,
+          roles: session.user.roles ?? [],
+          permissions: session.user.permissions ?? [],
+          modules: session.user.modules ?? [],
+        }
+      : null);
+
   return (
     <div className="h-screen overflow-hidden flex bg-background">
       <BrandColorApplier />
-      {/* Sidebar - Left Panel, full height */}
-      <AppSidebar locale={locale as Locale} serverIdentity={brandIdentity as any} />
+      <RbacProvider tenantContext={tenantContext}>
+        {/* Sidebar - Left Panel, full height */}
+        <AppSidebar locale={locale as Locale} serverIdentity={brandIdentity as any} />
 
-      {/* Right Container - Topbar + Content Column */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Topbar */}
-        <Topbar locale={locale as Locale} />
-
-        {/* Main Content Area */}
+        {/* Right Container - Topbar + Content Column */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <MobileModuleNav locale={locale as Locale} />
-          {/* ONLY THIS SCROLLS */}
-          <main className="flex-1 overflow-y-auto">{children}</main>
+          {/* Topbar */}
+          <Topbar locale={locale as Locale} />
+
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <MobileModuleNav locale={locale as Locale} />
+            {/* ONLY THIS SCROLLS */}
+            <main className="flex-1 overflow-y-auto">{children}</main>
+          </div>
         </div>
-      </div>
+      </RbacProvider>
     </div>
   );
 }

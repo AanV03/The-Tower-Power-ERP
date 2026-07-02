@@ -2,10 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 
-import { navigationGroups, navigationItems } from "@/data/navigation";
+import { useRbacContext } from "@/components/auth/rbac-provider";
+import { navigationGroups, navigationItems, type NavGroup, type NavItem } from "@/data/navigation";
+import {
+  filterNavigationGroupsByPermission,
+  filterNavigationItemsByPermission,
+} from "@/lib/auth/navigation-permissions";
 import { defaultBrand } from "@/lib/branding";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -15,11 +20,13 @@ function MobileDrawer({
   onClose,
   locale,
   pathname,
+  groups,
 }: {
   open: boolean;
   onClose: () => void;
   locale: Locale;
   pathname: string;
+  groups: NavGroup[];
 }) {
   const dictionary = getDictionary(locale);
 
@@ -115,7 +122,7 @@ function MobileDrawer({
 
       <nav className="flex-1 overflow-y-auto px-4 py-4" aria-label={dictionary.common.moduleNavigation}>
         <ul className="flex flex-col gap-1">
-          {navigationGroups.map((group) => (
+          {groups.map((group) => (
             <li key={group.id} className="pt-3 first:pt-0">
               <p
                 className="px-4 pb-1 text-xs font-semibold uppercase tracking-wide"
@@ -166,7 +173,15 @@ function MobileDrawer({
   );
 }
 
-function DesktopModuleBar({ locale, pathname }: { locale: Locale; pathname: string }) {
+function DesktopModuleBar({
+  locale,
+  pathname,
+  items,
+}: {
+  locale: Locale;
+  pathname: string;
+  items: NavItem[];
+}) {
   const dictionary = getDictionary(locale);
 
   return (
@@ -174,7 +189,7 @@ function DesktopModuleBar({ locale, pathname }: { locale: Locale; pathname: stri
       className="glass-panel glass-topbar hidden gap-2 overflow-x-auto rounded-none border-x-0 border-t-0 px-4 py-2 md:flex lg:hidden"
       aria-label={dictionary.common.moduleNavigation}
     >
-      {navigationItems.map((item) => {
+      {items.map((item) => {
         const href = `/${locale}${item.href}`;
         const isActive = pathname === href || (item.href !== "/dashboard" && pathname.startsWith(href));
         const Icon = item.icon;
@@ -205,7 +220,16 @@ function DesktopModuleBar({ locale, pathname }: { locale: Locale; pathname: stri
 
 export function MobileModuleNav({ locale }: { locale: Locale }) {
   const pathname = usePathname();
+  const tenantContext = useRbacContext();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const visibleNavigationGroups = useMemo(
+    () => filterNavigationGroupsByPermission(navigationGroups, tenantContext),
+    [tenantContext],
+  );
+  const visibleNavigationItems = useMemo(
+    () => filterNavigationItemsByPermission(navigationItems, tenantContext),
+    [tenantContext],
+  );
 
   useEffect(() => {
     const handler = () => {
@@ -219,12 +243,13 @@ export function MobileModuleNav({ locale }: { locale: Locale }) {
 
   return (
     <>
-      <DesktopModuleBar locale={locale} pathname={pathname} />
+      <DesktopModuleBar locale={locale} pathname={pathname} items={visibleNavigationItems} />
       <MobileDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         locale={locale}
         pathname={pathname}
+        groups={visibleNavigationGroups}
       />
     </>
   );

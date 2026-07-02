@@ -5,10 +5,12 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import type { CSSProperties } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { useRbacContext } from "@/components/auth/rbac-provider";
 import { getActiveNavigationGroupId, getNavSectionTheme } from "@/components/layout/nav-section-theme";
 import { navigationGroups } from "@/data/navigation";
+import { filterNavigationGroupsByPermission } from "@/lib/auth/navigation-permissions";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { defaultBrand } from "@/lib/branding";
@@ -18,9 +20,14 @@ export function AppSidebar({ locale, serverIdentity }: { locale: Locale, serverI
   const dictionary = getDictionary(locale);
   const pathname = usePathname();
   const identity = useBrandIdentity(serverIdentity);
+  const tenantContext = useRbacContext();
   const [collapsed, setCollapsed] = useState(false);
   const activeSectionId = getActiveNavigationGroupId(pathname, locale);
   const sectionTheme = getNavSectionTheme(activeSectionId);
+  const visibleNavigationGroups = useMemo(
+    () => filterNavigationGroupsByPermission(navigationGroups, tenantContext),
+    [tenantContext],
+  );
   const sectionStyle = {
     "--nav-section-accent": sectionTheme.accent,
     "--nav-section-ink": sectionTheme.ink,
@@ -120,7 +127,7 @@ export function AppSidebar({ locale, serverIdentity }: { locale: Locale, serverI
             className={cn("sidebar-content min-h-0 w-full flex-1 space-y-1 overflow-y-auto overscroll-contain py-5", collapsed ? "px-0" : "px-3")}
             aria-label={dictionary.common.moduleNavigation}
           >
-            {navigationGroups.map((group) => (
+            {visibleNavigationGroups.map((group) => (
               <div key={group.id} className={cn("space-y-1", collapsed ? "pt-4 first:pt-0" : "pt-5 first:pt-0")}>
                 {!collapsed && (
                   <p

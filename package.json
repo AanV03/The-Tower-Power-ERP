@@ -12,7 +12,7 @@
     "db:seed:dev": "node scripts/seed-dev.mjs",
     "test:db-env": "node --test scripts/check-env.test.mjs",
     "test:auth": "node --experimental-strip-types --test scripts/auth-password.test.mjs scripts/rbac.test.mjs",
-    "test:api": "node --experimental-strip-types --test scripts/api.test.mjs scripts/navigation.test.mjs scripts/maintenance.test.mjs scripts/seed-dev.test.mjs",
+    "test:api": "node --experimental-strip-types --test scripts/api.test.mjs scripts/navigation.test.mjs scripts/frontend-rbac.test.mjs scripts/maintenance.test.mjs scripts/seed-dev.test.mjs",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "check:accessibility": "pa11y http://localhost:3000",
