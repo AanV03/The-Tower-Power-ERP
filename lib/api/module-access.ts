@@ -3,28 +3,28 @@ import type { ModuleId } from "@/data/navigation";
 
 export type ModuleAccess = {
   moduleKey: ModuleKey;
-  permission: string;
+  permissionPrefix: string;
 };
 
 const MODULE_ACCESS: Record<ModuleId, ModuleAccess> = {
-  dashboard: { moduleKey: "DASHBOARD", permission: "dashboard.read" },
-  memberships: { moduleKey: "MEMBERSHIPS", permission: "memberships.manage" },
-  access: { moduleKey: "ACCESS", permission: "access.manage" },
-  finance: { moduleKey: "FINANCE", permission: "finance.manage" },
-  pos: { moduleKey: "POS", permission: "pos.manage" },
-  inventory: { moduleKey: "INVENTORY", permission: "inventory.manage" },
-  hr: { moduleKey: "HR", permission: "hr.manage" },
-  marketing: { moduleKey: "MARKETING", permission: "marketing.manage" },
-  specialists: { moduleKey: "SPECIALISTS", permission: "specialists.manage" },
-  admin: { moduleKey: "ADMIN", permission: "admin.manage" },
-  catalog: { moduleKey: "CATALOG", permission: "catalog.manage" },
-  purchases: { moduleKey: "PURCHASES", permission: "purchases.manage" },
-  warehouse: { moduleKey: "WAREHOUSE", permission: "warehouse.manage" },
-  accounting: { moduleKey: "ACCOUNTING", permission: "accounting.manage" },
-  payroll: { moduleKey: "PAYROLL", permission: "payroll.manage" },
-  analytics: { moduleKey: "ANALYTICS", permission: "analytics.manage" },
-  integrations: { moduleKey: "INTEGRATIONS", permission: "integrations.manage" },
-  maintenance: { moduleKey: "MAINTENANCE", permission: "maintenance.manage" },
+  dashboard: { moduleKey: "DASHBOARD", permissionPrefix: "dashboard" },
+  memberships: { moduleKey: "MEMBERSHIPS", permissionPrefix: "memberships" },
+  access: { moduleKey: "ACCESS", permissionPrefix: "access" },
+  finance: { moduleKey: "FINANCE", permissionPrefix: "finance" },
+  pos: { moduleKey: "POS", permissionPrefix: "pos" },
+  inventory: { moduleKey: "INVENTORY", permissionPrefix: "inventory" },
+  hr: { moduleKey: "HR", permissionPrefix: "hr" },
+  marketing: { moduleKey: "MARKETING", permissionPrefix: "marketing" },
+  specialists: { moduleKey: "SPECIALISTS", permissionPrefix: "specialists" },
+  admin: { moduleKey: "ADMIN", permissionPrefix: "admin" },
+  catalog: { moduleKey: "CATALOG", permissionPrefix: "catalog" },
+  purchases: { moduleKey: "PURCHASES", permissionPrefix: "purchases" },
+  warehouse: { moduleKey: "WAREHOUSE", permissionPrefix: "warehouse" },
+  accounting: { moduleKey: "ACCOUNTING", permissionPrefix: "accounting" },
+  payroll: { moduleKey: "PAYROLL", permissionPrefix: "payroll" },
+  analytics: { moduleKey: "ANALYTICS", permissionPrefix: "analytics" },
+  integrations: { moduleKey: "INTEGRATIONS", permissionPrefix: "integrations" },
+  maintenance: { moduleKey: "MAINTENANCE", permissionPrefix: "maintenance" },
 };
 
 export function resolveModuleAccess(moduleId: string): ModuleAccess | null {

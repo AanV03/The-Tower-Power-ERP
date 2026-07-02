@@ -18,7 +18,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "memberships" });
+    const context = await requireApiContext({ moduleId: "memberships", method: "GET" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
 
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "memberships" });
+    const context = await requireApiContext({ moduleId: "memberships", method: "POST" });
     const data = CreatePlanSchema.parse(await request.json());
 
     const plan = await prisma.membershipPlan.create({

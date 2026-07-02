@@ -24,7 +24,7 @@ function denied(message = "Acceso Denegado", status = 403) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "access" });
+    const context = await requireApiContext({ moduleId: "access", method: "POST" });
     const data = AccessValidateSchema.parse(await request.json());
     const now = new Date();
     const identifier = data.memberId ?? data.accessCode ?? "UNKNOWN";

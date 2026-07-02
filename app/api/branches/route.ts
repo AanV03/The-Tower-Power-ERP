@@ -17,7 +17,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "admin" });
+    const context = await requireApiContext({ moduleId: "admin", method: "GET" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
 
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "admin" });
+    const context = await requireApiContext({ moduleId: "admin", method: "POST" });
     const data = CreateBranchSchema.parse(await request.json());
 
     const branch = await prisma.branch.create({

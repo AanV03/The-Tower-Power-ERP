@@ -17,7 +17,7 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const context = await requireApiContext({ moduleId: "admin" });
+    const context = await requireApiContext({ moduleId: "admin", method: "GET" });
 
     const tenant = await prisma.tenant.findUniqueOrThrow({
       where: { id: context.tenantId },
@@ -47,7 +47,7 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "admin" });
+    const context = await requireApiContext({ moduleId: "admin", method: "PATCH" });
     const data = UpdateTenantSchema.parse(await request.json());
 
     const validModuleEntries = Object.entries(data.modules ?? {}).filter(([moduleKey]) =>

@@ -27,7 +27,7 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const context = await requireApiContext({ moduleId: "pos" });
+    const context = await requireApiContext({ moduleId: "pos", method: "GET" });
 
     const activeSession = await prisma.cashSession.findFirst({
       where: {
@@ -49,7 +49,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "pos" });
+    const context = await requireApiContext({ moduleId: "pos", method: "POST" });
     const data = OpenSessionSchema.parse(await request.json());
     const fallbackBranchId = data.registerId
       ? undefined
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "pos" });
+    const context = await requireApiContext({ moduleId: "pos", method: "PATCH" });
     const data = CloseSessionSchema.parse(await request.json());
 
     const session = await prisma.cashSession.update({

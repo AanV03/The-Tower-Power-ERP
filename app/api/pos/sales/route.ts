@@ -8,7 +8,7 @@ import { PosService } from '@/modules/pos/services/pos.service';
 
 export async function POST(req: NextRequest) {
   try {
-    const ctx = await requireApiContext({ moduleId: 'pos' });
+    const ctx = await requireApiContext({ moduleId: 'pos', method: "POST" });
 
     const body = await req.json();
     const validatedPayload = createSaleSchema.parse(body);
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const ctx = await requireApiContext({ moduleId: 'pos' });
+    const ctx = await requireApiContext({ moduleId: 'pos', method: "GET" });
     const url = new URL(req.url);
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const page = parseInt(url.searchParams.get('page') || '1');

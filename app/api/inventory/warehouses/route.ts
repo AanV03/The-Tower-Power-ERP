@@ -14,7 +14,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "inventory" });
+    const context = await requireApiContext({ moduleId: "inventory", method: "GET" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = scopedBranchWhere(context, searchParams.get("branchId"));
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "inventory" });
+    const context = await requireApiContext({ moduleId: "inventory", method: "POST" });
     const data = CreateWarehouseSchema.parse(await request.json());
     const branchId = await resolveWritableBranchId(context, data.branchId);
 

@@ -322,6 +322,7 @@ model Branch {
   branchBudgets      BranchBudget[]
   specialists        Specialist[]
   specialistSessions SpecialistSession[]
+  userRoles          UserRole[]
 
   @@unique([tenantId, code])
   @@index([tenantId, status])
@@ -431,15 +432,18 @@ model Permission {
 }
 
 model UserRole {
+  id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   roleId    String
   role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
   branchId  String?
+  branch    Branch?  @relation(fields: [branchId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
-  @@id([userId, roleId])
+  @@unique([userId, roleId, branchId])
   @@index([branchId])
+  @@index([roleId])
   @@map("user_roles")
 }
 

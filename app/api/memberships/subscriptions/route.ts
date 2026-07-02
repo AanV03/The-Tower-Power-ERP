@@ -36,7 +36,7 @@ function calculateEndDate(startDate: Date, period: BillingPeriod): Date {
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "memberships" });
+    const context = await requireApiContext({ moduleId: "memberships", method: "GET" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const memberId = searchParams.get("memberId") || undefined;
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "memberships" });
+    const context = await requireApiContext({ moduleId: "memberships", method: "POST" });
     const body = await request.json();
     const data = CreateSubscriptionSchema.parse(body);
 
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "memberships" });
+    const context = await requireApiContext({ moduleId: "memberships", method: "PATCH" });
     const body = await request.json();
     const data = UpdateSubscriptionSchema.parse(body);
 

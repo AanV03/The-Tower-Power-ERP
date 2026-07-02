@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const range = searchParams.get("range") || "30d";
     const branchId = searchParams.get("branchId") || "";
 
-    const context = await requireApiContext({ moduleId: "analytics" });
+    const context = await requireApiContext({ moduleId: "analytics", method: "GET" });
     const summary = await getModuleSummary("analytics", context, { range, branchId });
     return ok(summary);
   } catch (error) {

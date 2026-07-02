@@ -15,7 +15,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "catalog" });
+    const context = await requireApiContext({ moduleId: "catalog", method: "GET" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = { tenantId: context.tenantId };
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "catalog" });
+    const context = await requireApiContext({ moduleId: "catalog", method: "POST" });
     const data = CreateCategorySchema.parse(await request.json());
 
     const category = await prisma.productCategory.create({

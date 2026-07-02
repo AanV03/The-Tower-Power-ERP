@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "access" });
+    const context = await requireApiContext({ moduleId: "access", method: "POST" });
     const body = await request.json();
     const data = AccessCheckSchema.parse(body);
 

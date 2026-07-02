@@ -21,7 +21,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const context = await requireApiContext({ moduleId: "access" });
+    const context = await requireApiContext({ moduleId: "access", method: "PATCH" });
     const data = UpdateDeviceSchema.parse(await request.json());
 
     // Verify ownership and existence
@@ -62,7 +62,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const context = await requireApiContext({ moduleId: "access" });
+    const context = await requireApiContext({ moduleId: "access", method: "DELETE" });
 
     // Verify ownership
     const device = await prisma.accessDevice.findFirst({

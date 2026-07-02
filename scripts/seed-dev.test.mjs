@@ -17,7 +17,10 @@ test("builds a deterministic development seed config", () => {
   assert.equal(config.superadmin.password, "CustomSeed!123");
   assert.equal(config.tenant.name, "Gerpy Demo Gym");
   assert.equal(config.modules.includes("MAINTENANCE"), true);
-  assert.equal(config.permissions.includes("maintenance.manage"), true);
+  assert.equal(config.permissions.includes("maintenance.read"), true);
+  assert.equal(config.permissions.includes("maintenance.write"), true);
+  assert.equal(config.permissions.includes("maintenance.approve"), true);
+  assert.equal(config.permissions.includes("maintenance.admin"), true);
 });
 
 test("uses an explicit demo password outside production when no seed password is configured", () => {

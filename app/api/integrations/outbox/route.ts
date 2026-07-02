@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "integrations" });
+    const context = await requireApiContext({ moduleId: "integrations", method: "GET" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = {

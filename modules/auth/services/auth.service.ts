@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { generateSecret, generateURI, verify } from 'otplib';
 
 import { normalizeEmail, verifyPassword } from '@/lib/auth/password';
+import { buildPermission, PERMISSION_LEVELS } from '@/lib/auth/rbac';
 import { getTenantContext } from '@/lib/auth/tenant-context';
 import type { AuthTokenPayload, TwoFactorChallengePayload } from '@/lib/auth/session';
 import { prisma } from '@/lib/db/prisma';
@@ -10,7 +11,10 @@ import { LoginDTO, RegisterDTO } from '../schemas/auth.schema';
 type SessionPayloadInput = Omit<AuthTokenPayload, 'iat' | 'exp' | 'sub'>;
 
 const DEFAULT_BOOTSTRAP_MODULES = ['DASHBOARD', 'POS'] as const;
-const DEFAULT_BOOTSTRAP_PERMISSIONS = ['dashboard.read', 'pos.manage'] as const;
+const DEFAULT_BOOTSTRAP_PERMISSIONS = [
+  'dashboard.read',
+  ...PERMISSION_LEVELS.map((level) => buildPermission('pos', level)),
+];
 
 function assertActiveTenantContext(context: Awaited<ReturnType<typeof getTenantContext>>) {
   if (!context?.tenantId) {

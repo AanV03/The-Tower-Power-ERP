@@ -1,7 +1,14 @@
 import type { Session } from "next-auth";
 import { auth } from "@/auth";
 import { getTenantContextFromCookies } from "@/lib/auth/server-session";
-import { requireBranchAccess, requireModuleAccess, requirePermission } from "@/lib/auth/rbac";
+import {
+  buildPermission,
+  inferPermissionLevelFromMethod,
+  requireBranchAccess,
+  requireModuleAccess,
+  requirePermission,
+  type PermissionLevel,
+} from "@/lib/auth/rbac";
 import type { TenantContext } from "@/lib/auth/rbac";
 import { ApiError } from "@/lib/api/response";
 import { resolveModuleAccess } from "@/lib/api/module-access";
@@ -69,6 +76,9 @@ async function getCustomTenantContext() {
 export async function requireApiContext(options?: {
   moduleId?: string;
   permission?: string;
+  permissionLevel?: PermissionLevel;
+  request?: Request;
+  method?: string;
   branchId?: string | null;
 }) {
   const customContext = await getCustomTenantContext();
@@ -83,9 +93,13 @@ export async function requireApiContext(options?: {
     if (options?.moduleId) {
       const access = resolveModuleAccess(options.moduleId);
       if (!access) throw new ApiError("Unknown module.", 404, "MODULE_NOT_FOUND");
+      const inferredLevel =
+        options.permissionLevel ??
+        inferPermissionLevelFromMethod(options.method ?? options.request?.method);
+      const permission = options.permission ?? buildPermission(access.permissionPrefix, inferredLevel);
 
       requireModuleAccess(context, access.moduleKey);
-      requirePermission(context, options.permission ?? access.permission);
+      requirePermission(context, permission);
     } else if (options?.permission) {
       requirePermission(context, options.permission);
     }

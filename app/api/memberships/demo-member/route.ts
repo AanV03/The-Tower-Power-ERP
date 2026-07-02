@@ -19,7 +19,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "memberships" });
+    const context = await requireApiContext({ moduleId: "memberships", method: "POST" });
     const body = await request.json().catch(() => ({}));
     const data = DemoMemberSchema.parse(body);
     const branchId = await resolveWritableBranchId(context, data.branchId);

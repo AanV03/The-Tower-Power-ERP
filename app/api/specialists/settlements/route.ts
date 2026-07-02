@@ -45,7 +45,7 @@ function parsePeriodBoundary(value: string, timeZone: string) {
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "specialists" });
+    const context = await requireApiContext({ moduleId: "specialists", method: "GET" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = {
@@ -80,7 +80,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "specialists" });
+    const context = await requireApiContext({ moduleId: "specialists", method: "POST" });
     const data = SpecialistSettlementSchema.parse(await request.json());
 
     if (data.status === SettlementStatus.PAID) {
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "specialists" });
+    const context = await requireApiContext({ moduleId: "specialists", method: "PATCH" });
     const data = UpdateSpecialistSettlementSchema.parse(await request.json());
 
     if (context.branchId) {

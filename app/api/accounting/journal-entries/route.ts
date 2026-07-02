@@ -24,7 +24,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "accounting" });
+    const context = await requireApiContext({ moduleId: "accounting", method: "GET" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = {
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "accounting" });
+    const context = await requireApiContext({ moduleId: "accounting", method: "POST" });
     const data = CreateJournalEntrySchema.parse(await request.json());
 
     const entry = await prisma.journalEntry.create({

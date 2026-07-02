@@ -7,8 +7,44 @@ export type TenantContext = {
   modules: string[];
 };
 
+export const PERMISSION_LEVELS = ["read", "write", "approve", "admin"] as const;
+export type PermissionLevel = (typeof PERMISSION_LEVELS)[number];
+
+const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+function splitPermission(permission: string) {
+  const [prefix, level] = permission.split(".");
+
+  if (!prefix || !level || !PERMISSION_LEVELS.includes(level as PermissionLevel)) {
+    return null;
+  }
+
+  return { prefix, level: level as PermissionLevel };
+}
+
+export function buildPermission(permissionPrefix: string, level: PermissionLevel) {
+  return `${permissionPrefix}.${level}`;
+}
+
+export function inferPermissionLevelFromMethod(method: string | null | undefined): PermissionLevel {
+  if (!method) return "read";
+
+  return READ_METHODS.has(method.toUpperCase()) ? "read" : "write";
+}
+
 export function hasPermission(context: TenantContext | null | undefined, permission: string) {
-  return Boolean(context?.permissions.includes(permission));
+  if (!context) return false;
+
+  if (context.permissions.includes(permission)) return true;
+
+  const requested = splitPermission(permission);
+  if (!requested) return false;
+
+  return context.permissions.some((ownedPermission) => {
+    const owned = splitPermission(ownedPermission);
+
+    return owned?.prefix === requested.prefix && owned.level === "admin";
+  });
 }
 
 export function canAccessModule(context: TenantContext | null | undefined, moduleKey: string) {

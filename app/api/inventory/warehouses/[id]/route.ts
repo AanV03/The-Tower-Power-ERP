@@ -16,7 +16,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "inventory" });
+    const context = await requireApiContext({ moduleId: "inventory", method: "PUT" });
     const { id } = await params;
     const bodyJson = await request.json();
     const data = UpdateWarehouseSchema.parse(bodyJson);
@@ -52,7 +52,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "inventory" });
+    const context = await requireApiContext({ moduleId: "inventory", method: "DELETE" });
     const { id } = await params;
 
     // Verify warehouse belongs to tenant

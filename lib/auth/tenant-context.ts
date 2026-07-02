@@ -1,7 +1,7 @@
 import { ModuleKey, Prisma, RoleScope, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { hashPassword, normalizeEmail } from "@/lib/auth/password";
-import type { TenantContext } from "@/lib/auth/rbac";
+import { buildPermission, PERMISSION_LEVELS, type TenantContext } from "@/lib/auth/rbac";
 
 const DEFAULT_MODULES: ModuleKey[] = [
   ModuleKey.DASHBOARD,
@@ -24,26 +24,9 @@ const DEFAULT_MODULES: ModuleKey[] = [
   ModuleKey.MAINTENANCE,
 ];
 
-const DEFAULT_PERMISSIONS = [
-  "dashboard.read",
-  "memberships.manage",
-  "access.manage",
-  "finance.manage",
-  "pos.manage",
-  "inventory.manage",
-  "hr.manage",
-  "marketing.manage",
-  "specialists.manage",
-  "admin.manage",
-  "catalog.manage",
-  "purchases.manage",
-  "warehouse.manage",
-  "accounting.manage",
-  "payroll.manage",
-  "analytics.manage",
-  "integrations.manage",
-  "maintenance.manage",
-];
+const DEFAULT_PERMISSIONS = DEFAULT_MODULES.flatMap((moduleKey) =>
+  PERMISSION_LEVELS.map((level) => buildPermission(moduleKey.toLowerCase(), level)),
+);
 
 type PrismaTx = Prisma.TransactionClient;
 

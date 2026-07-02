@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    const context = await requireApiContext({ moduleId: "pos" });
+    const context = await requireApiContext({ moduleId: "pos", method: "POST" });
     const payload = createSaleSchema.parse(await req.json());
     const sale = await PosService.executeSale(
       context.tenantId,

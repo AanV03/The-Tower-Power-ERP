@@ -17,7 +17,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "catalog" });
+    const context = await requireApiContext({ moduleId: "catalog", method: "PUT" });
     const { id } = await params;
     const data = UpdateCategorySchema.parse(await request.json());
 
@@ -55,7 +55,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "catalog" });
+    const context = await requireApiContext({ moduleId: "catalog", method: "DELETE" });
     const { id } = await params;
 
     // Verify category belongs to tenant

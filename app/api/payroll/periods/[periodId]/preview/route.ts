@@ -202,7 +202,7 @@ export async function POST(
   { params }: { params: Promise<{ periodId: string }> },
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "payroll" });
+    const context = await requireApiContext({ moduleId: "payroll", method: "POST" });
     const { periodId } = await params;
 
     const result = await prisma.$transaction(async (tx) => {

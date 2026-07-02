@@ -30,26 +30,10 @@ const MODULES = [
   "MAINTENANCE",
 ];
 
-const PERMISSIONS = [
-  "dashboard.read",
-  "memberships.manage",
-  "pos.manage",
-  "access.manage",
-  "catalog.manage",
-  "purchases.manage",
-  "warehouse.manage",
-  "inventory.manage",
-  "finance.manage",
-  "accounting.manage",
-  "hr.manage",
-  "payroll.manage",
-  "specialists.manage",
-  "marketing.manage",
-  "analytics.manage",
-  "admin.manage",
-  "integrations.manage",
-  "maintenance.manage",
-];
+const PERMISSION_LEVELS = ["read", "write", "approve", "admin"];
+const PERMISSIONS = MODULES.flatMap((moduleKey) =>
+  PERMISSION_LEVELS.map((level) => `${moduleKey.toLowerCase()}.${level}`),
+);
 
 export function buildSeedConfig(env = process.env) {
   return {
@@ -275,7 +259,7 @@ async function upsertSuperAdmin(tx, config, tenantId, branchId) {
   });
 
   await tx.userRole.upsert({
-    where: { userId_roleId: { userId: user.id, roleId: role.id } },
+    where: { userId_roleId_branchId: { userId: user.id, roleId: role.id, branchId } },
     update: { branchId },
     create: { userId: user.id, roleId: role.id, branchId },
   });

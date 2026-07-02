@@ -41,7 +41,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "specialists" });
+    const context = await requireApiContext({ moduleId: "specialists", method: "GET" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = {
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "specialists" });
+    const context = await requireApiContext({ moduleId: "specialists", method: "POST" });
     const data = SpecialistSessionSchema.parse(await request.json());
     const branchId = await resolveWritableBranchId(context, data.branchId);
     const branch = await prisma.branch.findFirst({

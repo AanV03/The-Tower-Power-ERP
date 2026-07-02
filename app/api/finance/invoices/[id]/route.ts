@@ -20,7 +20,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const context = await requireApiContext({ moduleId: "finance" });
+    const context = await requireApiContext({ moduleId: "finance", method: "PATCH" });
     const data = UpdateInvoiceSchema.parse(await request.json());
 
     // Verify ownership and existence
@@ -61,7 +61,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const context = await requireApiContext({ moduleId: "finance" });
+    const context = await requireApiContext({ moduleId: "finance", method: "DELETE" });
 
     // Verify ownership
     const invoice = await prisma.invoice.findFirst({

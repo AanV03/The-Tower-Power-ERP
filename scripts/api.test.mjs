@@ -7,12 +7,12 @@ import { resolveModuleAccess } from "../lib/api/module-access.ts";
 test("resolves module ids to Prisma module keys and permissions", () => {
   assert.deepEqual(resolveModuleAccess("memberships"), {
     moduleKey: "MEMBERSHIPS",
-    permission: "memberships.manage",
+    permissionPrefix: "memberships",
   });
 
   assert.deepEqual(resolveModuleAccess("dashboard"), {
     moduleKey: "DASHBOARD",
-    permission: "dashboard.read",
+    permissionPrefix: "dashboard",
   });
 
   assert.equal(resolveModuleAccess("unknown"), null);
@@ -21,42 +21,42 @@ test("resolves module ids to Prisma module keys and permissions", () => {
 test("resolves premium ERP module ids to Prisma module keys and permissions", () => {
   assert.deepEqual(resolveModuleAccess("catalog"), {
     moduleKey: "CATALOG",
-    permission: "catalog.manage",
+    permissionPrefix: "catalog",
   });
 
   assert.deepEqual(resolveModuleAccess("purchases"), {
     moduleKey: "PURCHASES",
-    permission: "purchases.manage",
+    permissionPrefix: "purchases",
   });
 
   assert.deepEqual(resolveModuleAccess("warehouse"), {
     moduleKey: "WAREHOUSE",
-    permission: "warehouse.manage",
+    permissionPrefix: "warehouse",
   });
 
   assert.deepEqual(resolveModuleAccess("accounting"), {
     moduleKey: "ACCOUNTING",
-    permission: "accounting.manage",
+    permissionPrefix: "accounting",
   });
 
   assert.deepEqual(resolveModuleAccess("payroll"), {
     moduleKey: "PAYROLL",
-    permission: "payroll.manage",
+    permissionPrefix: "payroll",
   });
 
   assert.deepEqual(resolveModuleAccess("analytics"), {
     moduleKey: "ANALYTICS",
-    permission: "analytics.manage",
+    permissionPrefix: "analytics",
   });
 
   assert.deepEqual(resolveModuleAccess("integrations"), {
     moduleKey: "INTEGRATIONS",
-    permission: "integrations.manage",
+    permissionPrefix: "integrations",
   });
 
   assert.deepEqual(resolveModuleAccess("maintenance"), {
     moduleKey: "MAINTENANCE",
-    permission: "maintenance.manage",
+    permissionPrefix: "maintenance",
   });
 });
 
