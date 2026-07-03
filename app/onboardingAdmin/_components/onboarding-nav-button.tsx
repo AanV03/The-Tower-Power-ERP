@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,13 @@ export function OnboardingNavButton({
   href,
   variant = "default",
   className,
+  direction = "right",
 }: {
   children: string;
   href: string;
   variant?: "default" | "outline" | "secondary" | "ghost";
   className?: string;
+  direction?: "left" | "right";
 }) {
   const router = useRouter();
 
@@ -25,8 +27,11 @@ export function OnboardingNavButton({
       className={className}
       onClick={() => router.push(href as any)}
     >
+      {direction === "left" && <ArrowLeft aria-hidden="true" />}
+
       {children}
-      <ArrowRight aria-hidden="true" />
+
+      {direction === "right" && <ArrowRight aria-hidden="true" />}
     </Button>
   );
 }

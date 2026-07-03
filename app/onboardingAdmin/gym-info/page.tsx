@@ -57,18 +57,18 @@ export default function GymInfoPage() {
               <div key={field.id} className="space-y-2">
                 <label
                   htmlFor={field.id}
-                  className="text-sm font-medium text-foreground"
+                  className="text-sm font-semibold text-foreground"
                 >
                   {field.label}
                 </label>
                 <div className="relative">
                   <Icon
-                    className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                    className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
                     aria-hidden="true"
                   />
                   <Input
                     id={field.id}
-                    className="pl-8"
+                    className="h-12 border-white/10 bg-background/60 pl-9 shadow-sm placeholder:text-muted-foreground/70"
                     placeholder={field.placeholder}
                   />
                 </div>
@@ -80,6 +80,7 @@ export default function GymInfoPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <OnboardingNavButton
             href="/onboardingAdmin/welcome"
+            direction="left"
             variant="outline"
           >
             Regresar
@@ -95,9 +96,12 @@ export default function GymInfoPage() {
 
 function GymInfoAside() {
   return (
-    <Card size="sm">
+    <Card size="sm" className="border-white/10 bg-card/90 shadow-xl shadow-black/10 backdrop-blur">
       <CardHeader>
-        <CardTitle>Datos editables</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <MapPin className="size-4 text-[var(--brand-orange)]" aria-hidden="true" />
+          Datos editables
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <p className="text-sm leading-6 text-muted-foreground">

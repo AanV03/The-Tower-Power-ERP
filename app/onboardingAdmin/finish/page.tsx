@@ -17,11 +17,11 @@ export default function FinishPage() {
         description="Tu gimnasio ha sido configurado correctamente."
         aside={<FinishAside />}
       >
-        <div className="rounded-md border border-border bg-muted/30 p-6 text-center">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-md bg-accent text-accent-foreground">
+        <div className="rounded-2xl border border-white/10 bg-background/55 p-6 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-(--brand-green)/10 text-(--brand-green)">
             <CheckCircle2 className="size-7" aria-hidden="true" />
           </div>
-          <h2 className="text-xl font-semibold text-foreground">
+          <h2 className="text-xl font-bold text-foreground">
             Configuracion completada
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
@@ -31,7 +31,7 @@ export default function FinishPage() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <OnboardingNavButton href="/onboardingAdmin/plans" variant="outline">
+          <OnboardingNavButton href="/onboardingAdmin/plans" variant="outline" direction="left">
             Regresar
           </OnboardingNavButton>
           <DashboardButton />
@@ -43,21 +43,21 @@ export default function FinishPage() {
 
 function FinishAside() {
   return (
-    <Card size="sm">
+    <Card size="sm" className="border-white/10 bg-card/90 shadow-xl shadow-black/10 backdrop-blur">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <ClipboardCheck className="size-4" aria-hidden="true" />
+          <ClipboardCheck className="size-4 text-(--brand-orange)" aria-hidden="true" />
           Resumen
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Badge variant="secondary" className="rounded-md">
+        <Badge variant="secondary" className="rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
           Gimnasio preparado
         </Badge>
-        <Badge variant="secondary" className="rounded-md">
+        <Badge variant="secondary" className="rounded-full border border-white/10 bg-muted/60 text-muted-foreground">
           Configuracion revisada
         </Badge>
-        <Badge variant="secondary" className="rounded-md">
+        <Badge variant="secondary" className="rounded-full border border-(--brand-orange)/20 bg-(--brand-orange)/10 text-(--brand-orange)">
           Plan seleccionado
         </Badge>
       </CardContent>
