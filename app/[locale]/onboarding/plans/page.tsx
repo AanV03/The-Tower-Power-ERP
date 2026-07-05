@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   OnboardingLayout,
   OnboardingPanel,
-} from "@/app/onboardingAdmin/_components/onboarding-layout";
-import { OnboardingNavButton } from "@/app/onboardingAdmin/_components/onboarding-nav-button";
-import { PlanSelectButton } from "@/app/onboardingAdmin/_components/plan-select-button";
+} from "../_components/onboarding-layout";
+import { OnboardingNavButton } from "../_components/onboarding-nav-button";
+import { PlanSelectButton } from "../_components/plan-select-button";
 
 const plans = [
   {
@@ -91,7 +91,7 @@ export default function PlansPage() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <OnboardingNavButton href="/onboardingAdmin/setup" variant="outline" direction="left">
+          <OnboardingNavButton href="/onboarding/setup" variant="outline" direction="left">
             Regresar
           </OnboardingNavButton>
         </div>

@@ -11,7 +11,7 @@ export function PlanSelectButton() {
     <Button
       type="button"
       className="w-full"
-      onClick={() => router.push("/onboardingAdmin/finish" as any)}
+      onClick={() => router.push("/onboarding/finish" as any)}
     >
       Seleccionar
     </Button>

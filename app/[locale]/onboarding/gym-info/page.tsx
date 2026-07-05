@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import {
   OnboardingLayout,
   OnboardingPanel,
-} from "@/app/onboardingAdmin/_components/onboarding-layout";
-import { OnboardingNavButton } from "@/app/onboardingAdmin/_components/onboarding-nav-button";
+} from "../_components/onboarding-layout";
+import { OnboardingNavButton } from "../_components/onboarding-nav-button";
 
 const fields = [
   {
@@ -79,13 +79,13 @@ export default function GymInfoPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <OnboardingNavButton
-            href="/onboardingAdmin/welcome"
+            href="/onboarding/welcome"
             direction="left"
             variant="outline"
           >
             Regresar
           </OnboardingNavButton>
-          <OnboardingNavButton href="/onboardingAdmin/setup">
+          <OnboardingNavButton href="/onboarding/setup">
             Continuar
           </OnboardingNavButton>
         </div>

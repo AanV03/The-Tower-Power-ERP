@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   OnboardingLayout,
   OnboardingPanel,
-} from "@/app/onboardingAdmin/_components/onboarding-layout";
-import { OnboardingNavButton } from "@/app/onboardingAdmin/_components/onboarding-nav-button";
+} from "../_components/onboarding-layout";
+import { OnboardingNavButton } from "../_components/onboarding-nav-button";
 
 export default function WelcomePage() {
   return (
@@ -34,7 +34,7 @@ export default function WelcomePage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <OnboardingNavButton href="/onboardingAdmin/gym-info">
+          <OnboardingNavButton href="/onboarding/gym-info">
             Comenzar
           </OnboardingNavButton>
         </div>

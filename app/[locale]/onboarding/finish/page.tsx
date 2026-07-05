@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   OnboardingLayout,
   OnboardingPanel,
-} from "@/app/onboardingAdmin/_components/onboarding-layout";
-import { DashboardButton } from "@/app/onboardingAdmin/_components/dashboard-button";
-import { OnboardingNavButton } from "@/app/onboardingAdmin/_components/onboarding-nav-button";
+} from "../_components/onboarding-layout";
+import { DashboardButton } from "../_components/dashboard-button";
+import { OnboardingNavButton } from "../_components/onboarding-nav-button";
 
 export default function FinishPage() {
   return (
@@ -31,7 +31,7 @@ export default function FinishPage() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <OnboardingNavButton href="/onboardingAdmin/plans" variant="outline" direction="left">
+          <OnboardingNavButton href="/onboarding/plans" variant="outline" direction="left">
             Regresar
           </OnboardingNavButton>
           <DashboardButton />

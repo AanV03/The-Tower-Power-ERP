@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   OnboardingLayout,
   OnboardingPanel,
-} from "@/app/onboardingAdmin/_components/onboarding-layout";
-import { OnboardingNavButton } from "@/app/onboardingAdmin/_components/onboarding-nav-button";
+} from "../onboarding/_components/onboarding-layout";
+import { OnboardingNavButton } from "../onboarding/_components/onboarding-nav-button";
 
 const previewItems = [
   "Datos principales del gimnasio",
@@ -40,7 +40,7 @@ export default function OnboardingAdminPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <OnboardingNavButton href="/onboardingAdmin/welcome">
+          <OnboardingNavButton href="/onboarding/welcome">
             Comenzar
           </OnboardingNavButton>
         </div>

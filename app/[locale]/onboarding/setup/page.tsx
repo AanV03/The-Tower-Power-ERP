@@ -11,8 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   OnboardingLayout,
   OnboardingPanel,
-} from "@/app/onboardingAdmin/_components/onboarding-layout";
-import { OnboardingNavButton } from "@/app/onboardingAdmin/_components/onboarding-nav-button";
+} from "../_components/onboarding-layout";
+import { OnboardingNavButton } from "../_components/onboarding-nav-button";
 
 const setupItems = [
   {
@@ -74,13 +74,13 @@ export default function SetupPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <OnboardingNavButton
-            href="/onboardingAdmin/gym-info"
+            href="/onboarding/gym-info"
             direction="left"
             variant="outline"
           >
             Regresar
           </OnboardingNavButton>
-          <OnboardingNavButton href="/onboardingAdmin/plans">
+          <OnboardingNavButton href="/onboarding/plans">
             Continuar
           </OnboardingNavButton>
         </div>

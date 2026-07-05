@@ -48,9 +48,8 @@ const PROTECTED_PAGE_PREFIXES = [
   "/settings",
   "/specialists",
   "/warehouse",
+  "/onboarding",
 ];
-
-const NON_LOCALIZED_PAGE_PREFIXES = ["/onboardingAdmin"];
 
 type MiddlewareAuthContext = {
   userId: string;
@@ -105,13 +104,6 @@ function isPublicAuthApi(pathname: string) {
 function isProtectedPage(pathname: string) {
   const normalizedPath = stripLocale(pathname);
   return PROTECTED_PAGE_PREFIXES.some(
-    (prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`),
-  );
-}
-
-function isNonLocalizedPage(pathname: string) {
-  const normalizedPath = stripLocale(pathname);
-  return NON_LOCALIZED_PAGE_PREFIXES.some(
     (prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`),
   );
 }
@@ -225,20 +217,8 @@ export async function middleware(request: NextRequest) {
   }
 
   const isPublicPage = PUBLIC_PAGES.has(pathname);
-  const nonLocalizedPage = isNonLocalizedPage(pathname);
 
-  if (!pathname.startsWith("/api") && hasLocale(pathname) && nonLocalizedPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = stripLocale(pathname);
-    return NextResponse.redirect(url);
-  }
-
-  if (
-    !pathname.startsWith("/api") &&
-    !isPublicPage &&
-    !nonLocalizedPage &&
-    !hasLocale(pathname)
-  ) {
+  if (!pathname.startsWith("/api") && !isPublicPage && !hasLocale(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = `/${defaultLocale}${pathname}`;
     return NextResponse.redirect(url);
