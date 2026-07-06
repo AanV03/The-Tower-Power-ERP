@@ -9,7 +9,6 @@ import {
   BarChart3,
   CalendarClock,
   CreditCard,
-  Dumbbell,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -89,16 +88,11 @@ export default function Hero() {
 
       <div className="relative z-10 grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[1.03fr_0.97fr]">
         <div className="flex flex-col items-start">
-          <div className="mb-6 inline-flex items-center gap-2 border border-amber-400/25 bg-zinc-950/80 px-3 py-2 text-xs font-bold uppercase tracking-[0.22em] text-amber-400">
-            <Dumbbell className="h-4 w-4" aria-hidden="true" />
-            Gym ERP platform
-          </div>
-
           <h1
             ref={titleRef}
             className="flex max-w-5xl flex-wrap gap-x-3 overflow-hidden px-1 text-[clamp(3.2rem,15vw,7.5rem)] font-black uppercase leading-[0.9] tracking-normal text-white sm:gap-x-4 md:text-[clamp(4.6rem,9vw,8.5rem)]"
           >
-            {"RUN EVERY CLUB".split(" ").map((word, i) => (
+            {"ALL GYM OPS ONE PLATFORM".split(" ").map((word, i) => (
               <span
                 key={i}
                 className="inline-block overflow-hidden py-1 sm:py-2"
@@ -116,9 +110,9 @@ export default function Hero() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-7 text-zinc-300 sm:text-lg md:text-xl">
-            Gerpy centralizes memberships, access control, POS, classes,
-            payroll, inventory, and finance for gyms that need one operating
-            system across every branch.
+            Gerpy brings memberships, billing, access, classes, payroll,
+            stock, and finance into one connected operating layer for fitness
+            teams that move fast across every branch.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
