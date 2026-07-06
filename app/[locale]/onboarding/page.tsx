@@ -20,7 +20,6 @@ export default function OnboardingAdminPage() {
       <OnboardingPanel
         title="¡Bienvenido!"
         description="Vamos a configurar tu gimnasio antes de comenzar."
-        aside={<WelcomeSummary />}
       >
         <div className="grid gap-4 sm:grid-cols-3">
           {previewItems.map((item, index) => (
@@ -39,48 +38,12 @@ export default function OnboardingAdminPage() {
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 bg-black">
           <OnboardingNavButton href="/onboarding/welcome">
             Comenzar
           </OnboardingNavButton>
         </div>
       </OnboardingPanel>
     </OnboardingLayout>
-  );
-}
-
-function WelcomeSummary() {
-  return (
-    <Card size="sm" className="border-white/10 bg-card/90 shadow-xl shadow-black/10 backdrop-blur">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ClipboardList className="size-4 text-[var(--brand-orange)]" aria-hidden="true" />
-          Flujo guiado
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-start gap-3">
-          <Building2 className="mt-0.5 size-4 text-muted-foreground" aria-hidden="true" />
-          <p className="text-sm text-muted-foreground">
-            Captura datos operativos basicos del gimnasio.
-          </p>
-        </div>
-        <div className="flex items-start gap-3">
-          <ClipboardList className="mt-0.5 size-4 text-muted-foreground" aria-hidden="true" />
-          <p className="text-sm text-muted-foreground">
-            Revisa configuraciones iniciales modificables despues.
-          </p>
-        </div>
-        <div className="flex items-start gap-3">
-          <CheckCircle2 className="mt-0.5 size-4 text-muted-foreground" aria-hidden="true" />
-          <p className="text-sm text-muted-foreground">
-            Finaliza y entra al Dashboard.
-          </p>
-        </div>
-        <Badge variant="secondary" className="rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
-          Sin APIs por ahora
-        </Badge>
-      </CardContent>
-    </Card>
   );
 }

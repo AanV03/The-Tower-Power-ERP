@@ -25,16 +25,6 @@ const setupItems = [
     description: "Plantilla visual para turnos, apertura y cierre del gimnasio.",
     icon: CalendarClock,
   },
-  {
-    title: "Membresias",
-    description: "Estructura inicial para planes recurrentes y promociones.",
-    icon: Ticket,
-  },
-  {
-    title: "Metodos de pago",
-    description: "Opciones base para efectivo, tarjeta y transferencias.",
-    icon: CreditCard,
-  },
 ];
 
 export default function SetupPage() {
@@ -43,7 +33,6 @@ export default function SetupPage() {
       <OnboardingPanel
         title="Configuracion inicial"
         description="Estas configuraciones son una vista previa visual. Podras modificarlas posteriormente desde Configuracion."
-        aside={<SetupAside />}
       >
         <div className="grid gap-4 md:grid-cols-2">
           {setupItems.map((item) => {
@@ -80,30 +69,11 @@ export default function SetupPage() {
           >
             Regresar
           </OnboardingNavButton>
-          <OnboardingNavButton href="/onboarding/plans">
+          <OnboardingNavButton href="/onboarding/plans" className="ml-auto bg-black">
             Continuar
           </OnboardingNavButton>
         </div>
       </OnboardingPanel>
     </OnboardingLayout>
-  );
-}
-
-function SetupAside() {
-  return (
-    <Card size="sm" className="border-white/10 bg-card/90 shadow-xl shadow-black/10 backdrop-blur">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Settings className="size-4 text-[var(--brand-orange)]" aria-hidden="true" />
-          Configuracion
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Este paso prepara la estructura para conectar modulos como sucursales,
-          membresias, pagos y horarios cuando exista backend.
-        </p>
-      </CardContent>
-    </Card>
   );
 }

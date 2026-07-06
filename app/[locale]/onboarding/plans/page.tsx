@@ -39,8 +39,7 @@ export default function PlansPage() {
     <OnboardingLayout currentStep={4}>
       <OnboardingPanel
         title="Seleccion de plan"
-        description="Elige una opcion para continuar. Esta pantalla no implementa pago ni validaciones de facturacion."
-        aside={<PlansAside />}
+        description="Elige una opcion para continuar."
       >
         <div className="grid gap-4 lg:grid-cols-3">
           {plans.map((plan) => {
@@ -94,27 +93,11 @@ export default function PlansPage() {
           <OnboardingNavButton href="/onboarding/setup" variant="outline" direction="left">
             Regresar
           </OnboardingNavButton>
+          <OnboardingNavButton href="/onboarding/finish" className="ml-auto bg-black">
+            Continuar
+          </OnboardingNavButton>
         </div>
       </OnboardingPanel>
     </OnboardingLayout>
-  );
-}
-
-function PlansAside() {
-  return (
-    <Card size="sm" className="border-white/10 bg-card/90 shadow-xl shadow-black/10 backdrop-blur">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BriefcaseBusiness className="size-4 text-[var(--brand-orange)]" aria-hidden="true" />
-          Sin pago
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Todos los botones avanzan al cierre del onboarding para validar el
-          flujo de usuario antes de integrar billing.
-        </p>
-      </CardContent>
-    </Card>
   );
 }

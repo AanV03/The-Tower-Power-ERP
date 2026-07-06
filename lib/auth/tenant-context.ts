@@ -91,6 +91,7 @@ async function bootstrapTenantForUser(
       name: workspaceName(input.name, input.email),
       status: "ACTIVE",
       planId: plan.id,
+      brandIdentity: { adminOnboardingCompleted: false },
     },
   });
 

@@ -46,8 +46,7 @@ export default function GymInfoPage() {
     <OnboardingLayout currentStep={2}>
       <OnboardingPanel
         title="Informacion del gimnasio"
-        description="Captura los datos principales de operacion. Por ahora estos campos son solo visuales y no guardan informacion."
-        aside={<GymInfoAside />}
+        description="Captura los datos principales de operacion."
       >
         <div className="grid gap-4 sm:grid-cols-2">
           {fields.map((field) => {
@@ -85,30 +84,11 @@ export default function GymInfoPage() {
           >
             Regresar
           </OnboardingNavButton>
-          <OnboardingNavButton href="/onboarding/setup">
+          <OnboardingNavButton href="/onboarding/setup" className="ml-auto bg-black">
             Continuar
           </OnboardingNavButton>
         </div>
       </OnboardingPanel>
     </OnboardingLayout>
-  );
-}
-
-function GymInfoAside() {
-  return (
-    <Card size="sm" className="border-white/10 bg-card/90 shadow-xl shadow-black/10 backdrop-blur">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="size-4 text-[var(--brand-orange)]" aria-hidden="true" />
-          Datos editables
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Esta informacion podra conectarse despues al tenant, sucursal
-          principal y configuracion fiscal del gimnasio.
-        </p>
-      </CardContent>
-    </Card>
   );
 }

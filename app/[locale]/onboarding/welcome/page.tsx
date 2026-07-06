@@ -13,7 +13,6 @@ export default function WelcomePage() {
       <OnboardingPanel
         title="¡Bienvenido!"
         description="Vamos a configurar tu gimnasio antes de comenzar."
-        aside={<WelcomeAside />}
       >
         <div className="rounded-md border border-border bg-muted/30 p-5">
           <div className="flex items-start gap-4">
@@ -33,31 +32,12 @@ export default function WelcomePage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 bg-black">
           <OnboardingNavButton href="/onboarding/gym-info">
             Comenzar
           </OnboardingNavButton>
         </div>
       </OnboardingPanel>
     </OnboardingLayout>
-  );
-}
-
-function WelcomeAside() {
-  return (
-    <Card size="sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="size-4" aria-hidden="true" />
-          Primer acceso
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Simula la experiencia posterior al Signup sin modificar el registro
-          actual ni su logica existente.
-        </p>
-      </CardContent>
-    </Card>
   );
 }
