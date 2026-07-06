@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import BackgroundGrid from "@/components/BackgroundGrid";
+import { MultiStateBadge, type BadgeState } from "@/components/ui/multi-state-badge";
 import { cn } from "@/lib/utils";
 
 type RegisterField = "gymName" | "name" | "email" | "password" | "confirm";
@@ -127,6 +128,10 @@ function Spinner() {
   );
 }
 
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 interface InputFieldProps {
   id: string;
   label: string;
@@ -210,6 +215,7 @@ export default function RegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] = useState(false);
+  const [submitBadgeState, setSubmitBadgeState] = useState<BadgeState>("idle");
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState(emptyErrors);
   const [setupQrCodeDataUrl, setSetupQrCodeDataUrl] = useState("");
@@ -295,8 +301,12 @@ export default function RegisterPage() {
     setFormError("");
     setTouched({ gymName: true, name: true, email: true, password: true, confirm: true });
 
-    if (!validateClient()) return;
+    if (!validateClient()) {
+      setSubmitBadgeState("error");
+      return;
+    }
 
+    setSubmitBadgeState("processing");
     setIsLoading(true);
 
     try {
@@ -314,10 +324,16 @@ export default function RegisterPage() {
 
       if (!response.ok) {
         applyServerErrors(payload);
+        setSubmitBadgeState("error");
         return;
       }
 
+      setSubmitBadgeState("success");
+      await wait(450);
       await startTwoFactorSetup();
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Registration failed. Please try again.");
+      setSubmitBadgeState("error");
     } finally {
       setIsLoading(false);
     }
@@ -449,7 +465,10 @@ export default function RegisterPage() {
                 label="Gym name"
                 placeholder="Forge Gym"
                 value={gymName}
-                onChange={setGymName}
+                onChange={(value) => {
+                  setGymName(value);
+                  setSubmitBadgeState("idle");
+                }}
                 onBlur={() => handleBlur("gymName")}
                 hasError={!!fieldErrors.gymName}
                 error={fieldErrors.gymName}
@@ -463,7 +482,10 @@ export default function RegisterPage() {
                 label="Full name"
                 placeholder="Alex Rivera"
                 value={name}
-                onChange={setName}
+                onChange={(value) => {
+                  setName(value);
+                  setSubmitBadgeState("idle");
+                }}
                 onBlur={() => handleBlur("name")}
                 hasError={!!fieldErrors.name}
                 error={fieldErrors.name}
@@ -478,7 +500,10 @@ export default function RegisterPage() {
                 type="email"
                 placeholder="you@gym.com"
                 value={email}
-                onChange={setEmail}
+                onChange={(value) => {
+                  setEmail(value);
+                  setSubmitBadgeState("idle");
+                }}
                 onBlur={() => handleBlur("email")}
                 hasError={!!fieldErrors.email}
                 error={fieldErrors.email}
@@ -501,7 +526,10 @@ export default function RegisterPage() {
                     autoComplete="new-password"
                     placeholder="Create a secure password"
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      setSubmitBadgeState("idle");
+                    }}
                     onBlur={() => handleBlur("password")}
                     aria-invalid={fieldErrors.password ? "true" : "false"}
                     aria-describedby="register-password-rules"
@@ -557,7 +585,10 @@ export default function RegisterPage() {
                     autoComplete="new-password"
                     placeholder="Repeat your password"
                     value={confirm}
-                    onChange={(event) => setConfirm(event.target.value)}
+                    onChange={(event) => {
+                      setConfirm(event.target.value);
+                      setSubmitBadgeState("idle");
+                    }}
                     onBlur={() => handleBlur("confirm")}
                     aria-invalid={fieldErrors.confirm ? "true" : "false"}
                     aria-describedby={fieldErrors.confirm ? "register-confirm-error" : undefined}
@@ -601,30 +632,35 @@ export default function RegisterPage() {
                 </p>
               )}
 
-              <button
-                id="register-submit"
-                type="submit"
-                disabled={isLoading}
-                className={cn(
-                  "relative mt-2 h-10 w-full rounded-lg text-sm font-semibold text-white outline-none transition-all duration-200",
-                  "focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
-                  "hover:brightness-110 active:scale-[0.99]",
-                  "disabled:cursor-not-allowed disabled:opacity-60",
-                )}
-                style={{ background: "var(--brand-orange)" }}
-              >
-                {isLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Spinner />
-                    Creating account...
-                  </span>
-                ) : (
-                  <span className="flex items-center justify-center gap-2">
-                    <UserPlus className="size-4" aria-hidden="true" />
-                    Create account
-                  </span>
-                )}
-              </button>
+              <div className="space-y-2">
+                <button
+                  id="register-submit"
+                  type="submit"
+                  disabled={isLoading}
+                  className={cn(
+                    "relative mt-2 h-10 w-full rounded-lg text-sm font-semibold text-white outline-none transition-all duration-200",
+                    "focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
+                    "hover:brightness-110 active:scale-[0.99]",
+                    "disabled:cursor-not-allowed disabled:opacity-60",
+                  )}
+                  style={{ background: "var(--brand-orange)" }}
+                >
+                  {isLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Spinner />
+                      Creating account...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <UserPlus className="size-4" aria-hidden="true" />
+                      Create account
+                    </span>
+                  )}
+                </button>
+                <div className="flex justify-end">
+                  <MultiStateBadge state={submitBadgeState} />
+                </div>
+              </div>
             </form>
             )}
           </div>

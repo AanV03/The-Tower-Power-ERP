@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, Dumbbell, Eye, EyeOff, KeyRound, LogIn } from "lucide-react";
 
 import BackgroundGrid from "@/components/BackgroundGrid";
+import { MultiStateBadge, type BadgeState } from "@/components/ui/multi-state-badge";
 import { cn } from "@/lib/utils";
 
 type LoginPayload = {
@@ -78,6 +79,10 @@ function Spinner() {
   );
 }
 
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [redirectTo, setRedirectTo] = useState("/es/dashboard");
@@ -91,6 +96,7 @@ export default function LoginPage() {
   const [touched, setTouched] = useState({ email: false, password: false });
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [submitBadgeState, setSubmitBadgeState] = useState<BadgeState>("idle");
 
   useEffect(() => {
     setRedirectTo(safeRedirect(new URLSearchParams(window.location.search).get("next")));
@@ -128,8 +134,12 @@ export default function LoginPage() {
     setFormError(null);
     setTouched({ email: true, password: true });
 
-    if (!isFormValid) return;
+    if (!isFormValid) {
+      setSubmitBadgeState("error");
+      return;
+    }
 
+    setSubmitBadgeState("processing");
     setIsLoading(true);
 
     try {
@@ -142,10 +152,12 @@ export default function LoginPage() {
 
       if (!response.ok) {
         setFormError(payload?.message ?? copy.invalidCredentials);
+        setSubmitBadgeState("error");
         return;
       }
 
       if (payload?.twoFactorRequired) {
+        setSubmitBadgeState("success");
         setTwoFactorRequired(true);
         setPassword("");
         return;
@@ -153,13 +165,17 @@ export default function LoginPage() {
 
       if (payload?.twoFactorSetupRequired) {
         await startTwoFactorSetup();
+        setSubmitBadgeState("success");
         setPassword("");
         return;
       }
 
+      setSubmitBadgeState("success");
+      await wait(450);
       await completeLogin();
     } catch (error) {
       setFormError(error instanceof Error ? error.message : copy.invalidCredentials);
+      setSubmitBadgeState("error");
     } finally {
       setIsLoading(false);
     }
@@ -336,7 +352,10 @@ export default function LoginPage() {
                     autoComplete="email"
                     placeholder={copy.emailPlaceholder}
                     value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    onChange={(event) => {
+                      setEmail(event.target.value);
+                      setSubmitBadgeState("idle");
+                    }}
                     onBlur={() => handleBlur("email")}
                     aria-invalid={emailEmpty || emailInvalid ? "true" : "false"}
                     aria-describedby={emailEmpty || emailInvalid ? "login-email-error" : undefined}
@@ -363,7 +382,10 @@ export default function LoginPage() {
                       autoComplete="current-password"
                       placeholder={copy.passwordPlaceholder}
                       value={password}
-                      onChange={(event) => setPassword(event.target.value)}
+                      onChange={(event) => {
+                        setPassword(event.target.value);
+                        setSubmitBadgeState("idle");
+                      }}
                       onBlur={() => handleBlur("password")}
                       aria-invalid={passwordError ? "true" : "false"}
                       aria-describedby={passwordError ? "login-password-error" : undefined}
@@ -396,37 +418,42 @@ export default function LoginPage() {
 
                 <div className="flex justify-end">
                   <Link
-                    href="#"
+                    href="/password-recovery"
                     className="text-xs text-zinc-400 underline-offset-4 transition-colors hover:text-white hover:underline"
                   >
                     {copy.forgotPassword}
                   </Link>
                 </div>
 
-                <button
-                  id="login-submit"
-                  type="submit"
-                  disabled={isLoading}
-                  className={cn(
-                    "relative h-10 w-full rounded-lg text-sm font-semibold text-white outline-none transition-all duration-200",
-                    "focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
-                    "hover:brightness-110 active:scale-[0.99]",
-                    "disabled:cursor-not-allowed disabled:opacity-60",
-                  )}
-                  style={{ background: "var(--brand-orange)" }}
-                >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Spinner />
-                      {copy.loading}
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <LogIn className="size-4" aria-hidden="true" />
-                      {copy.submit}
-                    </span>
-                  )}
-                </button>
+                <div className="space-y-2">
+                  <button
+                    id="login-submit"
+                    type="submit"
+                    disabled={isLoading}
+                    className={cn(
+                      "relative h-10 w-full rounded-lg text-sm font-semibold text-white outline-none transition-all duration-200",
+                      "focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
+                      "hover:brightness-110 active:scale-[0.99]",
+                      "disabled:cursor-not-allowed disabled:opacity-60",
+                    )}
+                    style={{ background: "var(--brand-orange)" }}
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Spinner />
+                        {copy.loading}
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-2">
+                        <LogIn className="size-4" aria-hidden="true" />
+                        {copy.submit}
+                      </span>
+                    )}
+                  </button>
+                  <div className="flex justify-end">
+                    <MultiStateBadge state={submitBadgeState} />
+                  </div>
+                </div>
               </form>
             ) : (
               <form id="login-2fa-form" onSubmit={handleTwoFactorVerify} noValidate className="space-y-5">
