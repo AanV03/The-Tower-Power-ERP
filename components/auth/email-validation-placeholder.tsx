@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { Clock, Dumbbell } from "lucide-react";
 
-import BackgroundGrid from "@/components/BackgroundGrid";
+import { AuthShell } from "@/components/layout/auth-shell";
 
 function homeHref(locale?: string) {
   return (locale ? `/${locale}` : "/") as Route;
@@ -10,10 +10,7 @@ function homeHref(locale?: string) {
 
 export function EmailValidationPlaceholder({ locale }: { locale?: string }) {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-950 px-4 py-12 text-white">
-      <BackgroundGrid />
-      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-zinc-950" />
-
+    <AuthShell>
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <div
@@ -56,6 +53,6 @@ export function EmailValidationPlaceholder({ locale }: { locale?: string }) {
           </div>
         </div>
       </div>
-    </main>
+    </AuthShell>
   );
 }

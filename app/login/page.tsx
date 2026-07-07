@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Dumbbell, Eye, EyeOff, KeyRound, LogIn } from "lucide-react";
 
-import BackgroundGrid from "@/components/BackgroundGrid";
+import { AuthShell } from "@/components/layout/auth-shell";
 import { MultiStateBadge, type BadgeState } from "@/components/ui/multi-state-badge";
 import { cn } from "@/lib/utils";
 
@@ -242,13 +242,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main
-      id="login-page"
-      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-950 px-4 py-12 text-white"
-    >
-      <BackgroundGrid />
-      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-zinc-950" />
-
+    <AuthShell id="login-page">
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <div
@@ -533,6 +527,6 @@ export default function LoginPage() {
           )}
         </div>
       </div>
-    </main>
+    </AuthShell>
   );
 }

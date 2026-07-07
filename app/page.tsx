@@ -3,10 +3,7 @@ import ClassGrid from "@/components/ClassGrid";
 import KineticTicker from "@/components/KineticTicker"; // Import the new ticker
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
-import Link from "next/link";
-import type { Route } from "next";
 import {
-  ArrowRight,
   BadgeDollarSign,
   BarChart3,
   Boxes,
@@ -67,7 +64,7 @@ const platformFeatures = [
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen w-full bg-zinc-950 overflow-hidden">
+    <main className="relative min-h-screen w-full overflow-x-clip bg-zinc-950">
       <LandingNavbar />
       <Hero />
 
@@ -77,19 +74,19 @@ export default function Home() {
             <span className="block font-mono text-xs uppercase tracking-[0.24em] text-amber-500">
               {"// ONE-CLICK OPERATIONS"}
             </span>
-            <h2 className="mt-3 text-3xl font-black uppercase leading-none tracking-normal text-white sm:text-4xl">
+            <h2 className="mt-3 text-3xl font-black uppercase leading-tight tracking-normal text-white sm:text-4xl sm:leading-none">
               Apps for every gym workflow
             </h2>
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
             {appPills.map(({ label, icon: Icon }) => (
               <a
                 key={label}
                 href="#modules"
-                className="group flex min-h-20 items-center gap-3 border border-white/10 bg-zinc-900/60 px-3 py-3 transition-colors hover:border-amber-400/50 hover:bg-amber-400/10"
+                className="group flex min-h-20 min-w-0 items-center gap-3 border border-white/10 bg-zinc-900/60 px-3 py-3 transition-colors hover:border-amber-400/50 hover:bg-amber-400/10"
               >
                 <Icon className="h-5 w-5 text-amber-400" aria-hidden="true" />
-                <span className="text-xs font-black uppercase tracking-[0.14em] text-zinc-200 group-hover:text-white">
+                <span className="min-w-0 text-xs font-black uppercase tracking-[0.1em] text-zinc-200 group-hover:text-white sm:tracking-[0.14em]">
                   {label}
                 </span>
               </a>
@@ -104,7 +101,7 @@ export default function Home() {
             <span className="mb-2 block font-mono text-sm uppercase tracking-widest text-amber-500">
               {"// BUILT FOR GYM OPERATIONS"}
             </span>
-            <h2 className="text-[clamp(2.5rem,10vw,4.5rem)] font-black uppercase leading-none tracking-normal text-white">
+            <h2 className="text-[clamp(2.25rem,9vw,4.5rem)] font-black uppercase leading-none tracking-normal text-white">
               Choose the workflow. Gerpy connects the rest.
             </h2>
           </div>
@@ -124,7 +121,7 @@ export default function Home() {
           <span className="mb-2 block font-mono text-sm uppercase tracking-widest text-amber-500">
             {"// MULTI-BRANCH CONTROL"}
           </span>
-          <h2 className="text-[clamp(2.25rem,8vw,4.25rem)] font-black uppercase leading-none tracking-normal text-white">
+          <h2 className="text-[clamp(2rem,8vw,4.25rem)] font-black uppercase leading-none tracking-normal text-white">
             Know what is happening before it becomes a problem
           </h2>
         </div>
@@ -150,7 +147,7 @@ export default function Home() {
             <span className="mb-2 block font-mono text-sm uppercase tracking-widest text-amber-500">
               {"// IMAGINE WITHOUT GERPY"}
             </span>
-            <h2 className="text-[clamp(2.25rem,8vw,4.25rem)] font-black uppercase leading-none tracking-normal text-white">
+            <h2 className="text-[clamp(2rem,8vw,4.25rem)] font-black uppercase leading-none tracking-normal text-white">
               Fewer tabs. Fewer handoffs. Cleaner decisions.
             </h2>
             <p className="mt-5 max-w-xl text-base leading-7 text-zinc-400 sm:text-lg">
@@ -161,12 +158,12 @@ export default function Home() {
           </div>
 
           <div className="border border-white/10 bg-zinc-950 p-4 sm:p-6">
-            <div className="mb-5 flex items-center justify-between border-b border-white/10 pb-4">
+            <div className="mb-5 flex items-center justify-between gap-4 border-b border-white/10 pb-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-400">
                   Workflow chain
                 </p>
-                <h3 className="mt-2 text-2xl font-black uppercase text-white">
+                <h3 className="mt-2 text-xl font-black uppercase text-white sm:text-2xl">
                   From signup to payout
                 </h3>
               </div>
@@ -197,7 +194,7 @@ export default function Home() {
           <span className="mb-2 block font-mono text-sm uppercase tracking-widest text-amber-500">
             {"// ALL THE TECH IN ONE PLATFORM"}
           </span>
-          <h2 className="text-[clamp(2.25rem,8vw,4.25rem)] font-black uppercase leading-none tracking-normal text-white">
+          <h2 className="text-[clamp(2rem,8vw,4.25rem)] font-black uppercase leading-none tracking-normal text-white">
             Built like command software, not a marketing dashboard
           </h2>
         </div>
@@ -227,27 +224,20 @@ export default function Home() {
             <p className="text-sm font-black uppercase tracking-[0.2em]">
               Trusted by ambitious gym operators
             </p>
-            <h2 className="mt-3 max-w-4xl text-[clamp(2.25rem,8vw,4.5rem)] font-black uppercase leading-none tracking-normal">
+            <h2 className="mt-3 max-w-4xl text-[clamp(2rem,8vw,4.5rem)] font-black uppercase leading-none tracking-normal">
               Join the teams replacing scattered tools with one operating system
             </h2>
           </div>
           <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[420px]">
             {["No credit card", "Instant demo data", "Branch-ready"].map((item) => (
-              <div key={item} className="flex items-center gap-2 border border-black/20 bg-black/10 px-4 py-3">
+              <div key={item} className="flex min-w-0 items-center gap-2 border border-black/20 bg-black/10 px-4 py-3">
                 <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-                <span className="text-sm font-black uppercase tracking-[0.12em]">
+                <span className="min-w-0 text-sm font-black uppercase tracking-[0.08em] sm:tracking-[0.12em]">
                   {item}
                 </span>
               </div>
             ))}
           </div>
-          <Link
-            href={"/register" as Route}
-            className="inline-flex min-h-12 w-fit items-center justify-center gap-2 bg-black px-6 text-sm font-black uppercase tracking-[0.16em] text-white transition-colors hover:bg-zinc-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
-          >
-            Start setup
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
         </div>
       </section>
 

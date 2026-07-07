@@ -5,7 +5,7 @@ import type { Route } from "next";
 import { useState, type FormEvent } from "react";
 import { AlertCircle, CheckCircle2, Dumbbell, Mail } from "lucide-react";
 
-import BackgroundGrid from "@/components/BackgroundGrid";
+import { AuthShell } from "@/components/layout/auth-shell";
 import { cn } from "@/lib/utils";
 
 function validateEmail(email: string) {
@@ -73,10 +73,7 @@ export function PasswordRecoveryForm() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-950 px-4 py-12 text-white">
-      <BackgroundGrid />
-      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-zinc-950" />
-
+    <AuthShell>
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <div
@@ -170,6 +167,6 @@ export function PasswordRecoveryForm() {
           </div>
         </div>
       </div>
-    </main>
+    </AuthShell>
   );
 }

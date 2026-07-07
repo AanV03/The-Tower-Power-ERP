@@ -52,7 +52,7 @@ export default function ClassGrid() {
       {modules.map(({ icon: Icon, ...item }) => (
         <article
           key={item.title}
-          className="group flex min-h-72 flex-col justify-between border border-zinc-800 bg-zinc-900 p-5 transition-transform duration-300 hover:-translate-y-2 hover:border-amber-500/45 sm:min-h-80 sm:p-6 lg:min-h-[420px] lg:p-8"
+          className="group flex min-h-72 min-w-0 flex-col justify-between border border-zinc-800 bg-zinc-900 p-5 transition-transform duration-300 hover:-translate-y-2 hover:border-amber-500/45 sm:min-h-80 sm:p-6 lg:min-h-[420px] lg:p-8"
         >
           <div>
             <div className="mb-8 flex h-12 w-12 items-center justify-center border border-amber-400/30 bg-amber-400/10 text-amber-400">

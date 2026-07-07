@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import type { Route } from "next";
 import { useEffect, useRef } from "react";
 import {
   Activity,
@@ -75,7 +73,7 @@ export default function Hero() {
   return (
     <section
       ref={containerRef}
-      className="relative h-screen w-full overflow-hidden bg-zinc-950 flex items-center justify-center"
+      className="relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-zinc-950 px-4 py-28 sm:px-6 sm:py-32 lg:px-8"
     >
       {/* Layer 1 */}
       <BackgroundGrid />
@@ -87,10 +85,10 @@ export default function Hero() {
       <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-zinc-950 z-[2]" />
 
       <div className="relative z-10 grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[1.03fr_0.97fr]">
-        <div className="flex flex-col items-start">
+        <div className="flex min-w-0 flex-col items-start">
           <h1
             ref={titleRef}
-            className="flex max-w-5xl flex-wrap gap-x-3 overflow-hidden px-1 text-[clamp(3.2rem,15vw,7.5rem)] font-black uppercase leading-[0.9] tracking-normal text-white sm:gap-x-4 md:text-[clamp(4.6rem,9vw,8.5rem)]"
+            className="flex max-w-5xl flex-wrap gap-x-2 overflow-hidden px-1 text-[clamp(2.65rem,14vw,7.5rem)] font-black uppercase leading-[0.92] tracking-normal text-white sm:gap-x-4 sm:text-[clamp(3.7rem,10vw,8rem)] lg:text-[clamp(4.6rem,8.6vw,8.5rem)]"
           >
             {"ALL GYM OPS ONE PLATFORM".split(" ").map((word, i) => (
               <span
@@ -114,21 +112,6 @@ export default function Hero() {
             stock, and finance into one connected operating layer for fitness
             teams that move fast across every branch.
           </p>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href={"/en/dashboard" as Route}
-              className="inline-flex min-h-12 items-center justify-center rounded-lg bg-amber-500 px-6 py-3 text-sm font-bold uppercase tracking-wider text-black transition-colors duration-300 hover:bg-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300"
-            >
-              View dashboard
-            </Link>
-            <Link
-              href={"/register" as Route}
-              className="inline-flex min-h-12 items-center justify-center rounded-lg border border-white/15 bg-white/5 px-6 py-3 text-sm font-bold uppercase tracking-wider text-white transition-colors duration-300 hover:border-amber-400/50 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300"
-            >
-              Start setup
-            </Link>
-          </div>
 
           <div className="mt-10 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
             {heroStats.map((stat) => (

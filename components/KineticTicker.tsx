@@ -39,7 +39,7 @@ export default function KineticTicker() {
     >
       <div
         ref={textRef}
-        className="whitespace-nowrap text-[12vw] md:text-[10vw] font-black uppercase tracking-tighter text-zinc-950 will-change-transform flex gap-8 md:gap-16 px-4"
+        className="flex gap-8 whitespace-nowrap px-4 text-[14vw] font-black uppercase tracking-normal text-zinc-950 will-change-transform sm:text-[12vw] md:gap-16 md:text-[10vw]"
       >
         <span>Members. Payments. Access. Stock. Payroll.</span>
         <span
