@@ -151,9 +151,43 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
       return dateStr;
     }
   };
-
   return (
     <div className="mx-auto max-w-5xl space-y-8">
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes weightPlateStack {
+          0% { transform: translateY(-10px) scale(0.95); opacity: 0; }
+          100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes heartPump {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.03); }
+          100% { transform: scale(1); }
+        }
+        @keyframes dialRotate {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .animate-plate-x {
+          animation: weightPlateStack 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          opacity: 0;
+        }
+        .animate-plate-delay-1 { animation-delay: 0.1s; }
+        .animate-plate-delay-2 { animation-delay: 0.2s; }
+        
+        .gym-avatar-ring::before {
+          content: '';
+          position: absolute;
+          inset: -6px;
+          border-radius: 50%;
+          border: 2px dashed rgba(251,133,0,0.5);
+          animation: dialRotate 15s linear infinite;
+          pointer-events: none;
+        }
+        .hover-pump:hover {
+          animation: heartPump 0.8s ease-in-out infinite;
+        }
+      `}} />
+
       {/* Hidden file input */}
       <input
         type="file"
@@ -163,20 +197,20 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
         className="hidden"
       />
 
-      {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-card p-6 shadow-xl">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(251,133,0,0.12),transparent_24rem)]" />
+      {/* Premium Header - Glassmorphism aligned with Panel Operativo */}
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-md text-card-foreground animate-plate-x">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(251,133,0,0.12),transparent_35rem)]" />
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center">
           
-          {/* Avatar circular interactive */}
+          {/* Avatar circular interactive with clean brand ring */}
           <button 
             type="button"
             onClick={handleAvatarClick}
-            className="relative group self-center md:self-auto cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="relative group self-center md:self-auto cursor-pointer rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary p-1 bg-gradient-to-tr from-[var(--brand-orange)]/40 via-transparent to-[var(--brand-orange)]/10 ring-4 ring-[var(--brand-orange)]/15 shadow-[0_0_15px_rgba(251,133,0,0.1)] gym-avatar-ring hover-pump"
             aria-label={locale === "es" ? "Cambiar foto de perfil" : "Change profile picture"}
             title={locale === "es" ? "Cambiar foto de perfil" : "Change profile picture"}
           >
-            <div className="size-24 overflow-hidden rounded-full border-2 border-primary/40 bg-zinc-800 transition-all group-hover:border-primary group-hover:scale-105 duration-200">
+            <div className="size-24 overflow-hidden rounded-full border-4 border-background bg-muted shadow-md">
               {imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -191,24 +225,24 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
               )}
             </div>
             {/* Upload Overlay hover */}
-            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               <Camera className="size-6 text-white" />
             </div>
-            <div className="absolute -bottom-1 -right-1 rounded-full bg-primary p-1.5 text-black shadow-md">
-              <Camera className="size-4" />
+            <div className="absolute bottom-0 right-0 rounded-full bg-primary p-1.5 text-black shadow-md border-2 border-background">
+              <Camera className="size-3.5" />
             </div>
           </button>
 
-          <div className="space-y-1 text-center md:text-left">
-            <h2 className="text-2xl font-bold text-foreground">{user.name || "Usuario Gerpy"}</h2>
+          <div className="space-y-2 text-center md:text-left">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">{user.name || "Usuario Gerpy"}</h2>
             <p className="text-sm text-muted-foreground">{user.email}</p>
             <div className="mt-2 flex flex-wrap justify-center gap-2 md:justify-start">
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary border border-primary/20">
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20 shadow-sm">
                 <CheckCircle className="size-3" />
                 {user.role}
               </span>
               {user.branchName && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-0.5 text-xs text-muted-foreground border border-white/10">
+                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground border border-border shadow-sm">
                   <Building className="size-3" />
                   {user.branchName}
                 </span>
@@ -221,19 +255,24 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
       <div className="grid gap-6 md:grid-cols-3">
         {/* Contact info form */}
         <div className="md:col-span-2">
-          <Card className="border-white/10 bg-card/60 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserIcon className="size-5 text-primary" />
-                {t.personalInfo}
-              </CardTitle>
-              <CardDescription>{t.personalDesc}</CardDescription>
+          <Card className="relative overflow-hidden border-border bg-card text-card-foreground shadow-md animate-plate-x animate-plate-delay-1">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(251,133,0,0.06),transparent_22rem)]" />
+            <CardHeader className="relative border-b border-border pb-5 flex flex-row items-center gap-4 space-y-0">
+              <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                <UserIcon className="size-5" />
+              </div>
+              <div className="space-y-0.5">
+                <CardTitle className="text-lg font-bold text-foreground">
+                  {t.personalInfo}
+                </CardTitle>
+                <CardDescription className="text-muted-foreground text-xs">{t.personalDesc}</CardDescription>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative pt-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground" htmlFor="firstName">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" htmlFor="firstName">
                       {t.firstNameLabel}
                     </label>
                     <Input
@@ -243,11 +282,12 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
                       placeholder="John"
                       disabled={isSubmitting}
                       required
+                      className="border-input bg-background/55 focus:border-primary/80 focus:ring-primary/20 text-foreground transition-all duration-200 hover:border-muted-foreground/30 focus-visible:ring-[var(--brand-orange)]/15 focus-visible:border-[var(--brand-orange)]/60"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground" htmlFor="lastName">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" htmlFor="lastName">
                       {t.lastNameLabel}
                     </label>
                     <Input
@@ -257,13 +297,14 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
                       placeholder="Doe"
                       disabled={isSubmitting}
                       required
+                      className="border-input bg-background/55 focus:border-primary/80 focus:ring-primary/20 text-foreground transition-all duration-200 hover:border-muted-foreground/30 focus-visible:ring-[var(--brand-orange)]/15 focus-visible:border-[var(--brand-orange)]/60"
                     />
                   </div>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground" htmlFor="email">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" htmlFor="email">
                       {t.emailLabel}
                     </label>
                     <div className="relative">
@@ -272,14 +313,14 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
                         name="email"
                         defaultValue={user.email ?? ""}
                         disabled
-                        className="bg-zinc-900/50 pr-10 text-muted-foreground cursor-not-allowed"
+                        className="bg-muted border-border pr-10 text-muted-foreground cursor-not-allowed"
                       />
-                      <Mail className="absolute right-3 top-3 size-4 text-zinc-500" />
+                      <Mail className="absolute right-3 top-3 size-4 text-muted-foreground/60" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground" htmlFor="phone">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" htmlFor="phone">
                       {t.phoneLabel}
                     </label>
                     <div className="relative">
@@ -290,14 +331,15 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
                         defaultValue={user.phone ?? ""}
                         placeholder="+52 55 1234 5678"
                         disabled={isSubmitting}
+                        className="border-input bg-background/55 focus:border-primary/80 focus:ring-primary/20 text-foreground transition-all duration-200 hover:border-muted-foreground/30 focus-visible:ring-[var(--brand-orange)]/15 focus-visible:border-[var(--brand-orange)]/60"
                       />
-                      <Phone className="absolute right-3 top-3 size-4 text-zinc-500" />
+                      <Phone className="absolute right-3 top-3 size-4 text-muted-foreground/60" />
                     </div>
                   </div>
                 </div>
 
                 <div className="flex justify-end pt-2">
-                  <Button type="submit" disabled={isSubmitting} className="min-w-[150px]">
+                  <Button type="submit" disabled={isSubmitting} className="min-w-[150px] bg-[var(--brand-orange)] text-black font-bold hover:brightness-110 transition-all shadow-lg duration-150 hover-pump">
                     {isSubmitting ? t.saving : <Save className="mr-2 size-4" />}
                     {isSubmitting ? "" : t.saveButton}
                   </Button>
@@ -307,54 +349,88 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
           </Card>
         </div>
 
-        {/* Read-Only work details */}
+        {/* Read-Only work details - Styled like Alerts / Operational Status */}
         <div>
-          <Card className="border-white/10 bg-card/60 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="size-5 text-primary" />
-                {t.workInfo}
-              </CardTitle>
-              <CardDescription>{t.workDesc}</CardDescription>
+          <Card className="relative overflow-hidden border-border bg-card text-card-foreground shadow-md animate-plate-x animate-plate-delay-2">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_90%_0%,rgba(251,133,0,0.06),transparent_22rem)]" />
+            <CardHeader className="relative border-b border-border pb-5 flex flex-row items-center gap-4 space-y-0">
+              <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                <Briefcase className="size-5" />
+              </div>
+              <div className="space-y-0.5">
+                <CardTitle className="text-lg font-bold text-foreground">
+                  {t.workInfo}
+                </CardTitle>
+                <CardDescription className="text-muted-foreground text-xs">{t.workDesc}</CardDescription>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t.tenantLabel}
-                </span>
-                <p className="text-sm font-medium text-foreground">{user.tenantName || "-"}</p>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t.branchLabel}
-                </span>
-                <p className="text-sm font-medium text-foreground">{user.branchName || "-"}</p>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t.positionLabel}
-                </span>
-                <p className="text-sm font-medium text-foreground">{user.employee?.position || "-"}</p>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t.hireDateLabel}
-                </span>
-                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                  <Calendar className="size-4 text-zinc-500" />
-                  {formatDate(user.employee?.hireDate ?? null)}
+            <CardContent className="relative space-y-4 pt-6">
+              
+              {/* Organization */}
+              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                  <Building className="size-5" />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    {t.tenantLabel}
+                  </span>
+                  <p className="text-sm font-semibold text-foreground">{user.tenantName || "-"}</p>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t.roleLabel}
-                </span>
-                <p className="text-sm font-medium text-primary">{user.role}</p>
+              {/* Branch */}
+              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                  <Building className="size-5" />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    {t.branchLabel}
+                  </span>
+                  <p className="text-sm font-semibold text-foreground">{user.branchName || "-"}</p>
+                </div>
               </div>
+
+              {/* Position */}
+              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                  <Briefcase className="size-5" />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    {t.positionLabel}
+                  </span>
+                  <p className="text-sm font-semibold text-foreground">{user.employee?.position || "-"}</p>
+                </div>
+              </div>
+
+              {/* Hire Date */}
+              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                  <Calendar className="size-5" />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    {t.hireDateLabel}
+                  </span>
+                  <p className="text-sm font-semibold text-foreground">{formatDate(user.employee?.hireDate ?? null)}</p>
+                </div>
+              </div>
+
+              {/* Assigned Role */}
+              <div className="group/row flex items-center gap-4 rounded-xl border border-primary/20 bg-primary/5 p-3.5 hover:bg-primary/10 transition-all duration-200 shadow-sm shadow-primary/5">
+                <div className="bg-primary/20 text-primary p-2.5 rounded-xl">
+                  <CheckCircle className="size-5" />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary/75 block">
+                    {t.roleLabel}
+                  </span>
+                  <p className="text-sm font-bold text-primary">{user.role}</p>
+                </div>
+              </div>
+
             </CardContent>
           </Card>
         </div>

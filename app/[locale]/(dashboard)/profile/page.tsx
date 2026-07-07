@@ -11,7 +11,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
 
   const context = await requireApiContext();
 
-  const user = await prisma.user.findUnique({
+  const user = (await prisma.user.findUnique({
     where: { id: context.userId },
     include: {
       tenant: true,
@@ -22,7 +22,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
         },
       },
     },
-  });
+  })) as any;
 
   if (!user) {
     return (
