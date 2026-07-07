@@ -19,6 +19,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
       employee: {
         include: {
           position: true,
+          contracts: {
+            orderBy: { startDate: "desc" },
+            take: 1,
+          },
         },
       },
     },
@@ -36,6 +40,20 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
 
   const displayRole = context.roles[0] || "User";
 
+  const hasEmployeeRecord = !!user.employee;
+  const simulatedEmployee = {
+    id: user.employee?.id ?? `EMP-SIM-${user.id.slice(-6).toUpperCase()}`,
+    firstName: user.employee?.firstName ?? user.firstName ?? user.name?.split(" ")[0] ?? "Usuario",
+    lastName: user.employee?.lastName ?? user.lastName ?? user.name?.split(" ").slice(1).join(" ") ?? "Gerpy",
+    phone: user.employee?.phone ?? user.phone ?? null,
+    position: user.employee?.position?.name ?? (l === "es" ? "Administrador de Sistemas" : "Systems Administrator"),
+    hireDate: user.employee?.hireDate ? user.employee.hireDate.toISOString() : user.createdAt.toISOString(),
+    contractType: user.employee?.contracts?.[0]?.type ?? "FULL_TIME",
+    salary: user.employee?.contracts?.[0]?.salary ? Number(user.employee.contracts[0].salary) : 45000,
+    status: user.employee?.status ?? "ACTIVE",
+    isSimulated: !hasEmployeeRecord,
+  };
+
   // Consolidate user data natively from User table, falling back to Employee table if empty
   const userData = {
     id: user.id,
@@ -48,15 +66,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
     role: displayRole,
     tenantName: user.tenant?.name ?? null,
     branchName: user.branch?.name ?? null,
-    employee: user.employee
-      ? {
-          firstName: user.employee.firstName,
-          lastName: user.employee.lastName,
-          phone: user.employee.phone,
-          position: user.employee.position?.name ?? null,
-          hireDate: user.employee.hireDate ? user.employee.hireDate.toISOString() : null,
-        }
-      : null,
+    employee: simulatedEmployee,
   };
 
   return (

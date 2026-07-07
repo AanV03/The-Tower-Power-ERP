@@ -12,6 +12,11 @@ import {
   Save,
   Camera,
   CheckCircle,
+  DollarSign,
+  FileSignature,
+  Fingerprint,
+  Activity,
+  Info,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,12 +35,17 @@ interface ProfileFormProps {
     tenantName: string | null;
     branchName: string | null;
     employee: {
+      id: string;
       firstName: string;
       lastName: string;
       phone: string | null;
       position: string | null;
       hireDate: string | null;
-    } | null;
+      contractType: string;
+      salary: number;
+      status: string;
+      isSimulated: boolean;
+    };
   };
   dict: any;
   locale: string;
@@ -70,6 +80,38 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
     roleLabel: locale === "es" ? "Rol Asignado" : "Assigned Role",
     uploadError: locale === "es" ? "Sube una imagen menor a 400 KB." : "Upload an image under 400 KB.",
     imageTypeErr: locale === "es" ? "Formato de archivo inválido." : "Invalid file type.",
+    employeeIdLabel: locale === "es" ? "ID de Colaborador" : "Employee ID",
+    contractTypeLabel: locale === "es" ? "Tipo de Contrato" : "Contract Type",
+    salaryLabel: locale === "es" ? "Sueldo Base" : "Base Salary",
+    statusLabel: locale === "es" ? "Estado Laboral" : "Labor Status",
+    simulationBanner: locale === "es" ? "Modo Simulación Activo" : "Simulation Mode Active",
+    simulationDesc: locale === "es" ? "Mostrando componentes y campos simulados de empleado." : "Showing simulated employee components and fields.",
+  };
+
+  const getContractTypeLabel = (type: string) => {
+    switch (type) {
+      case "FULL_TIME":
+        return locale === "es" ? "Tiempo Completo" : "Full Time";
+      case "PART_TIME":
+        return locale === "es" ? "Medio Tiempo" : "Part Time";
+      case "CONTRACTOR":
+        return locale === "es" ? "Contratista" : "Contractor";
+      default:
+        return type;
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    return status === "ACTIVE" 
+      ? (locale === "es" ? "Activo" : "Active") 
+      : (locale === "es" ? "Inactivo" : "Inactive");
+  };
+
+  const formatSalary = (val: number) => {
+    return new Intl.NumberFormat(locale === "es" ? "es-MX" : "en-US", {
+      style: "currency",
+      currency: "MXN",
+    }).format(val);
   };
 
   const handleAvatarClick = () => {
@@ -366,6 +408,30 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
             </CardHeader>
             <CardContent className="relative space-y-4 pt-6">
               
+              {/* Simulation Mode Banner */}
+              {user.employee?.isSimulated && (
+                <div className="flex items-start gap-3 rounded-xl border border-orange-500/20 bg-orange-500/10 p-3.5 text-orange-600 dark:text-orange-400 shadow-sm">
+                  <Info className="size-5 shrink-0 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-bold block">{t.simulationBanner}</span>
+                    <p className="text-[11px] leading-relaxed opacity-90">{t.simulationDesc}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Employee ID */}
+              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                  <Fingerprint className="size-5" />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    {t.employeeIdLabel}
+                  </span>
+                  <p className="text-sm font-semibold text-foreground">{user.employee?.id || "-"}</p>
+                </div>
+              </div>
+
               {/* Organization */}
               <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
                 <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
@@ -415,6 +481,51 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
                     {t.hireDateLabel}
                   </span>
                   <p className="text-sm font-semibold text-foreground">{formatDate(user.employee?.hireDate ?? null)}</p>
+                </div>
+              </div>
+
+              {/* Contract Type */}
+              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                  <FileSignature className="size-5" />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    {t.contractTypeLabel}
+                  </span>
+                  <p className="text-sm font-semibold text-foreground">
+                    {user.employee?.contractType ? getContractTypeLabel(user.employee.contractType) : "-"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Base Salary */}
+              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                  <DollarSign className="size-5" />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    {t.salaryLabel}
+                  </span>
+                  <p className="text-sm font-semibold text-foreground">
+                    {user.employee?.salary ? formatSalary(user.employee.salary) : "-"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Employee Status */}
+              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                  <Activity className="size-5" />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    {t.statusLabel}
+                  </span>
+                  <p className="text-sm font-semibold text-foreground">
+                    {user.employee?.status ? getStatusLabel(user.employee.status) : "-"}
+                  </p>
                 </div>
               </div>
 
