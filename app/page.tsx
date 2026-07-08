@@ -64,7 +64,7 @@ const platformFeatures = [
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen w-full overflow-x-clip bg-zinc-950">
+    <main className="relative min-h-screen w-full overflow-hidden bg-zinc-950">
       <LandingNavbar />
       <Hero />
 
@@ -78,15 +78,15 @@ export default function Home() {
               Apps for every gym workflow
             </h2>
           </div>
-          <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {appPills.map(({ label, icon: Icon }) => (
               <a
                 key={label}
                 href="#modules"
-                className="group flex min-h-20 min-w-0 items-center gap-3 border border-white/10 bg-zinc-900/60 px-3 py-3 transition-colors hover:border-amber-400/50 hover:bg-amber-400/10"
+                className="group flex min-h-20 min-w-0 items-center gap-3 overflow-hidden border border-white/10 bg-zinc-900/60 px-3 py-3 transition-colors hover:border-amber-400/50 hover:bg-amber-400/10"
               >
-                <Icon className="h-5 w-5 text-amber-400" aria-hidden="true" />
-                <span className="min-w-0 text-xs font-black uppercase tracking-[0.1em] text-zinc-200 group-hover:text-white sm:tracking-[0.14em]">
+                <Icon className="h-5 w-5 shrink-0 text-amber-400" aria-hidden="true" />
+                <span className="min-w-0 text-xs font-black uppercase leading-snug tracking-[0.08em] text-zinc-200 [overflow-wrap:anywhere] group-hover:text-white sm:tracking-[0.1em]">
                   {label}
                 </span>
               </a>

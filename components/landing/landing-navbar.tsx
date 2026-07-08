@@ -69,6 +69,18 @@ export function LandingNavbar() {
 
   return (
     <header className="relative z-50 border-b border-white/10 bg-[#07080b]">
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-0 z-10 h-px w-[78vw] max-w-6xl origin-center -translate-x-1/2 bg-gradient-to-r from-transparent via-amber-400 to-transparent shadow-[0_0_18px_rgba(251,191,36,0.65)] sm:w-[82vw] lg:w-[86vw]"
+        animate={{ opacity: [0.22, 0.82, 0.22], scaleX: [0.92, 1, 0.92] }}
+        transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.span
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-[-3px] z-10 size-1.5 -translate-x-1/2 rounded-full bg-amber-300 shadow-[0_0_16px_rgba(251,191,36,0.85)]"
+        animate={{ opacity: [0.35, 0.95, 0.35], scale: [0.85, 1.25, 0.85] }}
+        transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut" }}
+      />
       {curtainPhase !== "idle" ? (
         <div
           aria-hidden="true"
@@ -169,16 +181,6 @@ export function LandingNavbar() {
           </Link>
         </div>
       </nav>
-
-      <div
-        aria-hidden="true"
-        className="border-t border-white/10 bg-black/30"
-      >
-        <div className="flex h-7 w-full items-center gap-2 px-4 text-[0.68rem] font-black uppercase tracking-[0.24em] text-amber-400 sm:px-6 lg:px-8">
-          <Dumbbell className="h-3.5 w-3.5" />
-          Gym ERP platform
-        </div>
-      </div>
     </header>
   );
 }

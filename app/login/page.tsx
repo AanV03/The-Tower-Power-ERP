@@ -444,9 +444,11 @@ export default function LoginPage() {
                       </span>
                     )}
                   </button>
-                  <div className="flex justify-end">
-                    <MultiStateBadge state={submitBadgeState} />
-                  </div>
+                  {submitBadgeState !== "idle" && (
+                    <div className="flex justify-end">
+                      <MultiStateBadge state={submitBadgeState} />
+                    </div>
+                  )}
                 </div>
               </form>
             ) : (
