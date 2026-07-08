@@ -17,10 +17,13 @@ import {
   Fingerprint,
   Activity,
   Info,
+  Award,
+  Clock,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface ProfileFormProps {
   user: {
@@ -193,6 +196,29 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
       return dateStr;
     }
   };
+
+  const getSeniority = () => {
+    if (!user.employee?.hireDate) return "-";
+    try {
+      const start = new Date(user.employee.hireDate);
+      const now = new Date();
+      let years = now.getFullYear() - start.getFullYear();
+      let months = now.getMonth() - start.getMonth();
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+      if (years === 0) {
+        return locale === "es" ? `${months} meses` : `${months} months`;
+      }
+      return locale === "es"
+        ? `${years} año${years > 1 ? "s" : ""} y ${months} mes${months !== 1 ? "es" : ""}`
+        : `${years} year${years > 1 ? "s" : ""} and ${months} month${months !== 1 ? "s" : ""}`;
+    } catch {
+      return "-";
+    }
+  };
+
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       <style dangerouslySetInnerHTML={{__html: `
@@ -241,9 +267,10 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
 
       {/* Premium Header - Glassmorphism aligned with Panel Operativo */}
       <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-md text-card-foreground animate-plate-x">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(251,133,0,0.12),transparent_35rem)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(251,133,0,0.15),transparent_35rem)]" />
+        <div className="absolute top-0 right-0 h-32 w-64 bg-gradient-to-l from-[var(--brand-orange)]/10 via-[var(--brand-yellow)]/5 to-transparent rounded-bl-full blur-xl pointer-events-none" />
+        
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center">
-          
           {/* Avatar circular interactive with clean brand ring */}
           <button 
             type="button"
@@ -275,8 +302,8 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
             </div>
           </button>
 
-          <div className="space-y-2 text-center md:text-left">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">{user.name || "Usuario Gerpy"}</h2>
+          <div className="space-y-2 text-center md:text-left flex-1">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">{user.name || "Usuario Gerpy"}</h2>
             <p className="text-sm text-muted-foreground">{user.email}</p>
             <div className="mt-2 flex flex-wrap justify-center gap-2 md:justify-start">
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20 shadow-sm">
@@ -289,15 +316,103 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
                   {user.branchName}
                 </span>
               )}
+              {user.employee?.position && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/10 px-3 py-1 text-xs text-orange-500 border border-orange-500/20 shadow-sm">
+                  <Briefcase className="size-3" />
+                  {user.employee.position}
+                </span>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Contact info form */}
-        <div className="md:col-span-2">
-          <Card className="relative overflow-hidden border-border bg-card text-card-foreground shadow-md animate-plate-x animate-plate-delay-1">
+      {/* Stats/KPIs Overview Grid */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 animate-plate-x animate-plate-delay-1">
+        {/* Antigüedad */}
+        <div className="relative overflow-hidden rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(251,133,0,0.04),transparent_10rem)]" />
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 text-primary p-2 rounded-lg">
+              <Award className="size-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                {locale === "es" ? "Antigüedad" : "Seniority"}
+              </span>
+              <p className="text-sm font-bold text-foreground mt-0.5 truncate">{getSeniority()}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Sueldo Base */}
+        <div className="relative overflow-hidden rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(34,197,94,0.04),transparent_10rem)]" />
+          <div className="flex items-center gap-3">
+            <div className="bg-emerald-500/10 text-emerald-500 p-2 rounded-lg">
+              <DollarSign className="size-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                {t.salaryLabel}
+              </span>
+              <p className="text-sm font-bold text-foreground mt-0.5 truncate">
+                {user.employee?.salary ? formatSalary(user.employee.salary) : "-"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Tipo de Contrato */}
+        <div className="relative overflow-hidden rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(251,133,0,0.04),transparent_10rem)]" />
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 text-primary p-2 rounded-lg">
+              <FileSignature className="size-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                {t.contractTypeLabel}
+              </span>
+              <p className="text-sm font-bold text-foreground mt-0.5 truncate">
+                {user.employee?.contractType ? getContractTypeLabel(user.employee.contractType) : "-"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Asistencia */}
+        <div className="relative overflow-hidden rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(59,130,246,0.04),transparent_10rem)]" />
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-500/10 text-blue-500 p-2 rounded-lg">
+              <Clock className="size-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                {locale === "es" ? "Asistencia" : "Attendance"}
+              </span>
+              <p className="text-sm font-bold text-foreground mt-0.5 truncate">98.5%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs Layout */}
+      <Tabs defaultValue="personal" className="w-full space-y-6 animate-plate-x animate-plate-delay-2">
+        <TabsList className="bg-card/40 border border-border p-1 rounded-xl w-full sm:w-auto">
+          <TabsTrigger value="personal" className="gap-2 px-4 py-2">
+            <UserIcon className="size-4" />
+            {t.personalInfo}
+          </TabsTrigger>
+          <TabsTrigger value="work" className="gap-2 px-4 py-2">
+            <Briefcase className="size-4" />
+            {locale === "es" ? "Ficha Laboral" : "Work Record"}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="personal" className="outline-none space-y-6">
+          <Card className="relative overflow-hidden border-border bg-card text-card-foreground shadow-md">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(251,133,0,0.06),transparent_22rem)]" />
             <CardHeader className="relative border-b border-border pb-5 flex flex-row items-center gap-4 space-y-0">
               <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
@@ -389,11 +504,10 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
               </form>
             </CardContent>
           </Card>
-        </div>
+        </TabsContent>
 
-        {/* Read-Only work details - Styled like Alerts / Operational Status */}
-        <div>
-          <Card className="relative overflow-hidden border-border bg-card text-card-foreground shadow-md animate-plate-x animate-plate-delay-2">
+        <TabsContent value="work" className="outline-none">
+          <Card className="relative overflow-hidden border-border bg-card text-card-foreground shadow-md">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_90%_0%,rgba(251,133,0,0.06),transparent_22rem)]" />
             <CardHeader className="relative border-b border-border pb-5 flex flex-row items-center gap-4 space-y-0">
               <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
@@ -406,11 +520,11 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
                 <CardDescription className="text-muted-foreground text-xs">{t.workDesc}</CardDescription>
               </div>
             </CardHeader>
-            <CardContent className="relative space-y-4 pt-6">
+            <CardContent className="relative pt-6">
               
               {/* Simulation Mode Banner */}
               {user.employee?.isSimulated && (
-                <div className="flex items-start gap-3 rounded-xl border border-orange-500/20 bg-orange-500/10 p-3.5 text-orange-600 dark:text-orange-400 shadow-sm">
+                <div className="flex items-start gap-3 rounded-xl border border-orange-500/20 bg-orange-500/10 p-3.5 text-orange-600 dark:text-orange-400 shadow-sm mb-6">
                   <Info className="size-5 shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
                     <span className="text-xs font-bold block">{t.simulationBanner}</span>
@@ -419,133 +533,135 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
                 </div>
               )}
 
-              {/* Employee ID */}
-              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
-                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
-                  <Fingerprint className="size-5" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* Employee ID */}
+                <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                  <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                    <Fingerprint className="size-5" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                      {t.employeeIdLabel}
+                    </span>
+                    <p className="text-sm font-semibold text-foreground">{user.employee?.id || "-"}</p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                    {t.employeeIdLabel}
-                  </span>
-                  <p className="text-sm font-semibold text-foreground">{user.employee?.id || "-"}</p>
-                </div>
-              </div>
 
-              {/* Organization */}
-              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
-                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
-                  <Building className="size-5" />
+                {/* Organization */}
+                <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                  <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                    <Building className="size-5" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                      {t.tenantLabel}
+                    </span>
+                    <p className="text-sm font-semibold text-foreground">{user.tenantName || "-"}</p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                    {t.tenantLabel}
-                  </span>
-                  <p className="text-sm font-semibold text-foreground">{user.tenantName || "-"}</p>
-                </div>
-              </div>
 
-              {/* Branch */}
-              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
-                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
-                  <Building className="size-5" />
+                {/* Branch */}
+                <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                  <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                    <Building className="size-5" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                      {t.branchLabel}
+                    </span>
+                    <p className="text-sm font-semibold text-foreground">{user.branchName || "-"}</p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                    {t.branchLabel}
-                  </span>
-                  <p className="text-sm font-semibold text-foreground">{user.branchName || "-"}</p>
-                </div>
-              </div>
 
-              {/* Position */}
-              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
-                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
-                  <Briefcase className="size-5" />
+                {/* Position */}
+                <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                  <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                    <Briefcase className="size-5" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                      {t.positionLabel}
+                    </span>
+                    <p className="text-sm font-semibold text-foreground">{user.employee?.position || "-"}</p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                    {t.positionLabel}
-                  </span>
-                  <p className="text-sm font-semibold text-foreground">{user.employee?.position || "-"}</p>
-                </div>
-              </div>
 
-              {/* Hire Date */}
-              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
-                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
-                  <Calendar className="size-5" />
+                {/* Hire Date */}
+                <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                  <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                    <Calendar className="size-5" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                      {t.hireDateLabel}
+                    </span>
+                    <p className="text-sm font-semibold text-foreground">{formatDate(user.employee?.hireDate ?? null)}</p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                    {t.hireDateLabel}
-                  </span>
-                  <p className="text-sm font-semibold text-foreground">{formatDate(user.employee?.hireDate ?? null)}</p>
-                </div>
-              </div>
 
-              {/* Contract Type */}
-              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
-                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
-                  <FileSignature className="size-5" />
+                {/* Contract Type */}
+                <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                  <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                    <FileSignature className="size-5" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                      {t.contractTypeLabel}
+                    </span>
+                    <p className="text-sm font-semibold text-foreground">
+                      {user.employee?.contractType ? getContractTypeLabel(user.employee.contractType) : "-"}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                    {t.contractTypeLabel}
-                  </span>
-                  <p className="text-sm font-semibold text-foreground">
-                    {user.employee?.contractType ? getContractTypeLabel(user.employee.contractType) : "-"}
-                  </p>
-                </div>
-              </div>
 
-              {/* Base Salary */}
-              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
-                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
-                  <DollarSign className="size-5" />
+                {/* Base Salary */}
+                <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                  <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                    <DollarSign className="size-5" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                      {t.salaryLabel}
+                    </span>
+                    <p className="text-sm font-semibold text-foreground">
+                      {user.employee?.salary ? formatSalary(user.employee.salary) : "-"}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                    {t.salaryLabel}
-                  </span>
-                  <p className="text-sm font-semibold text-foreground">
-                    {user.employee?.salary ? formatSalary(user.employee.salary) : "-"}
-                  </p>
-                </div>
-              </div>
 
-              {/* Employee Status */}
-              <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
-                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
-                  <Activity className="size-5" />
+                {/* Employee Status */}
+                <div className="group/row flex items-center gap-4 rounded-xl border border-border bg-background/45 p-3.5 hover:bg-background/80 transition-all duration-200">
+                  <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                    <Activity className="size-5" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                      {t.statusLabel}
+                    </span>
+                    <p className="text-sm font-semibold text-foreground">
+                      {user.employee?.status ? getStatusLabel(user.employee.status) : "-"}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                    {t.statusLabel}
-                  </span>
-                  <p className="text-sm font-semibold text-foreground">
-                    {user.employee?.status ? getStatusLabel(user.employee.status) : "-"}
-                  </p>
-                </div>
-              </div>
 
-              {/* Assigned Role */}
-              <div className="group/row flex items-center gap-4 rounded-xl border border-primary/20 bg-primary/5 p-3.5 hover:bg-primary/10 transition-all duration-200 shadow-sm shadow-primary/5">
-                <div className="bg-primary/20 text-primary p-2.5 rounded-xl">
-                  <CheckCircle className="size-5" />
-                </div>
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary/75 block">
-                    {t.roleLabel}
-                  </span>
-                  <p className="text-sm font-bold text-primary">{user.role}</p>
+                {/* Assigned Role */}
+                <div className="group/row flex items-center gap-4 rounded-xl border border-primary/20 bg-primary/5 p-3.5 hover:bg-primary/10 transition-all duration-200 shadow-sm shadow-primary/5 sm:col-span-2">
+                  <div className="bg-primary/20 text-primary p-2.5 rounded-xl">
+                    <CheckCircle className="size-5" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary/75 block">
+                      {t.roleLabel}
+                    </span>
+                    <p className="text-sm font-bold text-primary">{user.role}</p>
+                  </div>
                 </div>
               </div>
 
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
