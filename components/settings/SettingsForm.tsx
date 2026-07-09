@@ -11,8 +11,8 @@ import {
   EyeOff,
   Laptop,
   Check,
-  Globe,
   Settings,
+  Type,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -88,11 +88,31 @@ export default function SettingsForm({ user, dict, locale }: SettingsFormProps) 
     });
   }, [locale]);
 
-  const handleLanguageChange = (targetLocale: string) => {
-    const href = pathname.replace(`/${locale}`, `/${targetLocale}`);
-    router.push(href as any);
-    toast.success(targetLocale === "es" ? "Idioma cambiado a Español" : "Language changed to English");
-  };
+  const handleFontChange = useCallback((font: "default" | "serif" | "mono" | "elegant") => {
+    setColors((prev) => {
+      const next = { ...prev, font };
+      localStorage.setItem(BRAND_STORAGE_KEY, JSON.stringify(next));
+      
+      if (typeof document !== "undefined") {
+        document.documentElement.setAttribute("data-font", font);
+      }
+      
+      document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
+      
+      fetch("/api/admin/tenant", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brandColors: next }),
+      }).catch(() => {});
+
+      toast.success(
+        locale === "es" 
+          ? `Tipografía cambiada` 
+          : `Typography changed`
+      );
+      return next;
+    });
+  }, [locale]);
 
   const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -300,54 +320,7 @@ export default function SettingsForm({ user, dict, locale }: SettingsFormProps) 
 
         {/* PREFERENCES TAB */}
         <TabsContent value="preferences" className="outline-none space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Language Selection Card */}
-            <Card className="relative overflow-hidden border-border bg-card text-card-foreground shadow-md">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(251,133,0,0.05),transparent_20rem)]" />
-              <CardHeader className="relative border-b border-border pb-5 flex flex-row items-center gap-4 space-y-0">
-                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
-                  <Globe className="size-5" />
-                </div>
-                <div className="space-y-0.5">
-                  <CardTitle className="text-lg font-bold text-foreground">
-                    {locale === "es" ? "Idioma del Sistema" : "System Language"}
-                  </CardTitle>
-                  <CardDescription className="text-muted-foreground text-xs">
-                    {locale === "es" 
-                      ? "Selecciona tu idioma de preferencia para la plataforma." 
-                      : "Select your preferred language for the platform."}
-                  </CardDescription>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-3">
-                <button
-                  type="button"
-                  onClick={() => handleLanguageChange("es")}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all ${
-                    locale === "es" 
-                      ? "border-primary/30 bg-primary/5 font-semibold text-primary" 
-                      : "border-border bg-background/45 hover:bg-background/80 text-foreground"
-                  }`}
-                >
-                  <span>Español (MX)</span>
-                  {locale === "es" && <Check className="size-4" />}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleLanguageChange("en")}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all ${
-                    locale === "en" 
-                      ? "border-primary/30 bg-primary/5 font-semibold text-primary" 
-                      : "border-border bg-background/45 hover:bg-background/80 text-foreground"
-                  }`}
-                >
-                  <span>English (US)</span>
-                  {locale === "en" && <Check className="size-4" />}
-                </button>
-              </CardContent>
-            </Card>
-
+          <div className="w-full grid gap-6 md:grid-cols-2">
             {/* Contrast Selection Card */}
             <Card className="relative overflow-hidden border-border bg-card text-card-foreground shadow-md">
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(251,133,0,0.05),transparent_20rem)]" />
@@ -405,6 +378,49 @@ export default function SettingsForm({ user, dict, locale }: SettingsFormProps) 
                   <span>{locale === "es" ? "Contraste Alto" : "High Contrast"}</span>
                   {colors.contrast === "high" && <Check className="size-4" />}
                 </button>
+              </CardContent>
+            </Card>
+
+            {/* Typography Selection Card */}
+            <Card className="relative overflow-hidden border-border bg-card text-card-foreground shadow-md">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(251,133,0,0.05),transparent_20rem)]" />
+              <CardHeader className="relative border-b border-border pb-5 flex flex-row items-center gap-4 space-y-0">
+                <div className="bg-primary/10 text-primary p-2.5 rounded-xl">
+                  <Type className="size-5" />
+                </div>
+                <div className="space-y-0.5">
+                  <CardTitle className="text-lg font-bold text-foreground">
+                    {locale === "es" ? "Tipografía del Sistema" : "System Typography"}
+                  </CardTitle>
+                  <CardDescription className="text-muted-foreground text-xs">
+                    {locale === "es" 
+                      ? "Personaliza la fuente principal de la plataforma." 
+                      : "Customize the platform's primary font."}
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { id: "default", label: locale === "es" ? "Predeterminada (Sans)" : "Default (Sans)" },
+                    { id: "serif", label: locale === "es" ? "Serif (Clásica)" : "Serif (Classic)" },
+                    { id: "mono", label: locale === "es" ? "Monospace (Código)" : "Monospace (Code)" },
+                    { id: "elegant", label: locale === "es" ? "Elegant (Moderna)" : "Elegant (Modern)" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => handleFontChange(opt.id as any)}
+                      className={`w-full flex items-center justify-center p-3.5 rounded-xl border transition-all text-sm ${
+                        colors.font === opt.id
+                          ? "border-primary/30 bg-primary/5 font-semibold text-primary"
+                          : "border-border bg-background/45 hover:bg-background/80 text-foreground"
+                      }`}
+                    >
+                      <span>{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </div>

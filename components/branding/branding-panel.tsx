@@ -212,14 +212,6 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
     });
   };
 
-  const handleFontChange = (font: "default" | "serif" | "mono" | "elegant") => {
-    setColors((prev) => {
-      const next = { ...prev, font };
-      document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
-      return next;
-    });
-  };
-
   const handleIdentityChange = useCallback((key: keyof BrandIdentity, value: string) => {
     setIdentity((prev) => {
       const next = { ...prev, [key]: value };
@@ -465,8 +457,8 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
 
 
 
-      {/* ── Contraste y Fuentes ── */}
-      <div className="border-t border-border bg-muted/20 px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* ── Contraste ── */}
+      <div className="border-t border-border bg-muted/20 px-6 py-5 grid grid-cols-1 gap-6">
         <div className="space-y-3">
           <label className="text-sm font-semibold leading-none text-card-foreground block">
             {t.contrastLabel}
@@ -493,32 +485,7 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
           </div>
         </div>
 
-        <div className="space-y-3">
-          <label className="text-sm font-semibold leading-none text-card-foreground block">
-            {t.fontLabel}
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { id: "default", label: t.fontDefault },
-              { id: "serif", label: t.fontSerif },
-              { id: "mono", label: t.fontMono },
-              { id: "elegant", label: t.fontElegant },
-            ].map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => handleFontChange(opt.id as any)}
-                className={`px-3 py-2 rounded-lg border text-xs font-semibold transition-all ${
-                  colors.font === opt.id
-                    ? "border-[var(--sidebar-accent-active)] bg-[var(--sidebar-accent-active)]/5 text-foreground"
-                    : "border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
+
       </div>
 
       {/* ── Footer ── */}
