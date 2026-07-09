@@ -18,7 +18,12 @@ const config = {
   ci: {
     collect: {
       url: urls,
-      numberOfRuns: 1
+      numberOfRuns: 1,
+      puppeteerScript: './scripts/lhci-login.js',
+      puppeteerLaunchOptions: {
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
+      },
+      disableStorageReset: true
     },
     assert: {
       assertions: {
