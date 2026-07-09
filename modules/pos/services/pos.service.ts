@@ -1,7 +1,7 @@
 import { InventoryMovementType, Prisma } from "@prisma/client";
 
-import { ApiError } from "@/lib/api/response";
-import { prisma } from "@/lib/db/prisma";
+import { ApiError } from "../../../lib/api/response";
+import { prisma } from "../../../lib/db/prisma";
 import type { CreateSaleDTO } from "../schemas/pos.schema";
 
 type NormalizedSaleItem = {
