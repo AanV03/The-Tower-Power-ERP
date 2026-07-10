@@ -875,3 +875,23 @@ html[data-magicui-theme-vt="active"]::view-transition-new(root) {
   will-change: clip-path;
 }
 
+/* Custom minimal scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--nav-section-accent, var(--brand-green, rgba(255, 255, 255, 0.15)));
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--nav-section-accent, var(--brand-green, rgba(255, 255, 255, 0.3)));
+}
+/* For Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--nav-section-accent, var(--brand-green, rgba(255, 255, 255, 0.15))) transparent;
+}
