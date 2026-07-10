@@ -852,3 +852,10 @@
 :root[data-font="elegant"] * {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
+
+/* Prevent bounce/overscroll on the landing page specifically */
+html:has(.landing-palette),
+body:has(.landing-palette) {
+  overscroll-behavior-y: none;
+}
+
