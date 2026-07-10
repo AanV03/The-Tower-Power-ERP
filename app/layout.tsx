@@ -19,8 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      {/* antialiased makes text render much sharper on dark backgrounds */}
-      <body className="bg-zinc-950 text-white antialiased" suppressHydrationWarning>
+      <body className="bg-background text-foreground antialiased" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -1,0 +1,19 @@
+config:
+  target: "https://gerpy.vercel.app"
+  phases:
+    - duration: 15
+      arrivalRate: 5
+      rampTo: 30
+      name: "Rampa de carga inicial (Stress)"
+  defaults:
+    headers:
+      content-type: "application/json"
+
+scenarios:
+  - name: "Simulación de inicio de sesión (POST)"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "devops-test@gerpy.com"
+            password: "ClaveInvalidaParaPruebas123!"

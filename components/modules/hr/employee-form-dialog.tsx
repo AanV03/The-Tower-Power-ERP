@@ -110,7 +110,7 @@ export function EmployeeFormDialog({
           }
         />
       ) : null}
-      <StandardDialogContent className="border-white/10 bg-background/85 shadow-2xl backdrop-blur-xl dark:bg-zinc-950/85">
+      <StandardDialogContent>
         <StandardDialogHeader>
           <StandardDialogTitle>{isEditing ? "Editar empleado" : "Alta de empleado"}</StandardDialogTitle>
           <StandardDialogDescription>
