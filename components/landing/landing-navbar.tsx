@@ -6,10 +6,10 @@ import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Dumbbell, Search } from "lucide-react";
+import { LandingMegaMenu } from "@/components/landing/mega-menu";
 import { useLandingRouteTransition } from "@/components/landing/landing-route-transition";
 
 const navLinks = [
-  { label: "Modules", href: "#modules" },
   { label: "Operations", href: "#operations" },
   { label: "Contact", href: "#contact" },
 ];
@@ -108,7 +108,7 @@ export function LandingNavbar() {
 
       <nav
         aria-label="Main navigation"
-        className="grid w-full grid-cols-[1fr_auto] items-stretch md:grid-cols-[minmax(260px,0.9fr)_auto_minmax(260px,0.9fr)]"
+        className="grid w-full grid-cols-[1fr_auto] items-stretch lg:grid-cols-[minmax(260px,0.9fr)_auto_minmax(260px,0.9fr)]"
       >
         <Link
           href={"/" as Route}
@@ -130,7 +130,8 @@ export function LandingNavbar() {
           </span>
         </Link>
 
-        <div className="hidden items-center justify-center gap-3 px-8 md:flex lg:gap-4 lg:px-12">
+        <div className="hidden items-center justify-center gap-3 px-6 lg:flex xl:gap-4 xl:px-12">
+          <LandingMegaMenu mode="desktop" />
           {navLinks.map((link) => (
             <a
               key={link.href}
@@ -164,6 +165,7 @@ export function LandingNavbar() {
         </div>
 
         <div className="flex items-center justify-end gap-2 px-4 sm:px-6 lg:px-8">
+          <LandingMegaMenu mode="mobile" />
           <a
             href="#modules"
             aria-label="Search modules"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Activity,
   BadgeCheck,
@@ -11,12 +11,13 @@ import {
   Users,
 } from "lucide-react";
 import { gsap } from "gsap";
+import { animate, motion } from "framer-motion";
 import { AuthBackground } from "@/components/backgrounds/auth-background";
 
 const heroStats = [
-  { label: "Active members", value: "3,842", trend: "+12%" },
-  { label: "Monthly revenue", value: "$84.6k", trend: "+18%" },
-  { label: "Check-ins today", value: "716", trend: "Live" },
+  { label: "Active members", value: 3842, trend: "+12%" },
+  { label: "Monthly revenue", value: 84.6, prefix: "$", suffix: "k", decimals: 1, trend: "+18%" },
+  { label: "Check-ins today", value: 716, trend: "Live" },
 ];
 
 const operations = [
@@ -25,6 +26,68 @@ const operations = [
   { icon: CalendarClock, label: "Classes", value: "91% occupancy" },
   { icon: ShieldCheck, label: "Access", value: "Devices online" },
 ];
+
+type AnimateNumberProps = {
+  value: number;
+  prefix?: string;
+  suffix?: string;
+  decimals?: number;
+  delay?: number;
+};
+
+function formatAnimatedNumber(
+  value: number,
+  prefix: string,
+  suffix: string,
+  decimals: number
+) {
+  const formatted =
+    decimals > 0
+      ? value.toFixed(decimals)
+      : Math.round(value).toLocaleString("en-US");
+
+  return `${prefix}${formatted}${suffix}`;
+}
+
+function AnimateNumber({
+  value,
+  prefix = "",
+  suffix = "",
+  decimals = 0,
+  delay = 0,
+}: AnimateNumberProps) {
+  const [displayValue, setDisplayValue] = useState(() =>
+    formatAnimatedNumber(0, prefix, suffix, decimals)
+  );
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setDisplayValue(formatAnimatedNumber(value, prefix, suffix, decimals));
+      return;
+    }
+
+    const controls = animate(0, value, {
+      duration: 1.15,
+      delay,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (latest) => {
+        setDisplayValue(formatAnimatedNumber(latest, prefix, suffix, decimals));
+      },
+    });
+
+    return () => controls.stop();
+  }, [decimals, delay, prefix, suffix, value]);
+
+  return (
+    <motion.span
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay }}
+    >
+      {displayValue}
+    </motion.span>
+  );
+}
 
 export default function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -111,13 +174,19 @@ export default function Hero() {
           </p>
 
           <div className="mt-10 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
-            {heroStats.map((stat) => (
+            {heroStats.map((stat, index) => (
               <div
                 key={stat.label}
                 className="border border-[color:var(--landing-border)] bg-[var(--landing-panel)] p-4"
               >
                 <div className="text-2xl font-black text-[var(--landing-text)]">
-                  {stat.value}
+                  <AnimateNumber
+                    value={stat.value}
+                    prefix={stat.prefix}
+                    suffix={stat.suffix}
+                    decimals={stat.decimals}
+                    delay={0.25 + index * 0.12}
+                  />
                 </div>
                 <div className="mt-1 text-xs uppercase tracking-[0.16em] text-[var(--landing-muted)]">
                   {stat.label}
@@ -168,9 +237,17 @@ export default function Hero() {
               <div className="flex h-28 items-end gap-2">
                 {[38, 54, 46, 72, 58, 88, 66, 94, 81, 70, 92, 76].map(
                   (height, index) => (
-                    <div
+                    <motion.div
                       key={index}
-                      className="flex-1 bg-[var(--landing-accent-strong)]"
+                      className="origin-bottom flex-1 bg-[var(--landing-accent-strong)]"
+                      initial={{ scaleY: 0, opacity: 0.45 }}
+                      animate={{ scaleY: 1, opacity: 1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 180,
+                        damping: 22,
+                        delay: index * 0.075,
+                      }}
                       style={{ height: `${height}%` }}
                     />
                   )
