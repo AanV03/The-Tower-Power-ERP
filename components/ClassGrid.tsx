@@ -48,24 +48,24 @@ const modules = [
 
 export default function ClassGrid() {
   return (
-    <div className="grid grid-cols-1 gap-4 bg-zinc-950 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 bg-[var(--landing-bg)] sm:grid-cols-2 lg:grid-cols-3">
       {modules.map(({ icon: Icon, ...item }) => (
         <article
           key={item.title}
-          className="group flex min-h-72 flex-col justify-between border border-zinc-800 bg-zinc-900 p-5 transition-transform duration-300 hover:-translate-y-2 hover:border-amber-500/45 sm:min-h-80 sm:p-6 lg:min-h-[420px] lg:p-8"
+          className="group flex min-h-72 min-w-0 flex-col justify-between border border-[color:var(--landing-border)] bg-[var(--landing-panel)] p-5 transition-transform duration-300 hover:-translate-y-2 hover:border-[color:var(--landing-accent-strong)] sm:min-h-80 sm:p-6 lg:min-h-[420px] lg:p-8"
         >
           <div>
-            <div className="mb-8 flex h-12 w-12 items-center justify-center border border-amber-400/30 bg-amber-400/10 text-amber-400">
+            <div className="mb-8 flex h-12 w-12 items-center justify-center border border-[color:var(--landing-border)] bg-[var(--landing-icon-bg)] text-[var(--landing-accent-strong)]">
               <Icon className="h-6 w-6" aria-hidden="true" />
             </div>
-            <h3 className="mb-3 text-2xl font-bold text-white transition-colors group-hover:text-amber-400 sm:text-3xl">
+            <h3 className="mb-3 text-2xl font-bold text-[var(--landing-text)] transition-colors group-hover:text-[var(--landing-accent-strong)] sm:text-3xl">
               {item.title}
             </h3>
-            <p className="text-sm leading-6 text-zinc-400 sm:text-base">
+            <p className="text-sm leading-6 text-[var(--landing-copy)] sm:text-base">
               {item.desc}
             </p>
           </div>
-          <div className="mt-8 border-t border-zinc-800 pt-5 text-sm font-black uppercase tracking-[0.18em] text-zinc-500 group-hover:text-amber-400">
+          <div className="mt-8 border-t border-[color:var(--landing-border)] pt-5 text-sm font-black uppercase tracking-[0.18em] text-[var(--landing-muted)] group-hover:text-[var(--landing-accent-strong)]">
             {item.metric}
           </div>
         </article>

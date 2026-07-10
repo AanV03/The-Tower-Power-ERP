@@ -11,11 +11,18 @@ import {
 
 const PUBLIC_FILE = /\.(.*)$/;
 
-const PUBLIC_PAGES = new Set(["/", "/login", "/register"]);
+const PUBLIC_PAGES = new Set([
+  "/",
+  "/login",
+  "/register",
+  "/password-recovery",
+  "/email-validation",
+]);
 const PUBLIC_AUTH_API_PREFIXES = [
   "/api/auth/login",
   "/api/auth/register",
   "/api/auth/logout",
+  "/api/auth/password-recovery",
   "/api/auth/2fa/generate",
   "/api/auth/2fa/verify",
   "/api/auth/callback",

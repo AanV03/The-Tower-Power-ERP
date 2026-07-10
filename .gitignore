@@ -14,3 +14,4 @@ pnpm-debug.log*
 tsconfig.tsbuildinfo
 .lighthouseci/
 tmp/
+tsconfig.tsbuildinfo
