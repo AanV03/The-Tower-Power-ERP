@@ -55,6 +55,7 @@ const PROTECTED_PAGE_PREFIXES = [
   "/settings",
   "/specialists",
   "/warehouse",
+  "/onboarding",
 ];
 
 type MiddlewareAuthContext = {

@@ -2,12 +2,17 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
 export class ApiError extends Error {
+  status: number;
+  code: string;
+
   constructor(
     message: string,
-    public status = 500,
-    public code = "INTERNAL_ERROR",
+    status = 500,
+    code = "INTERNAL_ERROR",
   ) {
     super(message);
+    this.status = status;
+    this.code = code;
   }
 }
 

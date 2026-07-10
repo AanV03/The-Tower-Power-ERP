@@ -1,8 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { LandingRouteTransitionProvider } from "@/components/landing/landing-route-transition";
+
 import { Providers } from "@/app/providers";
+import { LandingRouteTransitionProvider } from "@/components/landing/landing-route-transition";
+
 import "./globals.css";
 
+export const metadata: Metadata = {
+  title: "Gerpy ERP | Gym Operations Platform",
+  description:
+    "ERP software for gym memberships, billing, access, inventory, payroll, and analytics.",
+};
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -16,10 +23,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      {/* antialiased makes text render much sharper on dark backgrounds */}
-      <body className="bg-background text-foreground antialiased" suppressHydrationWarning>
+      <body
+        className="bg-background text-foreground antialiased"
+        suppressHydrationWarning
+      >
         <Providers>
-          <LandingRouteTransitionProvider>{children}</LandingRouteTransitionProvider>
+          <LandingRouteTransitionProvider>
+            {children}
+          </LandingRouteTransitionProvider>
         </Providers>
       </body>
     </html>

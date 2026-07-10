@@ -8,13 +8,15 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  StandardDialogContent,
+  StandardDialogDescription,
+  StandardDialogFooter,
+  StandardDialogHeader,
+  StandardDialogTitle,
+} from "@/components/shared/standard-dialog";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import type { Locale } from "@/lib/i18n";
@@ -366,11 +368,11 @@ export function SpecialistActionDialogs({
           <FilePlus2 className="size-4" aria-hidden="true" />
           {labels.generate}
         </DialogTrigger>
-        <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-background/85 shadow-2xl backdrop-blur-xl dark:bg-zinc-950/85 sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{text.generateTitle}</DialogTitle>
-            <DialogDescription>{text.generateDesc}</DialogDescription>
-          </DialogHeader>
+        <StandardDialogContent className="max-h-[90vh] overflow-y-auto">
+          <StandardDialogHeader>
+            <StandardDialogTitle>{text.generateTitle}</StandardDialogTitle>
+            <StandardDialogDescription>{text.generateDesc}</StandardDialogDescription>
+          </StandardDialogHeader>
           <form className="grid gap-4" onSubmit={handleSettlementSubmit}>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label={text.specialist}>
@@ -417,16 +419,16 @@ export function SpecialistActionDialogs({
             <Field label={text.notes}>
               <Input name="notes" placeholder="Revision de sesiones, ajustes y pagos pendientes" disabled={submitting === "settlement"} />
             </Field>
-            <DialogFooter>
+            <StandardDialogFooter>
               <Button type="button" variant="outline" onClick={() => setSettlementOpen(false)} disabled={submitting === "settlement"}>
                 {text.cancel}
               </Button>
               <Button type="submit" disabled={submitting === "settlement"}>
                 {submitting === "settlement" ? "Calculando..." : text.submit}
               </Button>
-            </DialogFooter>
+            </StandardDialogFooter>
           </form>
-        </DialogContent>
+        </StandardDialogContent>
       </Dialog>
 
       <Dialog open={sessionOpen} onOpenChange={setSessionOpen}>
@@ -434,11 +436,11 @@ export function SpecialistActionDialogs({
           <ClipboardCheck className="size-4" aria-hidden="true" />
           {labels.registerSession}
         </DialogTrigger>
-        <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-background/85 shadow-2xl backdrop-blur-xl dark:bg-zinc-950/85 sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{text.sessionTitle}</DialogTitle>
-            <DialogDescription>{text.sessionDesc}</DialogDescription>
-          </DialogHeader>
+        <StandardDialogContent className="max-h-[90vh] overflow-y-auto">
+          <StandardDialogHeader>
+            <StandardDialogTitle>{text.sessionTitle}</StandardDialogTitle>
+            <StandardDialogDescription>{text.sessionDesc}</StandardDialogDescription>
+          </StandardDialogHeader>
           <form className="grid gap-4" onSubmit={handleSessionSubmit}>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label={text.specialist}>
@@ -547,16 +549,16 @@ export function SpecialistActionDialogs({
                 </NativeSelect>
               </Field>
             </div>
-            <DialogFooter>
+            <StandardDialogFooter>
               <Button type="button" variant="outline" onClick={() => setSessionOpen(false)} disabled={submitting === "session"}>
                 {text.cancel}
               </Button>
               <Button type="submit" disabled={submitting === "session"}>
                 {submitting === "session" ? "Guardando..." : text.submit}
               </Button>
-            </DialogFooter>
+            </StandardDialogFooter>
           </form>
-        </DialogContent>
+        </StandardDialogContent>
       </Dialog>
 
       <Dialog open={specialistOpen} onOpenChange={setSpecialistOpen}>
@@ -564,11 +566,11 @@ export function SpecialistActionDialogs({
           <UserPlus className="size-4" aria-hidden="true" />
           {labels.newSpecialist}
         </DialogTrigger>
-        <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-background/85 shadow-2xl backdrop-blur-xl dark:bg-zinc-950/85 sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{text.specialistTitle}</DialogTitle>
-            <DialogDescription>{text.specialistDesc}</DialogDescription>
-          </DialogHeader>
+        <StandardDialogContent className="max-h-[90vh] overflow-y-auto">
+          <StandardDialogHeader>
+            <StandardDialogTitle>{text.specialistTitle}</StandardDialogTitle>
+            <StandardDialogDescription>{text.specialistDesc}</StandardDialogDescription>
+          </StandardDialogHeader>
           <form className="grid gap-4" onSubmit={handleSpecialistSubmit}>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label={text.name}>
@@ -624,16 +626,16 @@ export function SpecialistActionDialogs({
                 <Input name="servicePrice" type="number" min="0" step="0.01" placeholder="650.00" disabled={submitting === "specialist"} />
               </Field>
             </div>
-            <DialogFooter>
+            <StandardDialogFooter>
               <Button type="button" variant="outline" onClick={() => setSpecialistOpen(false)} disabled={submitting === "specialist"}>
                 {text.cancel}
               </Button>
               <Button type="submit" disabled={submitting === "specialist"}>
                 {submitting === "specialist" ? "Guardando..." : text.submit}
               </Button>
-            </DialogFooter>
+            </StandardDialogFooter>
           </form>
-        </DialogContent>
+        </StandardDialogContent>
       </Dialog>
     </div>
   );
