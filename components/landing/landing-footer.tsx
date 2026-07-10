@@ -23,21 +23,21 @@ const contactLinks = [
 
 export function LandingFooter() {
   return (
-    <footer id="contact" className="relative border-t border-white/10 bg-black text-white">
+    <footer id="contact" className="relative border-t border-[color:var(--landing-border)] bg-[var(--landing-bg-deep)] text-[var(--landing-text)]">
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:px-8 lg:py-16">
         <div>
           <div className="flex items-center gap-3">
-            <span className="grid size-12 place-items-center border border-amber-400/40 bg-amber-400 text-black">
+            <span className="grid size-12 place-items-center border border-[color:var(--landing-border)] bg-[var(--landing-primary)] text-white">
               <Dumbbell className="h-6 w-6" aria-hidden="true" />
             </span>
             <div>
               <p className="text-lg font-black uppercase tracking-normal">Gerpy ERP</p>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--landing-muted)]">
                 System logo
               </p>
             </div>
           </div>
-          <p className="mt-6 max-w-md text-sm leading-6 text-zinc-400">
+          <p className="mt-6 max-w-md text-sm leading-6 text-[var(--landing-copy)]">
             Fake-for-now operating hub for gym networks, billing desks,
             coaches, access devices, inventory rooms, and the teams keeping
             every branch moving.
@@ -45,19 +45,19 @@ export function LandingFooter() {
           <div className="mt-6 flex flex-wrap gap-3">
             <a
               href="https://www.linkedin.example/gerpy"
-              className="text-sm font-bold text-zinc-300 underline-offset-4 hover:text-amber-300 hover:underline"
+              className="text-sm font-bold text-[var(--landing-copy)] underline-offset-4 hover:text-[var(--landing-accent-strong)] hover:underline"
             >
               LinkedIn
             </a>
             <a
               href="https://www.instagram.example/gerpy"
-              className="text-sm font-bold text-zinc-300 underline-offset-4 hover:text-amber-300 hover:underline"
+              className="text-sm font-bold text-[var(--landing-copy)] underline-offset-4 hover:text-[var(--landing-accent-strong)] hover:underline"
             >
               Instagram
             </a>
             <a
               href="https://status.example.com/gerpy"
-              className="text-sm font-bold text-zinc-300 underline-offset-4 hover:text-amber-300 hover:underline"
+              className="text-sm font-bold text-[var(--landing-copy)] underline-offset-4 hover:text-[var(--landing-accent-strong)] hover:underline"
             >
               Status
             </a>
@@ -65,7 +65,7 @@ export function LandingFooter() {
         </div>
 
         <div>
-          <h2 className="text-sm font-black uppercase tracking-[0.16em] text-amber-400">
+          <h2 className="text-sm font-black uppercase tracking-[0.16em] text-[var(--landing-accent-strong)]">
             Product
           </h2>
           <ul className="mt-5 space-y-3">
@@ -73,7 +73,7 @@ export function LandingFooter() {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="text-sm font-semibold text-zinc-300 transition-colors hover:text-white"
+                  className="text-sm font-semibold text-[var(--landing-copy)] transition-colors hover:text-[var(--landing-text)]"
                 >
                   {link.label}
                 </Link>
@@ -83,7 +83,7 @@ export function LandingFooter() {
         </div>
 
         <div>
-          <h2 className="text-sm font-black uppercase tracking-[0.16em] text-amber-400">
+          <h2 className="text-sm font-black uppercase tracking-[0.16em] text-[var(--landing-accent-strong)]">
             Contact
           </h2>
           <ul className="mt-5 space-y-3">
@@ -91,9 +91,9 @@ export function LandingFooter() {
               <li key={href}>
                 <a
                   href={href}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-300 transition-colors hover:text-white"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--landing-copy)] transition-colors hover:text-[var(--landing-text)]"
                 >
-                  <Icon className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+                  <Icon className="h-4 w-4 text-[var(--landing-muted)]" aria-hidden="true" />
                   {label}
                 </a>
               </li>
@@ -102,9 +102,9 @@ export function LandingFooter() {
         </div>
       </div>
 
-      <div className="border-t border-white/10">
+      <div className="border-t border-[color:var(--landing-border)]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-6 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-[var(--landing-muted)]">
             Copyright 2026 Gerpy Systems, Inc. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -112,7 +112,7 @@ export function LandingFooter() {
               <a
                 key={link.href}
                 href={link.href}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-zinc-400 transition-colors hover:text-amber-300"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--landing-copy)] transition-colors hover:text-[var(--landing-accent-strong)]"
               >
                 {index === 0 ? (
                   <ShieldCheck className="h-4 w-4" aria-hidden="true" />

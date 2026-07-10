@@ -23,22 +23,22 @@ const badgeContent: Record<
 > = {
   idle: {
     label: "Ready",
-    className: "border-white/10 bg-black/20 text-zinc-300",
-    icon: <span className="size-1.5 rounded-full bg-zinc-400" />,
+    className: "border-[color:var(--auth-card-border)] bg-[var(--auth-panel-muted)] text-[var(--auth-muted-strong)]",
+    icon: <span className="size-1.5 rounded-full bg-[var(--auth-icon)]" />,
   },
   processing: {
     label: "Processing",
-    className: "border-amber-400/30 bg-amber-400/10 text-amber-200",
+    className: "border-primary/30 bg-primary/10 text-primary",
     icon: <Loader2 className="size-3 animate-spin" aria-hidden="true" />,
   },
   success: {
     label: "Success",
-    className: "border-emerald-400/30 bg-emerald-500/10 text-emerald-200",
+    className: "border-[color:var(--auth-success-border)] bg-[var(--auth-success-bg)] text-[var(--auth-success)]",
     icon: <CheckCircle2 className="size-3" aria-hidden="true" />,
   },
   error: {
     label: "Error",
-    className: "border-red-400/30 bg-red-500/10 text-red-200",
+    className: "border-[color:var(--auth-error-border)] bg-[var(--auth-error-bg)] text-[var(--auth-error)]",
     icon: <XCircle className="size-3" aria-hidden="true" />,
   },
 };

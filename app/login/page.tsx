@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, Dumbbell, Eye, EyeOff, KeyRound, LogIn } from "lucide-react";
 
 import { AuthShell } from "@/components/layout/auth-shell";
+import { OtpCodeInput } from "@/components/auth/otp-code-input";
 import { MultiStateBadge, type BadgeState } from "@/components/ui/multi-state-badge";
 import { cn } from "@/lib/utils";
 
@@ -63,7 +64,7 @@ function safeRedirect(value: string | null) {
 
 function FieldError({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <p id={id} className="flex items-center gap-1 text-xs text-red-300">
+    <p id={id} className="auth-error-text flex items-center gap-1 text-xs">
       <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
       {children}
     </p>
@@ -246,8 +247,7 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <div
-            className="flex size-14 items-center justify-center rounded-2xl shadow-lg"
-            style={{ background: "var(--brand-orange)" }}
+            className="auth-icon-tile flex size-14 items-center justify-center rounded-2xl shadow-lg"
           >
             {twoFactorRequired ? (
               <KeyRound className="size-7 text-white" aria-hidden="true" />
@@ -258,17 +258,17 @@ export default function LoginPage() {
             )}
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">
+            <h1 className="auth-heading text-2xl font-bold tracking-tight">
               {setupQrCodeDataUrl ? copy.setupTitle : twoFactorRequired ? copy.twoFactorTitle : copy.title}
             </h1>
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="auth-muted mt-1 text-sm">
               {setupQrCodeDataUrl ? copy.setupSubtitle : twoFactorRequired ? copy.twoFactorSubtitle : copy.subtitle}
             </p>
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/60 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl">
-          <div className="h-1 w-full" style={{ background: "var(--brand-orange)" }} />
+        <div className="auth-card overflow-hidden rounded-2xl border ring-1 ring-[color:var(--auth-card-border)] backdrop-blur-xl">
+          <div className="auth-accent-bar h-1 w-full" />
 
           <div className="px-8 py-8">
             {setupQrCodeDataUrl ? (
@@ -283,36 +283,21 @@ export default function LoginPage() {
                 </div>
 
                 {setupSecret && (
-                  <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-zinc-300">
-                    Manual key: <span className="font-mono text-zinc-100">{setupSecret}</span>
+                  <div className="auth-manual-key rounded-lg border p-3 text-xs">
+                    Manual key: <span className="font-mono">{setupSecret}</span>
                   </div>
                 )}
 
-                <div className="space-y-1.5">
-                  <label htmlFor="login-2fa-setup-code" className="block text-sm font-medium text-zinc-100">
-                    {copy.code}
-                  </label>
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
-                      <KeyRound className="size-4" aria-hidden="true" />
-                    </span>
-                    <input
-                      id="login-2fa-setup-code"
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]{6}"
-                      maxLength={6}
-                      autoComplete="one-time-code"
-                      placeholder="000000"
-                      value={twoFactorCode}
-                      onChange={(event) => setTwoFactorCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                      className="h-10 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 pl-9 text-center font-mono text-sm tracking-[0.35em] text-white placeholder:text-zinc-500 outline-none transition-[box-shadow,border-color] focus:border-orange-400 focus:ring-2 focus:ring-orange-400/25"
-                    />
-                  </div>
-                </div>
+                <OtpCodeInput
+                  id="login-2fa-setup-code"
+                  label={copy.code}
+                  value={twoFactorCode}
+                  onChange={setTwoFactorCode}
+                  hasError={!!formError}
+                />
 
                 {formError && (
-                  <p className="flex items-center gap-2 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200" role="alert">
+                  <p className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="alert">
                     <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                     {formError}
                   </p>
@@ -321,8 +306,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading || twoFactorCode.length !== 6}
-                  className="relative h-10 w-full rounded-lg text-sm font-semibold text-white outline-none transition-all duration-200 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
-                  style={{ background: "var(--brand-orange)" }}
+                  className="auth-primary-button relative h-10 w-full rounded-lg text-sm font-semibold outline-none transition-all duration-200 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
@@ -337,7 +321,7 @@ export default function LoginPage() {
             ) : !twoFactorRequired ? (
               <form id="login-form" onSubmit={handleLogin} noValidate className="space-y-5">
                 <div className="space-y-1.5">
-                  <label htmlFor="login-email" className="block text-sm font-medium text-zinc-100">
+                  <label htmlFor="login-email" className="auth-label block text-sm font-medium">
                     {copy.email}
                   </label>
                   <input
@@ -354,11 +338,10 @@ export default function LoginPage() {
                     aria-invalid={emailEmpty || emailInvalid ? "true" : "false"}
                     aria-describedby={emailEmpty || emailInvalid ? "login-email-error" : undefined}
                     className={cn(
-                      "h-10 w-full rounded-lg border bg-black/30 px-3 py-2 text-sm text-white placeholder:text-zinc-500 outline-none transition-[box-shadow,border-color]",
-                      "focus:border-orange-400 focus:ring-2 focus:ring-orange-400/25",
+                      "auth-input h-10 w-full rounded-lg border px-3 py-2 text-sm outline-none transition-[box-shadow,border-color]",
                       emailEmpty || emailInvalid
-                        ? "border-red-400 ring-2 ring-red-400/20"
-                        : "border-white/10",
+                        ? "auth-input-error"
+                        : "",
                     )}
                   />
                   {emailEmpty && <FieldError id="login-email-error">{copy.emailRequired}</FieldError>}
@@ -366,7 +349,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="login-password" className="block text-sm font-medium text-zinc-100">
+                  <label htmlFor="login-password" className="auth-label block text-sm font-medium">
                     {copy.password}
                   </label>
                   <div className="relative">
@@ -384,18 +367,17 @@ export default function LoginPage() {
                       aria-invalid={passwordError ? "true" : "false"}
                       aria-describedby={passwordError ? "login-password-error" : undefined}
                       className={cn(
-                        "h-10 w-full rounded-lg border bg-black/30 px-3 py-2 pr-10 text-sm text-white placeholder:text-zinc-500 outline-none transition-[box-shadow,border-color]",
-                        "focus:border-orange-400 focus:ring-2 focus:ring-orange-400/25",
+                        "auth-input h-10 w-full rounded-lg border px-3 py-2 pr-10 text-sm outline-none transition-[box-shadow,border-color]",
                         passwordError
-                          ? "border-red-400 ring-2 ring-red-400/20"
-                          : "border-white/10",
+                          ? "auth-input-error"
+                          : "",
                       )}
                     />
                     <button
                       type="button"
                       aria-label={showPassword ? copy.hidePassword : copy.showPassword}
                       onClick={() => setShowPassword((current) => !current)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 transition-colors hover:text-white"
+                      className="auth-icon-button absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
                     >
                       {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
@@ -404,7 +386,7 @@ export default function LoginPage() {
                 </div>
 
                 {formError && (
-                  <p className="flex items-center gap-2 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200" role="alert">
+                  <p className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="alert">
                     <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                     {formError}
                   </p>
@@ -413,7 +395,7 @@ export default function LoginPage() {
                 <div className="flex justify-end">
                   <Link
                     href="/password-recovery"
-                    className="text-xs text-zinc-400 underline-offset-4 transition-colors hover:text-white hover:underline"
+                    className="auth-muted text-xs underline-offset-4 transition-colors hover:text-[var(--auth-foreground)] hover:underline"
                   >
                     {copy.forgotPassword}
                   </Link>
@@ -425,12 +407,10 @@ export default function LoginPage() {
                     type="submit"
                     disabled={isLoading}
                     className={cn(
-                      "relative h-10 w-full rounded-lg text-sm font-semibold text-white outline-none transition-all duration-200",
-                      "focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
+                      "auth-primary-button relative h-10 w-full rounded-lg text-sm font-semibold outline-none transition-all duration-200",
                       "hover:brightness-110 active:scale-[0.99]",
                       "disabled:cursor-not-allowed disabled:opacity-60",
                     )}
-                    style={{ background: "var(--brand-orange)" }}
                   >
                     {isLoading ? (
                       <span className="flex items-center justify-center gap-2">
@@ -453,31 +433,16 @@ export default function LoginPage() {
               </form>
             ) : (
               <form id="login-2fa-form" onSubmit={handleTwoFactorVerify} noValidate className="space-y-5">
-                <div className="space-y-1.5">
-                  <label htmlFor="login-2fa-code" className="block text-sm font-medium text-zinc-100">
-                    {copy.code}
-                  </label>
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
-                      <KeyRound className="size-4" aria-hidden="true" />
-                    </span>
-                    <input
-                      id="login-2fa-code"
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]{6}"
-                      maxLength={6}
-                      autoComplete="one-time-code"
-                      placeholder="000000"
-                      value={twoFactorCode}
-                      onChange={(event) => setTwoFactorCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                      className="h-10 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 pl-9 text-center font-mono text-sm tracking-[0.35em] text-white placeholder:text-zinc-500 outline-none transition-[box-shadow,border-color] focus:border-orange-400 focus:ring-2 focus:ring-orange-400/25"
-                    />
-                  </div>
-                </div>
+                <OtpCodeInput
+                  id="login-2fa-code"
+                  label={copy.code}
+                  value={twoFactorCode}
+                  onChange={setTwoFactorCode}
+                  hasError={!!formError}
+                />
 
                 {formError && (
-                  <p className="flex items-center gap-2 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200" role="alert">
+                  <p className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="alert">
                     <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                     {formError}
                   </p>
@@ -486,8 +451,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading || twoFactorCode.length !== 6}
-                  className="relative h-10 w-full rounded-lg text-sm font-semibold text-white outline-none transition-all duration-200 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
-                  style={{ background: "var(--brand-orange)" }}
+                  className="auth-primary-button relative h-10 w-full rounded-lg text-sm font-semibold outline-none transition-all duration-200 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
@@ -501,7 +465,7 @@ export default function LoginPage() {
 
                 <button
                   type="button"
-                  className="h-10 w-full rounded-lg border border-white/10 bg-black/20 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white"
+                  className="auth-secondary-button h-10 w-full rounded-lg border text-sm font-medium transition-colors"
                   onClick={() => {
                     setTwoFactorRequired(false);
                     setTwoFactorCode("");
@@ -516,12 +480,11 @@ export default function LoginPage() {
           </div>
 
           {!twoFactorRequired && !setupQrCodeDataUrl && (
-            <div className="border-t border-white/10 bg-black/20 px-8 py-5 text-center text-sm text-zinc-400">
+            <div className="auth-divider border-t px-8 py-5 text-center text-sm">
               {copy.footerPrefix}{" "}
               <Link
                 href="/register"
-                className="font-semibold underline-offset-4 transition-colors hover:underline"
-                style={{ color: "var(--brand-orange)" }}
+                className="auth-link font-semibold underline-offset-4 transition-colors hover:underline"
               >
                 {copy.footerAction}
               </Link>

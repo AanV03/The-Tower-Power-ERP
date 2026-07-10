@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { AuthShell } from "@/components/layout/auth-shell";
+import { OtpCodeInput } from "@/components/auth/otp-code-input";
 import { MultiStateBadge, type BadgeState } from "@/components/ui/multi-state-badge";
 import { cn } from "@/lib/utils";
 
@@ -69,13 +70,13 @@ function RuleItem({ met, label }: { met: boolean; label: string }) {
     <li
       className={cn(
         "flex items-center gap-2 text-xs transition-colors duration-200",
-        met ? "text-emerald-400" : "text-zinc-500",
+        met ? "auth-success-text" : "auth-muted",
       )}
     >
       {met ? (
-        <CheckCircle2 className="size-3.5 shrink-0 text-emerald-400" aria-hidden="true" />
+        <CheckCircle2 className="auth-success-text size-3.5 shrink-0" aria-hidden="true" />
       ) : (
-        <XCircle className="size-3.5 shrink-0 text-zinc-500" aria-hidden="true" />
+        <XCircle className="auth-muted size-3.5 shrink-0" aria-hidden="true" />
       )}
       <span>{label}</span>
     </li>
@@ -83,21 +84,27 @@ function RuleItem({ met, label }: { met: boolean; label: string }) {
 }
 
 function StrengthBar({ metCount }: { metCount: number }) {
-  const colors = ["bg-red-500", "bg-orange-400", "bg-yellow-400", "bg-lime-400", "bg-emerald-500"];
+  const colors = [
+    "bg-destructive",
+    "bg-warning",
+    "bg-warning",
+    "bg-success",
+    "bg-success",
+  ];
 
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-xs text-zinc-500">Password strength</span>
+        <span className="auth-muted text-xs">Password strength</span>
         {metCount > 0 && (
           <span
             className={cn(
               "text-xs font-medium",
-              metCount === 1 && "text-red-400",
-              metCount === 2 && "text-orange-400",
-              metCount === 3 && "text-yellow-400",
-              metCount === 4 && "text-lime-400",
-              metCount === 5 && "text-emerald-400",
+              metCount === 1 && "auth-error-text",
+              metCount === 2 && "text-[var(--warning)]",
+              metCount === 3 && "text-[var(--warning)]",
+              metCount === 4 && "text-[var(--success)]",
+              metCount === 5 && "auth-success-text",
             )}
           >
             {strengthLabels[metCount]}
@@ -165,12 +172,12 @@ function InputField({
 }: InputFieldProps) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-zinc-100">
+      <label htmlFor={id} className="auth-label block text-sm font-medium">
         {label}
       </label>
       <div className="relative">
         {icon && (
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+          <span className="auth-field-icon pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
             {icon}
           </span>
         )}
@@ -185,17 +192,16 @@ function InputField({
           aria-invalid={hasError ? "true" : "false"}
           aria-describedby={ariaDescribedBy}
           className={cn(
-            "h-10 w-full rounded-lg border bg-black/30 py-2 text-sm text-white placeholder:text-zinc-500 outline-none transition-[box-shadow,border-color]",
+            "auth-input h-10 w-full rounded-lg border py-2 text-sm outline-none transition-[box-shadow,border-color]",
             icon ? "pl-9" : "pl-3",
             rightAddon ? "pr-10" : "pr-3",
-            "focus:border-orange-400 focus:ring-2 focus:ring-orange-400/25",
-            hasError ? "border-red-400 ring-2 ring-red-400/20" : "border-white/10",
+            hasError ? "auth-input-error" : "",
           )}
         />
         {rightAddon && <div className="absolute right-3 top-1/2 -translate-y-1/2">{rightAddon}</div>}
       </div>
       {error && (
-        <p id={ariaDescribedBy} className="flex items-center gap-1 text-xs text-red-300">
+        <p id={ariaDescribedBy} className="auth-error-text flex items-center gap-1 text-xs">
           <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
           {error}
         </p>
@@ -375,8 +381,7 @@ export default function RegisterPage() {
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <div
-            className="flex size-14 items-center justify-center rounded-2xl shadow-lg"
-            style={{ background: "var(--brand-orange)" }}
+            className="auth-icon-tile flex size-14 items-center justify-center rounded-2xl shadow-lg"
           >
             {setupQrCodeDataUrl ? (
               <KeyRound className="size-7 text-white" aria-hidden="true" />
@@ -385,10 +390,10 @@ export default function RegisterPage() {
             )}
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">
+            <h1 className="auth-heading text-2xl font-bold tracking-tight">
               {setupQrCodeDataUrl ? "Secure your account" : "Create your account"}
             </h1>
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="auth-muted mt-1 text-sm">
               {setupQrCodeDataUrl
                 ? "Scan the QR code and verify 2FA before entering the dashboard."
                 : "Start managing your gym with Gerpy ERP."}
@@ -396,8 +401,8 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/60 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl">
-          <div className="h-1 w-full" style={{ background: "var(--brand-orange)" }} />
+        <div className="auth-card overflow-hidden rounded-2xl border ring-1 ring-[color:var(--auth-card-border)] backdrop-blur-xl">
+          <div className="auth-accent-bar h-1 w-full" />
 
           <div className="px-8 py-8">
             {setupQrCodeDataUrl ? (
@@ -412,25 +417,21 @@ export default function RegisterPage() {
                 </div>
 
                 {setupSecret && (
-                  <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-zinc-300">
-                    Manual key: <span className="font-mono text-zinc-100">{setupSecret}</span>
+                  <div className="auth-manual-key rounded-lg border p-3 text-xs">
+                    Manual key: <span className="font-mono">{setupSecret}</span>
                   </div>
                 )}
 
-                <InputField
+                <OtpCodeInput
                   id="register-2fa-code"
                   label="Authenticator code"
-                  placeholder="000000"
                   value={twoFactorCode}
-                  onChange={(value) => setTwoFactorCode(value.replace(/\D/g, "").slice(0, 6))}
-                  onBlur={() => undefined}
-                  hasError={false}
-                  icon={<KeyRound className="size-4" aria-hidden="true" />}
-                  autoComplete="one-time-code"
+                  onChange={setTwoFactorCode}
+                  hasError={!!formError}
                 />
 
                 {formError && (
-                  <p className="flex items-center gap-2 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200" role="alert">
+                  <p className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="alert">
                     <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                     {formError}
                   </p>
@@ -439,8 +440,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={isVerifyingTwoFactor || twoFactorCode.length !== 6}
-                  className="relative mt-2 h-10 w-full rounded-lg text-sm font-semibold text-white outline-none transition-all duration-200 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
-                  style={{ background: "var(--brand-orange)" }}
+                  className="auth-primary-button relative mt-2 h-10 w-full rounded-lg text-sm font-semibold outline-none transition-all duration-200 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isVerifyingTwoFactor ? (
                     <span className="flex items-center justify-center gap-2">
@@ -507,11 +507,11 @@ export default function RegisterPage() {
               />
 
               <div className="space-y-1.5">
-                <label htmlFor="register-password" className="block text-sm font-medium text-zinc-100">
+                <label htmlFor="register-password" className="auth-label block text-sm font-medium">
                   Password
                 </label>
                 <div className="relative">
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                  <span className="auth-field-icon pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
                     <Lock className="size-4" aria-hidden="true" />
                   </span>
                   <input
@@ -528,16 +528,15 @@ export default function RegisterPage() {
                     aria-invalid={fieldErrors.password ? "true" : "false"}
                     aria-describedby="register-password-rules"
                     className={cn(
-                      "h-10 w-full rounded-lg border bg-black/30 py-2 pl-9 pr-10 text-sm text-white placeholder:text-zinc-500 outline-none transition-[box-shadow,border-color]",
-                      "focus:border-orange-400 focus:ring-2 focus:ring-orange-400/25",
-                      fieldErrors.password ? "border-red-400 ring-2 ring-red-400/20" : "border-white/10",
+                      "auth-input h-10 w-full rounded-lg border py-2 pl-9 pr-10 text-sm outline-none transition-[box-shadow,border-color]",
+                      fieldErrors.password ? "auth-input-error" : "",
                     )}
                   />
                   <button
                     type="button"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     onClick={() => setShowPassword((current) => !current)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 transition-colors hover:text-white"
+                    className="auth-icon-button absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
                   >
                     {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
@@ -546,7 +545,7 @@ export default function RegisterPage() {
                 {showChecklist && (
                   <div
                     id="register-password-rules"
-                    className="mt-2 space-y-3 rounded-xl border border-white/10 bg-black/20 p-4"
+                    className="auth-card-rule mt-2 space-y-3 rounded-xl border p-4"
                   >
                     <StrengthBar metCount={metCount} />
                     <ul className="space-y-2 pt-1">
@@ -558,7 +557,7 @@ export default function RegisterPage() {
                 )}
 
                 {fieldErrors.password && !showChecklist && (
-                  <p className="flex items-center gap-1 text-xs text-red-300">
+                  <p className="auth-error-text flex items-center gap-1 text-xs">
                     <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                     {fieldErrors.password}
                   </p>
@@ -566,11 +565,11 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="register-confirm" className="block text-sm font-medium text-zinc-100">
+                <label htmlFor="register-confirm" className="auth-label block text-sm font-medium">
                   Confirm password
                 </label>
                 <div className="relative">
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                  <span className="auth-field-icon pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
                     <Lock className="size-4" aria-hidden="true" />
                   </span>
                   <input
@@ -587,32 +586,31 @@ export default function RegisterPage() {
                     aria-invalid={fieldErrors.confirm ? "true" : "false"}
                     aria-describedby={fieldErrors.confirm ? "register-confirm-error" : undefined}
                     className={cn(
-                      "h-10 w-full rounded-lg border bg-black/30 py-2 pl-9 pr-10 text-sm text-white placeholder:text-zinc-500 outline-none transition-[box-shadow,border-color]",
-                      "focus:border-orange-400 focus:ring-2 focus:ring-orange-400/25",
+                      "auth-input h-10 w-full rounded-lg border py-2 pl-9 pr-10 text-sm outline-none transition-[box-shadow,border-color]",
                       fieldErrors.confirm
-                        ? "border-red-400 ring-2 ring-red-400/20"
+                        ? "auth-input-error"
                         : confirm.length > 0 && confirm === password
-                          ? "border-emerald-400 ring-2 ring-emerald-400/20"
-                          : "border-white/10",
+                          ? "auth-input-success"
+                          : "",
                     )}
                   />
                   <button
                     type="button"
                     aria-label={showConfirm ? "Hide confirmation" : "Show confirmation"}
                     onClick={() => setShowConfirm((current) => !current)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 transition-colors hover:text-white"
+                    className="auth-icon-button absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
                   >
                     {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
                 {confirm.length > 0 && !fieldErrors.confirm && (
-                  <p className="flex items-center gap-1 text-xs text-emerald-400">
+                  <p className="auth-success-text flex items-center gap-1 text-xs">
                     <CheckCircle2 className="size-3 shrink-0" aria-hidden="true" />
                     Passwords match
                   </p>
                 )}
                 {fieldErrors.confirm && (
-                  <p id="register-confirm-error" className="flex items-center gap-1 text-xs text-red-300">
+                  <p id="register-confirm-error" className="auth-error-text flex items-center gap-1 text-xs">
                     <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                     {fieldErrors.confirm}
                   </p>
@@ -620,7 +618,7 @@ export default function RegisterPage() {
               </div>
 
               {formError && (
-                <p className="flex items-center gap-2 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200" role="alert">
+                <p className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="alert">
                   <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                   {formError}
                 </p>
@@ -632,12 +630,10 @@ export default function RegisterPage() {
                   type="submit"
                   disabled={isLoading}
                   className={cn(
-                    "relative mt-2 h-10 w-full rounded-lg text-sm font-semibold text-white outline-none transition-all duration-200",
-                    "focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
+                    "auth-primary-button relative mt-2 h-10 w-full rounded-lg text-sm font-semibold outline-none transition-all duration-200",
                     "hover:brightness-110 active:scale-[0.99]",
                     "disabled:cursor-not-allowed disabled:opacity-60",
                   )}
-                  style={{ background: "var(--brand-orange)" }}
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
@@ -662,12 +658,11 @@ export default function RegisterPage() {
           </div>
 
           {!setupQrCodeDataUrl && (
-          <div className="border-t border-white/10 bg-black/20 px-8 py-5 text-center text-sm text-zinc-400">
+          <div className="auth-divider border-t px-8 py-5 text-center text-sm">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="font-semibold underline-offset-4 transition-colors hover:underline"
-              style={{ color: "var(--brand-orange)" }}
+              className="auth-link font-semibold underline-offset-4 transition-colors hover:underline"
             >
               Sign in
             </Link>
@@ -676,13 +671,13 @@ export default function RegisterPage() {
         </div>
 
         {!setupQrCodeDataUrl && (
-        <p className="mt-6 text-center text-xs text-zinc-500">
+        <p className="auth-muted mt-6 text-center text-xs">
           By signing up you accept the{" "}
-          <Link href="#" className="underline underline-offset-4 transition-colors hover:text-zinc-300">
+          <Link href="#" className="underline underline-offset-4 transition-colors hover:text-[var(--auth-foreground)]">
             Terms of use
           </Link>{" "}
           and the{" "}
-          <Link href="#" className="underline underline-offset-4 transition-colors hover:text-zinc-300">
+          <Link href="#" className="underline underline-offset-4 transition-colors hover:text-[var(--auth-foreground)]">
             Privacy policy
           </Link>
           .

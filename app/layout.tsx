@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { LandingRouteTransitionProvider } from "@/components/landing/landing-route-transition";
+import { Providers } from "@/app/providers";
 import "./globals.css";
 
 
@@ -16,8 +17,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       {/* antialiased makes text render much sharper on dark backgrounds */}
-      <body className="bg-zinc-950 text-white antialiased" suppressHydrationWarning>
-        <LandingRouteTransitionProvider>{children}</LandingRouteTransitionProvider>
+      <body className="bg-background text-foreground antialiased" suppressHydrationWarning>
+        <Providers>
+          <LandingRouteTransitionProvider>{children}</LandingRouteTransitionProvider>
+        </Providers>
       </body>
     </html>
   );

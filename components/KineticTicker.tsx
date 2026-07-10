@@ -35,23 +35,23 @@ export default function KineticTicker() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full overflow-hidden bg-amber-500 py-12 md:py-24 flex items-center"
+      className="relative flex w-full items-center overflow-hidden bg-[var(--landing-primary)] py-12 md:py-24"
     >
       <div
         ref={textRef}
-        className="flex gap-8 whitespace-nowrap px-4 text-[14vw] font-black uppercase tracking-normal text-zinc-950 will-change-transform sm:text-[12vw] md:gap-16 md:text-[10vw]"
+        className="flex gap-8 whitespace-nowrap px-4 text-[14vw] font-black uppercase tracking-normal text-white will-change-transform sm:text-[12vw] md:gap-16 md:text-[10vw]"
       >
         <span>Members. Payments. Access. Stock. Payroll.</span>
         <span
           className="text-transparent"
-          style={{ WebkitTextStroke: "2px #09090b" }}
+          style={{ WebkitTextStroke: "2px rgba(255,255,255,0.85)" }}
         >
           One gym operating system.
         </span>
         <span>Members. Payments. Access. Stock. Payroll.</span>
         <span
           className="text-transparent"
-          style={{ WebkitTextStroke: "2px #09090b" }}
+          style={{ WebkitTextStroke: "2px rgba(255,255,255,0.85)" }}
         >
           One gym operating system.
         </span>

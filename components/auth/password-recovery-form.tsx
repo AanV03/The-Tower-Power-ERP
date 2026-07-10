@@ -77,31 +77,30 @@ export function PasswordRecoveryForm() {
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <div
-            className="flex size-14 items-center justify-center rounded-2xl shadow-lg"
-            style={{ background: "var(--brand-orange)" }}
+            className="auth-icon-tile flex size-14 items-center justify-center rounded-2xl shadow-lg"
           >
             <Dumbbell className="size-7 text-white" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">
+            <h1 className="auth-heading text-2xl font-bold tracking-tight">
               Password Recovery
             </h1>
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="auth-muted mt-1 text-sm">
               Enter your email and Gerpy will send recovery instructions if the account exists.
             </p>
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/60 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl">
-          <div className="h-1 w-full" style={{ background: "var(--brand-orange)" }} />
+        <div className="auth-card overflow-hidden rounded-2xl border ring-1 ring-[color:var(--auth-card-border)] backdrop-blur-xl">
+          <div className="auth-accent-bar h-1 w-full" />
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5 px-8 py-8">
             <div className="space-y-1.5">
-              <label htmlFor="password-recovery-email" className="block text-sm font-medium text-zinc-100">
+              <label htmlFor="password-recovery-email" className="auth-label block text-sm font-medium">
                 Email
               </label>
               <div className="relative">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                <span className="auth-field-icon pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
                   <Mail className="size-4" aria-hidden="true" />
                 </span>
                 <input
@@ -118,23 +117,22 @@ export function PasswordRecoveryForm() {
                   onBlur={() => setTouched(true)}
                   aria-invalid={emailEmpty || emailInvalid ? "true" : "false"}
                   className={cn(
-                    "h-10 w-full rounded-lg border bg-black/30 px-3 py-2 pl-9 text-sm text-white placeholder:text-zinc-500 outline-none transition-[box-shadow,border-color]",
-                    "focus:border-orange-400 focus:ring-2 focus:ring-orange-400/25",
-                    emailEmpty || emailInvalid ? "border-red-400 ring-2 ring-red-400/20" : "border-white/10"
+                    "auth-input h-10 w-full rounded-lg border px-3 py-2 pl-9 text-sm outline-none transition-[box-shadow,border-color]",
+                    emailEmpty || emailInvalid ? "auth-input-error" : ""
                   )}
                 />
               </div>
             </div>
 
             {successMessage && (
-              <p className="flex items-center gap-2 rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200" role="status">
+              <p className="auth-success-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="status">
                 <CheckCircle2 className="size-3 shrink-0" aria-hidden="true" />
                 {successMessage}
               </p>
             )}
 
             {errorMessage && (
-              <p className="flex items-center gap-2 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200" role="alert">
+              <p className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="alert">
                 <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                 {errorMessage}
               </p>
@@ -144,23 +142,20 @@ export function PasswordRecoveryForm() {
               type="submit"
               disabled={isSubmitting}
               className={cn(
-                "relative h-10 w-full rounded-lg text-sm font-semibold text-white outline-none transition-all duration-200",
-                "focus-visible:ring-2 focus-visible:ring-orange-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
+                "auth-primary-button relative h-10 w-full rounded-lg text-sm font-semibold outline-none transition-all duration-200",
                 "hover:brightness-110 active:scale-[0.99]",
                 "disabled:cursor-not-allowed disabled:opacity-60"
               )}
-              style={{ background: "var(--brand-orange)" }}
             >
               {isSubmitting ? "Sending recovery email..." : "Send recovery email"}
             </button>
           </form>
 
-          <div className="border-t border-white/10 bg-black/20 px-8 py-5 text-center text-sm text-zinc-400">
+          <div className="auth-divider border-t px-8 py-5 text-center text-sm">
             Remembered your password?{" "}
             <Link
               href={signInHref()}
-              className="font-semibold underline-offset-4 transition-colors hover:underline"
-              style={{ color: "var(--brand-orange)" }}
+              className="auth-link font-semibold underline-offset-4 transition-colors hover:underline"
             >
               Sign in
             </Link>

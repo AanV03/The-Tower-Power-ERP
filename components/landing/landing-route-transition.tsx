@@ -105,13 +105,14 @@ export function LandingRouteTransitionProvider({
 
       {curtainPhase !== "idle" ? (
         <div
+          key={curtainPhase}
           aria-hidden="true"
           className="pointer-events-none fixed inset-0 z-[100] grid grid-cols-7"
         >
           {curtainPanels.map((panel) => (
             <motion.div
               key={panel}
-              className="origin-top bg-amber-500"
+              className="origin-top bg-[var(--landing-transition-bg,#025453)]"
               initial={{ scaleY: curtainPhase === "enter" ? 0 : 1 }}
               animate={{ scaleY: curtainPhase === "enter" ? 1 : 0 }}
               transition={{

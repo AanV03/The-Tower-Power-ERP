@@ -11,8 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import { gsap } from "gsap";
-import BackgroundGrid from "../BackgroundGrid";
-import AuroraBackground from "../AuroraBackground";
+import { AuthBackground } from "@/components/backgrounds/auth-background";
 
 const heroStats = [
   { label: "Active members", value: "3,842", trend: "+12%" },
@@ -73,22 +72,20 @@ export default function Hero() {
   return (
     <section
       ref={containerRef}
-      className="relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-zinc-950 px-4 py-28 sm:px-6 sm:py-32 lg:px-8"
+      className="landing-hero relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-[var(--landing-background)] px-4 py-28 sm:px-6 sm:py-32 lg:px-8"
     >
       {/* Layer 1 */}
-      <BackgroundGrid />
-      <AuroraBackground />
+      <AuthBackground variant="hero" />
       {/* Layer 2 */}
      
 
-      {/* Layer 3 */}
-      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-zinc-950 z-[2]" />
+      {/* Layer 3 — soft edge vignette, keeps center colorful */}
 
       <div className="relative z-10 grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[1.03fr_0.97fr]">
         <div className="flex min-w-0 flex-col items-start">
           <h1
             ref={titleRef}
-            className="flex max-w-5xl flex-wrap gap-x-2 overflow-hidden px-1 text-[clamp(2.65rem,14vw,7.5rem)] font-black uppercase leading-[0.92] tracking-normal text-white sm:gap-x-4 sm:text-[clamp(3.7rem,10vw,8rem)] lg:text-[clamp(4.6rem,8.6vw,8.5rem)]"
+            className="flex max-w-5xl flex-wrap gap-x-2 overflow-hidden px-1 text-[clamp(2.65rem,14vw,7.5rem)] font-black uppercase leading-[0.92] tracking-normal text-[var(--landing-text)] sm:gap-x-4 sm:text-[clamp(3.7rem,10vw,8rem)] lg:text-[clamp(4.6rem,8.6vw,8.5rem)]"
           >
             {"ALL GYM OPS ONE PLATFORM".split(" ").map((word, i) => (
               <span
@@ -107,7 +104,7 @@ export default function Hero() {
             ))}
           </h1>
 
-          <p className="mt-6 max-w-2xl text-base leading-7 text-zinc-300 sm:text-lg md:text-xl">
+          <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--landing-copy)] sm:text-lg md:text-xl">
             Gerpy brings memberships, billing, access, classes, payroll,
             stock, and finance into one connected operating layer for fitness
             teams that move fast across every branch.
@@ -117,15 +114,15 @@ export default function Hero() {
             {heroStats.map((stat) => (
               <div
                 key={stat.label}
-                className="border border-white/10 bg-zinc-900/70 p-4"
+                className="border border-[color:var(--landing-border)] bg-[var(--landing-panel)] p-4"
               >
-                <div className="text-2xl font-black text-white">
+                <div className="text-2xl font-black text-[var(--landing-text)]">
                   {stat.value}
                 </div>
-                <div className="mt-1 text-xs uppercase tracking-[0.16em] text-zinc-500">
+                <div className="mt-1 text-xs uppercase tracking-[0.16em] text-[var(--landing-muted)]">
                   {stat.label}
                 </div>
-                <div className="mt-3 text-sm font-bold text-emerald-400">
+                <div className="mt-3 text-sm font-bold text-[var(--landing-mint)]">
                   {stat.trend}
                 </div>
               </div>
@@ -134,17 +131,17 @@ export default function Hero() {
         </div>
 
         <div className="relative hidden lg:block">
-          <div className="border border-white/12 bg-zinc-950/90 p-5 shadow-2xl shadow-black/50">
-            <div className="mb-5 flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="border border-[color:var(--landing-border)] bg-[var(--landing-panel-strong)] p-5 shadow-2xl shadow-slate-900/10 dark:shadow-black/50">
+            <div className="mb-5 flex items-center justify-between border-b border-[color:var(--landing-border)] pb-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--landing-accent-strong)]">
                   Operations command
                 </p>
-                <h2 className="mt-2 text-2xl font-black uppercase text-white">
+                <h2 className="mt-2 text-2xl font-black uppercase text-[var(--landing-text)]">
                   Downtown branch
                 </h2>
               </div>
-              <div className="flex items-center gap-2 text-sm font-bold text-emerald-400">
+              <div className="flex items-center gap-2 text-sm font-bold text-[var(--landing-accent-strong)]">
                 <Activity className="h-4 w-4" aria-hidden="true" />
                 Live
               </div>
@@ -152,28 +149,28 @@ export default function Hero() {
 
             <div className="grid grid-cols-2 gap-3">
               {operations.map(({ icon: Icon, label, value }) => (
-                <div key={label} className="border border-white/10 bg-white/[0.04] p-4">
-                  <Icon className="mb-4 h-5 w-5 text-amber-400" aria-hidden="true" />
-                  <p className="text-sm font-bold text-white">{label}</p>
-                  <p className="mt-1 text-sm text-zinc-400">{value}</p>
+                <div key={label} className="border border-[color:var(--landing-border)] bg-white/[0.04] p-4">
+                  <Icon className="mb-4 h-5 w-5 text-[var(--landing-accent-strong)]" aria-hidden="true" />
+                  <p className="text-sm font-bold text-[var(--landing-text)]">{label}</p>
+                  <p className="mt-1 text-sm text-[var(--landing-copy)]">{value}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-5 border border-white/10 bg-black/20 p-4">
+            <div className="mt-5 border border-[color:var(--landing-border)] bg-[var(--landing-panel-muted)] p-4">
               <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-bold text-white">
-                  <BarChart3 className="h-4 w-4 text-amber-400" aria-hidden="true" />
+                <div className="flex items-center gap-2 text-sm font-bold text-[var(--landing-text)]">
+                  <BarChart3 className="h-4 w-4 text-[var(--landing-accent-strong)]" aria-hidden="true" />
                   Revenue by hour
                 </div>
-                <BadgeCheck className="h-5 w-5 text-emerald-400" aria-hidden="true" />
+                <BadgeCheck className="h-5 w-5 text-[var(--landing-accent-strong)]" aria-hidden="true" />
               </div>
               <div className="flex h-28 items-end gap-2">
                 {[38, 54, 46, 72, 58, 88, 66, 94, 81, 70, 92, 76].map(
                   (height, index) => (
                     <div
                       key={index}
-                      className="flex-1 bg-amber-400/80"
+                      className="flex-1 bg-[var(--landing-accent-strong)]"
                       style={{ height: `${height}%` }}
                     />
                   )
@@ -181,16 +178,16 @@ export default function Hero() {
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-[1fr_auto] items-center gap-4 border border-amber-400/25 bg-amber-400/10 p-4">
+            <div className="mt-5 grid grid-cols-[1fr_auto] items-center gap-4 border border-[color:var(--landing-alert-border)] bg-[var(--landing-alert-bg)] p-4">
               <div>
-                <p className="text-sm font-bold text-white">
+                <p className="text-sm font-bold text-[var(--landing-text)]">
                   Low stock alert resolved
                 </p>
-                <p className="mt-1 text-sm text-zinc-400">
+                <p className="mt-1 text-sm text-[var(--landing-copy)]">
                   Protein bars transferred from North branch.
                 </p>
               </div>
-              <span className="text-xs font-black uppercase tracking-[0.16em] text-amber-300">
+              <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--landing-accent-strong)]">
                 Synced
               </span>
             </div>

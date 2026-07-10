@@ -14,7 +14,7 @@ export function Providers({ children, ...props }: React.ComponentProps<typeof Ne
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="light"
+      defaultTheme="system"
       enableSystem
       disableTransitionOnChange
       {...props}
