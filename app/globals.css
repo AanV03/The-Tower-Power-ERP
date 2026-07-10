@@ -474,3 +474,25 @@
 :root[data-font="elegant"] * {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
+
+/* Custom minimal scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--nav-section-accent, var(--brand-green, rgba(255, 255, 255, 0.15)));
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--nav-section-accent, var(--brand-green, rgba(255, 255, 255, 0.3)));
+}
+/* For Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--nav-section-accent, var(--brand-green, rgba(255, 255, 255, 0.15))) transparent;
+}
+
