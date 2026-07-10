@@ -41,6 +41,7 @@ export class AuthService {
     const email = normalizeEmail(payload.email);
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(payload.password, salt);
+    const tenantName = payload.gymName?.trim() || "Gimnasio pendiente de configuración";
 
     return prisma.$transaction(async (tx) => {
       const existingUser = await tx.user.findUnique({
@@ -53,7 +54,7 @@ export class AuthService {
 
       const tenant = await tx.tenant.create({
         data: {
-          name: payload.gymName,
+          name: tenantName,
           status: 'ACTIVE',
         },
       });

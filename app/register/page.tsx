@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
-  Building2,
   CheckCircle2,
   Dumbbell,
   Eye,
@@ -21,7 +20,7 @@ import {
 import BackgroundGrid from "@/components/BackgroundGrid";
 import { cn } from "@/lib/utils";
 
-type RegisterField = "gymName" | "name" | "email" | "password" | "confirm";
+type RegisterField = "name" | "email" | "password" | "confirm";
 
 type RegisterResponse = {
   ok?: boolean;
@@ -42,7 +41,6 @@ type TwoFactorSetupResponse = {
 };
 
 const emptyErrors: Record<RegisterField, string> = {
-  gymName: "",
   name: "",
   email: "",
   password: "",
@@ -201,7 +199,6 @@ function InputField({
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [gymName, setGymName] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -216,7 +213,6 @@ export default function RegisterPage() {
   const [setupSecret, setSetupSecret] = useState("");
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [touched, setTouched] = useState<Record<RegisterField, boolean>>({
-    gymName: false,
     name: false,
     email: false,
     password: false,
@@ -234,10 +230,6 @@ export default function RegisterPage() {
 
   function validateClient() {
     const nextErrors = { ...emptyErrors };
-
-    if (gymName.trim().length < 3) {
-      nextErrors.gymName = "Gym name must be at least 3 characters.";
-    }
 
     if (name.trim().length < 2) {
       nextErrors.name = "Full name is required.";
@@ -267,7 +259,7 @@ export default function RegisterPage() {
     payload?.details?.forEach((issue) => {
       const field = issue.path?.[0];
       if (
-        (field === "gymName" || field === "name" || field === "email" || field === "password") &&
+        (field === "name" || field === "email" || field === "password") &&
         issue.message
       ) {
         nextErrors[field] = issue.message;
@@ -293,7 +285,7 @@ export default function RegisterPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
-    setTouched({ gymName: true, name: true, email: true, password: true, confirm: true });
+    setTouched({ name: true, email: true, password: true, confirm: true });
 
     if (!validateClient()) return;
 
@@ -304,7 +296,6 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          gymName: gymName.trim(),
           name: name.trim(),
           email: email.trim(),
           password,
@@ -360,7 +351,7 @@ export default function RegisterPage() {
       className="relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-950 px-4 py-12 text-white"
     >
       <BackgroundGrid />
-      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-zinc-950" />
+      <div className="absolute inset-0 z-1 bg-linear-to-t from-zinc-950 via-zinc-950/40 to-zinc-950" />
 
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
@@ -444,20 +435,6 @@ export default function RegisterPage() {
               </form>
             ) : (
             <form id="register-form" onSubmit={handleSubmit} noValidate className="space-y-5">
-              <InputField
-                id="register-gym-name"
-                label="Gym name"
-                placeholder="Forge Gym"
-                value={gymName}
-                onChange={setGymName}
-                onBlur={() => handleBlur("gymName")}
-                hasError={!!fieldErrors.gymName}
-                error={fieldErrors.gymName}
-                ariaDescribedBy="register-gym-name-error"
-                icon={<Building2 className="size-4" aria-hidden="true" />}
-                autoComplete="organization"
-              />
-
               <InputField
                 id="register-name"
                 label="Full name"
