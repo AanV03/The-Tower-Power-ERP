@@ -1,17 +1,18 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-
 import { Button } from "@/components/ui/button";
 
-export function PlanSelectButton() {
-  const router = useRouter();
-
+export function PlanSelectButton({
+  onClick,
+  selected,
+}: {
+  onClick: () => void;
+  selected?: boolean;
+}) {
   return (
     <Button
       type="button"
       className="w-full"
-      onClick={() => router.push("/onboarding/finish" as any)}
+      variant={selected ? "secondary" : "default"}
+      onClick={onClick}
     >
       Seleccionar
     </Button>

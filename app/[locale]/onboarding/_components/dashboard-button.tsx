@@ -9,7 +9,7 @@ export function DashboardButton() {
   const router = useRouter();
 
   return (
-    <Button type="button" onClick={() => router.push("/dashboard")}>
+    <Button type="button" onClick={() => router.push("/dashboard" as any)}>
       Ir al Dashboard
       <LayoutDashboard aria-hidden="true" />
     </Button>

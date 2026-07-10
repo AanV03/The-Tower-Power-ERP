@@ -1,4 +1,4 @@
-import { Building2, CheckCircle2, ClipboardList } from "lucide-react";
+import { Building2, CheckCircle2, CreditCard } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +9,9 @@ import {
 import { OnboardingNavButton } from "../onboarding/_components/onboarding-nav-button";
 
 const previewItems = [
-  "Datos principales del gimnasio",
-  "Configuraciones iniciales",
+  "Nombre del gimnasio, CURP y RFC",
   "Seleccion de plan",
+  "Numero de tarjeta temporal",
 ];
 
 export default function OnboardingAdminPage() {
@@ -27,12 +27,12 @@ export default function OnboardingAdminPage() {
               key={item}
               className="rounded-2xl border border-white/10 bg-background/55 p-4 shadow-sm"
             >
-              <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-[var(--brand-orange)]/10 text-[var(--brand-orange)]">
-                <span className="text-sm font-bold">{index + 1}</span>
+              <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-orange-400/10 text-orange-400">
+                {index === 0 ? <Building2 className="size-4" aria-hidden="true" /> : index === 1 ? <CheckCircle2 className="size-4" aria-hidden="true" /> : <CreditCard className="size-4" aria-hidden="true" />}
               </div>
               <p className="text-sm font-semibold text-foreground">{item}</p>
               <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                Este paso solo prepara la experiencia inicial del administrador.
+                Este recorrido prepara los datos necesarios antes de entrar al dashboard.
               </p>
             </div>
           ))}
