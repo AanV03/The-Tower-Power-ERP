@@ -1,0 +1,17 @@
+{
+  "short_name": "Gerpy Socio",
+  "name": "Gerpy - Portal de Socios",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": "/es/portal",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/"
+}

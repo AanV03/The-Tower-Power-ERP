@@ -64,7 +64,7 @@ const platformFeatures = [
 
 export default function Home() {
   return (
-    <main className="landing-palette relative min-h-screen w-full overflow-hidden bg-[var(--landing-bg)]">
+    <main className="landing-palette relative min-h-screen w-full overflow-hidden bg-[var(--landing-bg)] overscroll-y-none">
       <LandingNavbar />
       <Hero />
 
