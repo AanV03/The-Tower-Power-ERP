@@ -1,0 +1,19 @@
+import pypdf
+import os
+
+pdf_path = r"c:\Dev\Gerpy\docs\workplan2.0.pdf"
+output_path = r"c:\Dev\Gerpy\scratch\workplan2.0_text.txt"
+
+os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+reader = pypdf.PdfReader(pdf_path)
+print(f"Total pages: {len(reader.pages)}")
+
+with open(output_path, "w", encoding="utf-8") as f:
+    for idx, page in enumerate(reader.pages):
+        text = page.extract_text()
+        f.write(f"--- PAGE {idx + 1} ---\n")
+        f.write(text)
+        f.write("\n\n")
+
+print("Done! Text saved to scratch/workplan2.0_text.txt")

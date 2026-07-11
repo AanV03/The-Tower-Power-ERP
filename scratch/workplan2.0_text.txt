@@ -1,0 +1,129 @@
+--- PAGE 1 ---
+    
+WORKPLAN 2.0 Date 29/05/2026  Group IDGBIS81N 
+
+
+--- PAGE 2 ---
+Sprint 1: Foundation Setup & Architecture 
+Timeline: May 12, 2026 – May 26, 2026 
+ Sprint Objective: Establish repository foundations, design the multi-tenant directory 
+layouts, and construct the responsive UI shell with localized mock paths.  
+ Tasks & Responsibilities: 
+o Task 1: Next.js 15 UI Shell & Navigation System | Frontend (Primary), 
+Tester (Supporting) -> Build global dashboard layout and multi-language 
+routing features.  
+o Task 2: API-First Multicapa Backend Boilerplate | Backend (Primary), 
+Database (Supporting) -> Define Domain-Driven Design folder tree and hook 
+up Prisma to Supabase.  
+o Task 3: Mock Data Layouts & Accessibility Pipeline | Frontend (Primary), 
+Tester (Primary) -> Map out sample module files and configure automated 
+Pa11y/Lighthouse validation scripts.  
+ Deliverable: Accessible "hollow shell" frontend showing structural views for all 10 
+modules alongside an active backend connection.  
+ Due Date: May 26, 2026 
+ 
+Sprint 2: Core Multi-Tenancy & Authentication 
+Timeline: May 26, 2026 – June 9, 2026 
+ Sprint Objective: Wire up the authentication screens to securely handle user log-
+ins, enforce role-based rules, and guarantee total data isolation between different 
+gyms.  
+ Tasks & Responsibilities: 
+o Task 1: Multi-Tenant Schema & Database Isolation | Database (Primary), 
+Backend (Supporting) -> Deploy user/tenant models in Prisma and configure 
+Supabase Row Level Security (RLS).  
+o Task 2: Auth Services & Multi-Tenancy Middleware | Backend (Primary), 
+Database (Supporting) -> Build login endpoints and program middleware.ts 
+to validate the x-tenant-id header.  
+o Task 3: Live UI Integration & Cross-Tenant Validation | Frontend 
+(Primary), Tester (Primary) -> Replace frontend mock auth with real API calls 
+and rigorously test for zero data leakage between gyms.  
+
+--- PAGE 3 ---
+ Deliverable: Secure authentication gateway that logs users in, validates roles, and 
+enforces data isolation across gym environments.  
+ Due Date: June 9, 2026 
+ 
+Sprint 3: Core Gym Operations 
+Timeline: June 9, 2026 – June 23, 2026 
+ Sprint Objective: Replace the mock files for subscriptions, access control 
+checkpoints, and retail transactions with live database-driven business logic.  
+ Tasks & Responsibilities: 
+o Task 1: Subscriptions & Hardware Access Engine | Database (Primary), 
+Backend (Supporting) -> Build membership lifecycle systems and write real-
+time status check endpoints for turnstiles/QR links.  
+o Task 2: Inventory Tracking & Point of Sale (POS) | Backend (Primary), 
+Database (Supporting) -> Build product retail checkout services, inter-branch 
+stock transfers, and automated audit logging.  
+o Task 3: Operational UI Integration | Frontend (Primary), Tester (Primary) -
+> Swap out mock configurations for /memberships, /access, /inventory, and 
+/pos pages to consume the new live data layers.  
+ Deliverable: Live operational modules reading and writing true member actions and 
+inventory tracking counts directly to the database.  
+ Due Date: June 23, 2026 
+ 
+Sprint 4: Human Resources & Specialist Models 
+Timeline: June 23, 2026 – July 7, 2026 
+ Sprint Objective: Connect internal staff operations, daily employee time clocks, and 
+specialized commission calculations for independent gym trainers.  
+ Tasks & Responsibilities: 
+o Task 1: HR Portal, Time Clock, & Branch Budgets | Database (Primary), 
+Backend (Supporting) -> Code employee record tables, digital staff clock-ins, 
+and manager budget controls.  
+o Task 2: Specialist Commission & Fixed Rent Engines | Backend 
+(Primary), Database (Supporting) -> Write calculations to handle automated 
+monthly payouts based on flat rent fees or completed session percentage 
+splits.  
+
+--- PAGE 4 ---
+o Task 3: HR & Specialist Interface Launch | Frontend (Primary), Tester 
+(Primary) -> Connect /hr and /specialists pages to live endpoints and 
+mathematically audit calculation accuracy.  
+ Deliverable: Dynamic payroll and contractor dashboards displaying real attendance 
+counts and exact automated financial settlement breakdowns.  
+ Due Date: July 7, 2026 
+ 
+Sprint 5: Marketing Funnels & Financial Reconciliation 
+Timeline: July 7, 2026 – July 21, 2026 
+ Sprint Objective: Implement automated customer relations tools alongside cash 
+flow reconciliation engines to manage branch revenues and reduce member churn.  
+ Tasks & Responsibilities: 
+o Task 1: Integrated CRM & Predictive Churn Analytics | Database 
+(Primary), Backend (Supporting) -> Set up sales funnel tracks and write 
+algorithms to flag at-risk members showing low gym attendance.  
+o Task 2: Marketing Automations & Accounts Receivable | Backend 
+(Primary), Frontend (Supporting) -> Develop automatic renewal reminder 
+triggers (Email/SMS simulation) and build bank reconciliation ledger streams.  
+o Task 3: Marketing & Finance UI Synthesis | Frontend (Primary), Tester 
+(Primary) -> Link the final operational pages (/marketing, /finance) to core 
+endpoints and test responsive charts under changing data filters.  
+ Deliverable: Fully functional analytics reporting boards processing automatic 
+collection ledger updates and marketing outreach campaigns.  
+ Due Date: July 21, 2026 
+ 
+Sprint 6: Super-Admin SaaS Dashboard & Hardening 
+Timeline: July 21, 2026 – August 4, 2026 
+ Sprint Objective: Create the master SaaS tier controls, convert frontend themes to 
+true white-label configurations, and complete final security hardening.  
+ Tasks & Responsibilities: 
+o Task 1: Super-Administrator Control Center | Backend (Primary), 
+Database (Supporting) -> Build root administration endpoints to create 
+tenants, toggle feature flags, or freeze overdue licenses.  
+
+--- PAGE 5 ---
+o Task 2: Dynamic White-Label Theming Engine | Frontend (Primary), 
+Backend (Supporting) -> Update BrandStyleProvider to adjust logos, 
+palettes, and custom domains based on active tenant values.  
+o Task 3: Full Project Hardening & Final Sign-off | Tester (Primary), All 
+Team (Supporting) -> Run final automated Pa11y/Lighthouse audits, check 
+security bounds, and compile the mandatory CHANGELOG.md.  
+ Deliverable: Production-ready multi-tenant SaaS application fully hardened against 
+vulnerabilities and verified to achieve strict accessibility standards.  
+ Due Date: August 4, 2026 
+ 
+Buffer & Release Phase 
+Timeline: August 4, 2026 – August 7, 2026 
+ Focus: Production environment configuration checks, backup policy validation, and 
+official project handover sign-off.  
+ Final Delivery: August 7, 2026 
+ 
+
