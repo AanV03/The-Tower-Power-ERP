@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { Providers } from "@/app/providers";
 import { LandingRouteTransitionProvider } from "@/components/landing/landing-route-transition";
@@ -31,6 +32,7 @@ export default function RootLayout({
           <LandingRouteTransitionProvider>
             {children}
           </LandingRouteTransitionProvider>
+          <SpeedInsights />
         </Providers>
       </body>
     </html>
