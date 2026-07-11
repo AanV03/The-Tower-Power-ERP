@@ -135,7 +135,7 @@ Respuesta:
     "completed": false,
     "currentStep": "gym-info",
     "gymInfo": {
-      "gymName": "Gerpy Fitness Center",
+      "gymName": "The Tower Power Fitness Center",
       "address": "Av. Principal 123",
       "timeZone": "America/Mexico_City",
       "curp": "ABCD010101HDFRRN09",
@@ -162,7 +162,7 @@ Body:
 
 ```json
 {
-  "gymName": "Gerpy Fitness Center",
+  "gymName": "The Tower Power Fitness Center",
   "address": "Av. Principal 123, Col. Centro",
   "timeZone": "America/Mexico_City",
   "curp": "ABCD010101HDFRRN09",

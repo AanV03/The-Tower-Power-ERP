@@ -46,7 +46,7 @@ export function EmailValidationPlaceholder({ locale }: { locale?: string }) {
               href={homeHref(locale)}
               className="auth-primary-button inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold transition-all duration-200 hover:brightness-110"
             >
-              Back to Gerpy
+              Back to The Tower Power
             </Link>
           </div>
         </div>

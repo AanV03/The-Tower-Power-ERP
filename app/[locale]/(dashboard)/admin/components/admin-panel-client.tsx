@@ -12,9 +12,9 @@ import { toast } from "sonner";
 // Initial seed data matching existing options in the platform
 const SEED_TENANTS: Tenant[] = [
   {
-    id: "gerpy-hq",
-    name: "Gerpy HQ",
-    subdomain: "gerpy-hq",
+    id: "tower-power-hq",
+    name: "The Tower Power HQ",
+    subdomain: "tower-power-hq",
     plan: "Enterprise",
     status: "Active",
     createdAt: "2025-06-01",

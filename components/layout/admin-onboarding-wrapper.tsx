@@ -601,7 +601,7 @@ function GymInfoStep({
                 "h-12 border-border bg-background/60 pl-9 shadow-sm placeholder:text-muted-foreground/70",
                 errors.gymName ? "border-destructive focus-visible:ring-destructive/20" : "",
               )}
-              placeholder="Gerpy Fitness Center"
+              placeholder="The Tower Power Fitness Center"
               aria-invalid={errors.gymName ? "true" : "false"}
             />
           </div>

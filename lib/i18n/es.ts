@@ -108,7 +108,7 @@ export const es = {
     },
     signin: {
       title: "Bienvenido de vuelta",
-      subtitle: "Inicia sesión en tu cuenta de Gerpy ERP",
+      subtitle: "Inicia sesión en tu cuenta de The Tower Power",
       forgotPassword: "¿Olvidaste tu contraseña?",
       submit: "Iniciar sesión",
       loading: "Iniciando sesión…",
@@ -117,7 +117,7 @@ export const es = {
     },
     signup: {
       title: "Crea tu cuenta",
-      subtitle: "Únete a Gerpy ERP y empieza a gestionar tu gimnasio",
+      subtitle: "Únete a The Tower Power y empieza a gestionar tu gimnasio",
       submit: "Crear cuenta",
       loading: "Creando cuenta…",
       footerPrefix: "¿Ya tienes cuenta?",

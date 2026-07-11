@@ -139,7 +139,7 @@ export async function PayrollDashboard({
         NOT: {
           email: {
             startsWith: "specialist-",
-            endsWith: "@gerpy.demo",
+            endsWith: "@towerpower.demo",
           },
         },
       },

@@ -3,7 +3,7 @@ import { getToken } from "next-auth/jwt";
 
 import { defaultLocale, locales } from "@/lib/i18n";
 import {
-  GERPY_SESSION_COOKIE,
+  TOWER_POWER_SESSION_COOKIE,
   getAuthSecret,
   type SessionTokenPayload,
   verifyAuthToken,
@@ -132,7 +132,7 @@ function readStringList(value: unknown) {
 }
 
 async function getMiddlewareAuthContext(request: NextRequest): Promise<MiddlewareAuthContext | null> {
-  const sessionCookie = request.cookies.get(GERPY_SESSION_COOKIE)?.value;
+  const sessionCookie = request.cookies.get(TOWER_POWER_SESSION_COOKIE)?.value;
   const sessionPayload = await verifyAuthToken<SessionTokenPayload>(sessionCookie, "session");
 
   if (sessionPayload) {

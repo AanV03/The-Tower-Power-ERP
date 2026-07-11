@@ -20,8 +20,8 @@ export type BrandConfig = {
 };
 
 export const defaultBrand: BrandConfig = {
-  id: "gerpy",
-  name: "Gerpy ERP",
+  id: "tower-power",
+  name: "The Tower Power",
   logoText: "GE",
   radius: "0.75rem",
   palettes: {

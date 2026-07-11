@@ -133,7 +133,7 @@ export function EmployeeFormDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-email`}>
               Correo
-              <Input id={`${formId}-email`} name="email" type="email" defaultValue={employee?.email === "Sin correo" ? "" : employee?.email} placeholder="empleado@gerpy.mx" disabled={isSubmitting} />
+              <Input id={`${formId}-email`} name="email" type="email" defaultValue={employee?.email === "Sin correo" ? "" : employee?.email} placeholder="empleado@towerpower.mx" disabled={isSubmitting} />
             </label>
             <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-phone`}>
               Telefono

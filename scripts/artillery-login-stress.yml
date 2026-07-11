@@ -1,5 +1,5 @@
 config:
-  target: "https://gerpy.vercel.app"
+  target: "https://towerpower.vercel.app"
   phases:
     - duration: 15
       arrivalRate: 5
@@ -15,5 +15,5 @@ scenarios:
       - post:
           url: "/api/auth/login"
           json:
-            email: "devops-test@gerpy.com"
+            email: "devops-test@towerpower.com"
             password: "ClaveInvalidaParaPruebas123!"

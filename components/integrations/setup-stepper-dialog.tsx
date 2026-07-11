@@ -172,7 +172,7 @@ export function SetupStepperDialog({
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                El token se almacena de forma encriptada en la base de datos de Gerpy ERP.
+                El token se almacena de forma encriptada en la base de datos de The Tower Power.
               </p>
             </div>
           )}
@@ -219,7 +219,7 @@ export function SetupStepperDialog({
                 <div className="flex items-center gap-2 p-2.5 rounded-lg border border-[var(--sidebar-border-color)] bg-[var(--glass-control-bg)]">
                   <Webhook className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
                   <span className="text-xs font-mono select-all overflow-hidden text-ellipsis whitespace-nowrap text-muted-foreground">
-                    https://api.gerpy.com/v1/webhooks/{integration.id}
+                    https://api.towerpower.com/v1/webhooks/{integration.id}
                   </span>
                 </div>
               </div>

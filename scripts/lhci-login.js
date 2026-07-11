@@ -20,9 +20,9 @@ module.exports = async (browser, context) => {
     
     // 3. Type credentials
     await page.click('#login-email');
-    await page.type('#login-email', 'superadmin@gerpy.local', { delay: 50 });
+    await page.type('#login-email', 'superadmin@towerpower.local', { delay: 50 });
     await page.click('#login-password');
-    await page.type('#login-password', 'GerpyDemo!2026', { delay: 50 });
+    await page.type('#login-password', 'The Tower PowerDemo!2026', { delay: 50 });
     
     // 4. Submit first stage
     await page.click('#login-submit');

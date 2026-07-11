@@ -6,8 +6,8 @@ import mongoose, { Schema } from "mongoose";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Prisma, PrismaClient } from "@prisma/client";
 
-export const DEFAULT_SUPERADMIN_EMAIL = "superadmin@gerpy.local";
-export const DEFAULT_SUPERADMIN_PASSWORD = "GerpyDemo!2026";
+export const DEFAULT_SUPERADMIN_EMAIL = "superadmin@towerpower.local";
+export const DEFAULT_SUPERADMIN_PASSWORD = "The Tower PowerDemo!2026";
 
 const MODULES = [
   "DASHBOARD",
@@ -54,13 +54,13 @@ const PERMISSIONS = [
 export function buildSeedConfig(env = process.env) {
   return {
     superadmin: {
-      name: "Gerpy Superadmin",
+      name: "The Tower Power Superadmin",
       email: DEFAULT_SUPERADMIN_EMAIL,
       password: env.SEED_SUPERADMIN_PASSWORD || DEFAULT_SUPERADMIN_PASSWORD,
     },
     tenant: {
-      name: "Gerpy Demo Gym",
-      legalName: "Gerpy Demo Gym S.A. de C.V.",
+      name: "The Tower Power Demo Gym",
+      legalName: "The Tower Power Demo Gym S.A. de C.V.",
       taxId: "GDE260101DEMO",
     },
     branch: {
@@ -321,7 +321,7 @@ async function seedCatalog(tx, tenantId, branchId) {
   const towel = await tx.product.upsert({
     where: { tenantId_sku: { tenantId, sku: "TOWEL-PRO" } },
     update: {
-      name: "Toalla Premium Gerpy",
+      name: "Toalla Premium The Tower Power",
       categoryId: apparel.id,
       price: decimal(249),
       cost: decimal(95),
@@ -331,7 +331,7 @@ async function seedCatalog(tx, tenantId, branchId) {
     create: {
       tenantId,
       sku: "TOWEL-PRO",
-      name: "Toalla Premium Gerpy",
+      name: "Toalla Premium The Tower Power",
       categoryId: apparel.id,
       price: decimal(249),
       cost: decimal(95),
@@ -380,7 +380,7 @@ async function seedCatalog(tx, tenantId, branchId) {
 
 async function seedOperations(tx, tenantId, branchId, products) {
   const member = await tx.member.upsert({
-    where: { tenantId_email: { tenantId, email: "miembro.demo@gerpy.local" } },
+    where: { tenantId_email: { tenantId, email: "miembro.demo@towerpower.local" } },
     update: {
       branchId,
       firstName: "Alex",
@@ -392,7 +392,7 @@ async function seedOperations(tx, tenantId, branchId, products) {
       branchId,
       firstName: "Alex",
       lastName: "Demo",
-      email: "miembro.demo@gerpy.local",
+      email: "miembro.demo@towerpower.local",
       phone: "+52 55 0000 0000",
       status: "ACTIVE",
     },
@@ -536,7 +536,7 @@ async function seedFinanceAndPeople(tx, tenantId, branchId) {
         where: { id: existingSupplier.id },
         data: {
           taxId: "SUP260101DEMO",
-          email: "proveedor.demo@gerpy.local",
+          email: "proveedor.demo@towerpower.local",
           status: "ACTIVE",
         },
       })
@@ -545,7 +545,7 @@ async function seedFinanceAndPeople(tx, tenantId, branchId) {
       tenantId,
       name: "Proveedor Demo Suplementos",
       taxId: "SUP260101DEMO",
-      email: "proveedor.demo@gerpy.local",
+      email: "proveedor.demo@towerpower.local",
       status: "ACTIVE",
     },
   });
@@ -603,7 +603,7 @@ async function seedFinanceAndPeople(tx, tenantId, branchId) {
   });
 
   const employee = await tx.employee.upsert({
-    where: { tenantId_email: { tenantId, email: "gerente.demo@gerpy.local" } },
+    where: { tenantId_email: { tenantId, email: "gerente.demo@towerpower.local" } },
     update: {
       branchId,
       firstName: "Mariana",
@@ -616,7 +616,7 @@ async function seedFinanceAndPeople(tx, tenantId, branchId) {
       branchId,
       firstName: "Mariana",
       lastName: "Gerente",
-      email: "gerente.demo@gerpy.local",
+      email: "gerente.demo@towerpower.local",
       phone: "+52 55 1111 1111",
       positionId: position.id,
       status: "ACTIVE",

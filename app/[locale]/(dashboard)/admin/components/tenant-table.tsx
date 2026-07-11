@@ -206,7 +206,7 @@ export function TenantTable({ tenants, onEdit, onAdd, locale, dict }: TenantTabl
                     <td className="px-4 py-3.5 font-mono text-xs text-muted-foreground">
                       <span className="flex items-center gap-1.5">
                         <Globe className="h-3.5 w-3.5" />
-                        {tenant.subdomain}.gerpy.com
+                        {tenant.subdomain}.towerpower.com
                       </span>
                     </td>
                     <td className="px-4 py-3.5">{getPlanBadge(tenant.plan)}</td>

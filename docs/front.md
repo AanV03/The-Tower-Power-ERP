@@ -1,12 +1,12 @@
-# Analisis de Frontend - ERP Gerpy
+# Analisis de Frontend - ERP The Tower Power
 
 Fecha de analisis: 2026-05-29  
 Documento base: `C:\Users\aaron\Desktop\workplan.pdf`  
-Repositorio: `C:\Dev\School\Gerpy`
+Repositorio: `C:\Dev\School\The Tower Power`
 
 ## Resumen ejecutivo
 
-El frontend de Gerpy esta construido como un dashboard ERP multi-modulo con App Router, rutas localizadas, shell autenticado, sidebar agrupado, topbar, navegacion movil, tarjetas metricas, graficas, tablas y soporte de marca. Visualmente y estructuralmente ya existe una interfaz amplia para 18 modulos ERP.
+El frontend de The Tower Power esta construido como un dashboard ERP multi-modulo con App Router, rutas localizadas, shell autenticado, sidebar agrupado, topbar, navegacion movil, tarjetas metricas, graficas, tablas y soporte de marca. Visualmente y estructuralmente ya existe una interfaz amplia para 18 modulos ERP.
 
 El punto debil principal es que muchas pantallas son vistas de resumen reutilizadas mediante `ModulePage`. Esto da cobertura visual y lectura de KPIs, pero no entrega todavia flujos operativos completos de CRUD, formularios especializados, pantallas de cajero, control de acceso, membresias, nomina, asistencia o compras como pide el workplan. El frontend esta en buen estado como esqueleto de producto y capa de visualizacion; le falta convertirse en una herramienta transaccional.
 

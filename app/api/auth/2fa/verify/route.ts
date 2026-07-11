@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import {
   createAuthToken,
-  GERPY_SESSION_COOKIE,
-  GERPY_TWO_FACTOR_COOKIE,
-  GERPY_TWO_FACTOR_SETUP_COOKIE,
+  TOWER_POWER_SESSION_COOKIE,
+  TOWER_POWER_TWO_FACTOR_COOKIE,
+  TOWER_POWER_TWO_FACTOR_SETUP_COOKIE,
   SESSION_MAX_AGE_SECONDS,
   type TwoFactorChallengePayload,
   type TwoFactorSetupPayload,
@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { code } = twoFactorVerifySchema.parse(body);
-    const challengeToken = req.cookies.get(GERPY_TWO_FACTOR_COOKIE)?.value;
-    const setupToken = req.cookies.get(GERPY_TWO_FACTOR_SETUP_COOKIE)?.value;
+    const challengeToken = req.cookies.get(TOWER_POWER_TWO_FACTOR_COOKIE)?.value;
+    const setupToken = req.cookies.get(TOWER_POWER_TWO_FACTOR_SETUP_COOKIE)?.value;
 
     if (challengeToken) {
       const challenge = await verifyAuthToken<TwoFactorChallengePayload>(
@@ -51,9 +51,9 @@ export async function POST(req: NextRequest) {
         { status: 200 },
       );
 
-      response.cookies.delete(GERPY_TWO_FACTOR_COOKIE);
-      response.cookies.delete(GERPY_TWO_FACTOR_SETUP_COOKIE);
-      response.cookies.set(GERPY_SESSION_COOKIE, sessionToken, {
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_COOKIE);
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_SETUP_COOKIE);
+      response.cookies.set(TOWER_POWER_SESSION_COOKIE, sessionToken, {
         httpOnly: true,
         secure: secureCookie,
         sameSite: 'lax',
@@ -93,9 +93,9 @@ export async function POST(req: NextRequest) {
         { status: 200 },
       );
 
-      response.cookies.delete(GERPY_TWO_FACTOR_SETUP_COOKIE);
-      response.cookies.delete(GERPY_TWO_FACTOR_COOKIE);
-      response.cookies.set(GERPY_SESSION_COOKIE, sessionToken, {
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_SETUP_COOKIE);
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_COOKIE);
+      response.cookies.set(TOWER_POWER_SESSION_COOKIE, sessionToken, {
         httpOnly: true,
         secure: secureCookie,
         sameSite: 'lax',

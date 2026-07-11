@@ -15,7 +15,7 @@ test("builds a deterministic development seed config", () => {
 
   assert.equal(config.superadmin.email, DEFAULT_SUPERADMIN_EMAIL);
   assert.equal(config.superadmin.password, "CustomSeed!123");
-  assert.equal(config.tenant.name, "Gerpy Demo Gym");
+  assert.equal(config.tenant.name, "The Tower Power Demo Gym");
   assert.equal(config.modules.includes("MAINTENANCE"), true);
   assert.equal(config.permissions.includes("maintenance.manage"), true);
 });

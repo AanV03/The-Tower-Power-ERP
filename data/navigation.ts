@@ -306,7 +306,7 @@ export const scopeOptions = [
 ];
 
 export const tenantOptions = [
-  { id: "gerpy-hq", label: "Gerpy HQ" },
+  { id: "tower-power-hq", label: "The Tower Power HQ" },
   { id: "fitlab-pro", label: "FitLab Pro" },
   { id: "urban-gym", label: "Urban Gym" },
 ];

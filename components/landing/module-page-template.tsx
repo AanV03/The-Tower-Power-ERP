@@ -82,7 +82,7 @@ export function ModulePageTemplate({ module }: ModulePageTemplateProps) {
           <div>
             <p className="text-xs font-black uppercase tracking-[0.22em]">Ready for the next step</p>
             <h2 className="mt-3 text-3xl font-black uppercase leading-none sm:text-5xl">
-              Explore Gerpy with your team
+              Explore The Tower Power with your team
             </h2>
           </div>
           <Link

@@ -1,12 +1,12 @@
 # Progreso de mejoras UI/UX por modulo
 
 Fecha de referencia: 2026-06-09  
-Repositorio: `C:\Dev\School\Gerpy`  
+Repositorio: `C:\Dev\School\The Tower Power`  
 Rama actual al crear este documento: `especialistas`
 
 ## Objetivo
 
-Este documento sirve como contexto rapido para continuar el rediseño frontend de Gerpy en nuevos chats. La meta es identificar que modulos ya dejaron de ser pantallas genericas basadas en `ModulePage`, cuales estan parcialmente personalizados y cuales siguen pendientes.
+Este documento sirve como contexto rapido para continuar el rediseño frontend de The Tower Power en nuevos chats. La meta es identificar que modulos ya dejaron de ser pantallas genericas basadas en `ModulePage`, cuales estan parcialmente personalizados y cuales siguen pendientes.
 
 ## Criterio de estado
 

@@ -108,7 +108,7 @@ export function TenantDrawer({ isOpen, onClose, tenant, onSave, locale, dict }: 
                 placeholder="muscle-gym"
               />
               <span className="bg-muted px-3 py-2 text-xs text-muted-foreground border-l border-border flex items-center font-mono">
-                .gerpy.com
+                .towerpower.com
               </span>
             </div>
           </div>

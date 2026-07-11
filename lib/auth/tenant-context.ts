@@ -58,7 +58,7 @@ function workspaceName(name: string | null | undefined, email: string | null | u
   if (trimmedName) return `${trimmedName} Workspace`;
 
   const emailPrefix = email?.split("@")[0]?.trim();
-  return emailPrefix ? `${emailPrefix} Workspace` : "Gerpy Workspace";
+  return emailPrefix ? `${emailPrefix} Workspace` : "The Tower Power Workspace";
 }
 
 async function bootstrapTenantForUser(

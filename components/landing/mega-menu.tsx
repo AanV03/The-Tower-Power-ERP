@@ -213,7 +213,7 @@ export function LandingMegaMenu({ locale = "es", mode }: LandingMegaMenuProps) {
             <div className="mb-4 flex items-center justify-between gap-5 border-b border-[color:var(--landing-border)] pb-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--landing-accent-strong)]">
-                  Módulos Gerpy
+                  Módulos The Tower Power
                 </p>
                 <p className="mt-1 max-w-2xl text-sm text-[var(--landing-copy)]">
                   Explora páginas públicas con previews, descripciones y capturas listas para agregar después.

@@ -86,7 +86,7 @@ export function PasswordRecoveryForm() {
               Password Recovery
             </h1>
             <p className="auth-muted mt-1 text-sm">
-              Enter your email and Gerpy will send recovery instructions if the account exists.
+              Enter your email and The Tower Power will send recovery instructions if the account exists.
             </p>
           </div>
         </div>

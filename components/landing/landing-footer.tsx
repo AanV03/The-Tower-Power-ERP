@@ -16,9 +16,9 @@ const legalLinks = [
 ];
 
 const contactLinks = [
-  { label: "hello@gerpy.example", href: "mailto:hello@gerpy.example", icon: Mail },
+  { label: "hello@towerpower.example", href: "mailto:hello@towerpower.example", icon: Mail },
   { label: "+1 (555) 018-2046", href: "tel:+15550182046", icon: Phone },
-  { label: "Austin, TX", href: "https://maps.example.com/gerpy", icon: MapPin },
+  { label: "Austin, TX", href: "https://maps.example.com/tower_power", icon: MapPin },
 ];
 
 export function LandingFooter() {
@@ -31,7 +31,7 @@ export function LandingFooter() {
               <Dumbbell className="h-6 w-6" aria-hidden="true" />
             </span>
             <div>
-              <p className="text-lg font-black uppercase tracking-normal">Gerpy ERP</p>
+              <p className="text-lg font-black uppercase tracking-normal">The Tower Power</p>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--landing-muted)]">
                 System logo
               </p>
@@ -44,19 +44,19 @@ export function LandingFooter() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <a
-              href="https://www.linkedin.example/gerpy"
+              href="https://www.linkedin.example/tower_power"
               className="text-sm font-bold text-[var(--landing-copy)] underline-offset-4 hover:text-[var(--landing-accent-strong)] hover:underline"
             >
               LinkedIn
             </a>
             <a
-              href="https://www.instagram.example/gerpy"
+              href="https://www.instagram.example/tower_power"
               className="text-sm font-bold text-[var(--landing-copy)] underline-offset-4 hover:text-[var(--landing-accent-strong)] hover:underline"
             >
               Instagram
             </a>
             <a
-              href="https://status.example.com/gerpy"
+              href="https://status.example.com/tower_power"
               className="text-sm font-bold text-[var(--landing-copy)] underline-offset-4 hover:text-[var(--landing-accent-strong)] hover:underline"
             >
               Status
@@ -105,7 +105,7 @@ export function LandingFooter() {
       <div className="border-t border-[color:var(--landing-border)]">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-6 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
           <p className="text-sm text-[var(--landing-muted)]">
-            Copyright 2026 Gerpy Systems, Inc. All rights reserved.
+            Copyright 2026 The Tower Power Systems, Inc. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             {legalLinks.map((link, index) => (

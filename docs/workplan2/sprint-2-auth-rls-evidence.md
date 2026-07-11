@@ -1,7 +1,7 @@
 # Workplan 2.0 Sprint 2 Core Multi-Tenancy & Authentication Evidence
 
 Date: 2026-07-11
-Repository: `C:\Dev\Gerpy`
+Repository: `C:\Dev\The Tower Power`
 Sprint: Core Multi-Tenancy & Authentication
 Status: Strong Partial Implementation; Security Alignment Pending
 
@@ -11,7 +11,7 @@ Wire up the authentication screens to securely handle user log-ins, enforce role
 
 ## Current Worked State vs. Workplan 2.0
 
-| Workplan 2.0 Requirement | Implementation Status in Gerpy | Details / Gaps |
+| Workplan 2.0 Requirement | Implementation Status in The Tower Power | Details / Gaps |
 |---|---|---|
 | **Multi-Tenant Schema & DB Isolation** | **Partial** | Database models for users and tenants exist in Prisma. Row Level Security (RLS) policies are planned but not yet deployed in Supabase. |
 | **Auth Services & Middleware** | **Partial** | Credentials login and sign-up endpoints are working. Session/JWT-based tenant isolation is implemented. However, the requested `x-tenant-id` header middleware validation is pending/deferred. |

@@ -155,7 +155,7 @@ export async function POST(request: Request) {
           where: {
             tenantId_email: {
               tenantId: context.tenantId,
-              email: `walk-in+${branchId}@gerpy.local`,
+              email: `walk-in+${branchId}@towerpower.local`,
             },
           },
           create: {
@@ -163,7 +163,7 @@ export async function POST(request: Request) {
             branchId,
             firstName: "Cliente",
             lastName: "General",
-            email: `walk-in+${branchId}@gerpy.local`,
+            email: `walk-in+${branchId}@towerpower.local`,
             status: "ACTIVE",
           },
           update: {

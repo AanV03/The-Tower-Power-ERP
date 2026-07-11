@@ -1,7 +1,7 @@
 # Workplan 2.0 Sprint 6 Super-Admin SaaS Dashboard & Hardening Evidence
 
 Date: 2026-07-11
-Repository: `C:\Dev\Gerpy`
+Repository: `C:\Dev\The Tower Power`
 Sprint: Super-Admin SaaS Dashboard & Hardening
 Status: Scaffolded; Final Hardening Pending
 
@@ -11,7 +11,7 @@ Create the master SaaS tier controls, convert frontend themes to true white-labe
 
 ## Current Worked State vs. Workplan 2.0
 
-| Workplan 2.0 Requirement | Implementation Status in Gerpy | Details / Gaps |
+| Workplan 2.0 Requirement | Implementation Status in The Tower Power | Details / Gaps |
 |---|---|---|
 | **Super-Administrator Control Center** | **Scaffolded** | The admin page shell exists with basic layout controls. Core endpoints to freeze licenses or toggles for global feature flags are pending. |
 | **Dynamic White-Label Theming Engine** | **Scaffolded** | Custom palettes can be previewed client-side (via localStorage). DB persistence of custom themes and custom domain resolution are pending. |

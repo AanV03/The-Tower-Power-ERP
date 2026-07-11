@@ -1,8 +1,8 @@
 import pypdf
 import os
 
-pdf_path = r"c:\Dev\Gerpy\docs\workplan2.0.pdf"
-output_path = r"c:\Dev\Gerpy\scratch\workplan2.0_text.txt"
+pdf_path = r"c:\Dev\The Tower Power\docs\workplan2.0.pdf"
+output_path = r"c:\Dev\The Tower Power\scratch\workplan2.0_text.txt"
 
 os.makedirs(os.path.dirname(output_path), exist_ok=True)
 

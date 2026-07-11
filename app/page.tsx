@@ -102,11 +102,11 @@ export default function Home() {
               {"// BUILT FOR GYM OPERATIONS"}
             </span>
             <h2 className="text-[clamp(2.25rem,9vw,4.5rem)] font-black uppercase leading-none tracking-normal text-[var(--landing-text)]">
-              Choose the workflow. Gerpy connects the rest.
+              Choose the workflow. The Tower Power connects the rest.
             </h2>
           </div>
           <p className="max-w-3xl text-base leading-7 text-[var(--landing-copy)] sm:text-lg lg:justify-self-end">
-            Inspired by broad ERP suites, Gerpy narrows the focus to fitness:
+            Inspired by broad ERP suites, The Tower Power narrows the focus to fitness:
             every app is shaped around check-ins, memberships, classes,
             branch operations, inventory, and recurring revenue.
           </p>
@@ -145,7 +145,7 @@ export default function Home() {
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[0.92fr_1.08fr] lg:px-8 lg:py-24">
           <div>
             <span className="mb-2 block font-mono text-sm uppercase tracking-widest text-[var(--landing-accent-strong)]">
-              {"// IMAGINE WITHOUT GERPY"}
+              {"// IMAGINE WITHOUT THE TOWER POWER"}
             </span>
             <h2 className="text-[clamp(2rem,8vw,4.25rem)] font-black uppercase leading-none tracking-normal text-[var(--landing-text)]">
               Fewer tabs. Fewer handoffs. Cleaner decisions.

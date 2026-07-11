@@ -126,7 +126,7 @@ test(
           tenantId,
           branchId: branch.id,
           name: "POS Test Cashier",
-          email: `pos-${suffix}@gerpy.test`,
+          email: `pos-${suffix}@towerpower.test`,
           status: "ACTIVE",
         },
         select: { id: true },

@@ -168,7 +168,7 @@ export default function Hero() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--landing-copy)] sm:text-lg md:text-xl">
-            Gerpy brings memberships, billing, access, classes, payroll,
+            The Tower Power brings memberships, billing, access, classes, payroll,
             stock, and finance into one connected operating layer for fitness
             teams that move fast across every branch.
           </p>

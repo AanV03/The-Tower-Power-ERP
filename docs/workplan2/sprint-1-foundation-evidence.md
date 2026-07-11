@@ -1,7 +1,7 @@
 # Workplan 2.0 Sprint 1 Foundation Evidence
 
 Date: 2026-05-29
-Repository: `C:\Dev\School\Gerpy`
+Repository: `C:\Dev\School\The Tower Power`
 Sprint: Foundation Setup & Architecture
 CI/CD status: Deferred by project decision; local verification is the Sprint 1 closeout gate.
 
@@ -11,7 +11,7 @@ Establish repository foundations, design the multi-tenant directory layouts, and
 
 ## Localized Routes
 
-Gerpy supports the locale prefixes required by the current shell:
+The Tower Power supports the locale prefixes required by the current shell:
 
 - `/es`
 - `/en`
@@ -30,7 +30,7 @@ The UI shell is implemented with:
 - `components/shared/module-page.tsx`: reusable module page layout for metrics, charts, tables, audit feed, and quick actions.
 - `data/navigation.ts`: module registry and grouped navigation.
 
-Workplan 2.0 asks for a hollow shell showing structural views for 10 modules. The current Gerpy shell exposes 18 ERP modules.
+Workplan 2.0 asks for a hollow shell showing structural views for 10 modules. The current The Tower Power shell exposes 18 ERP modules.
 
 ## Implemented Modules
 

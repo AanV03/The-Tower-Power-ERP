@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const endDate = new Date(now.getTime());
     endDate.setMonth(endDate.getMonth() + 1);
     const stamp = Date.now().toString(36).toUpperCase();
-    const email = data.email ?? `demo.${stamp.toLowerCase()}@gerpy.local`;
+    const email = data.email ?? `demo.${stamp.toLowerCase()}@towerpower.local`;
 
     const result = await prisma.$transaction(async (tx) => {
       const plan = await tx.membershipPlan.upsert({

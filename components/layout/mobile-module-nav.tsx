@@ -43,7 +43,7 @@ function MobileDrawer({
 
     // Load initial logo
     try {
-      const raw = localStorage.getItem("gerpy-brand-colors");
+      const raw = localStorage.getItem("tower-power-brand-colors");
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed.logoUrl) setLogoUrl(parsed.logoUrl);
@@ -159,7 +159,7 @@ function MobileDrawer({
 
       <div className="shrink-0 border-t border-[var(--shell-sidebar-border-color)] px-5 py-4">
         <p className="text-xs" style={{ color: "var(--shell-sidebar-foreground-secondary)" }}>
-          (c) {new Date().getFullYear()} Gerpy
+          (c) {new Date().getFullYear()} The Tower Power
         </p>
       </div>
     </div>

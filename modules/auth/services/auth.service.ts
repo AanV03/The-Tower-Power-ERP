@@ -260,7 +260,7 @@ export class AuthService {
 
     const secret = generateSecret();
     const label = user.email ?? user.id;
-    const issuer = `Gerpy ${user.tenant?.name ?? 'ERP'}`;
+    const issuer = `The Tower Power ${user.tenant?.name ?? 'ERP'}`;
     const otpauthUrl = generateURI({ issuer, label, secret });
 
     await prisma.user.update({

@@ -29,7 +29,7 @@ export function BranchScopeSelector({
       </label>
       <div className="relative">
         <Building2 aria-hidden="true" className={iconClass} />
-        <NativeSelect id="tenant-selector" className={tenantClass} defaultValue="gerpy-hq">
+        <NativeSelect id="tenant-selector" className={tenantClass} defaultValue="tower-power-hq">
           {tenantOptions.map((tenant) => (
             <option key={tenant.id} value={tenant.id}>
               {tenant.label}

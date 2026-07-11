@@ -22,11 +22,11 @@ type LoginPayload = {
 
 const copy = {
   title: "Welcome back",
-  subtitle: "Sign in to your Gerpy ERP account",
+  subtitle: "Sign in to your The Tower Power account",
   twoFactorTitle: "Verify access",
   twoFactorSubtitle: "Enter the 6-digit code from your authenticator app.",
   setupTitle: "Secure your account",
-  setupSubtitle: "Scan the QR code and verify 2FA before entering Gerpy.",
+  setupSubtitle: "Scan the QR code and verify 2FA before entering The Tower Power.",
   email: "Email",
   password: "Password",
   code: "Authentication code",
@@ -277,7 +277,7 @@ export default function LoginPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={setupQrCodeDataUrl}
-                    alt="Gerpy 2FA QR code"
+                    alt="The Tower Power 2FA QR code"
                     className="mx-auto aspect-square w-full max-w-64 rounded-lg"
                   />
                 </div>

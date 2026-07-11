@@ -113,14 +113,14 @@ export function LandingNavbar() {
         <Link
           href={"/" as Route}
           className="group inline-flex min-w-0 items-center gap-3  px-4 py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)] sm:px-6 lg:px-8"
-          aria-label="Gerpy home"
+          aria-label="The Tower Power home"
         >
           <span className="grid size-9 shrink-0 place-items-center bg-[var(--landing-primary)] text-white">
             <Dumbbell className="h-4 w-4" aria-hidden="true" />
           </span>
           <span className="min-w-0">
             <span className="block text-xs font-black uppercase tracking-normal text-[var(--landing-text)] sm:text-sm">
-              Gerpy ERP
+              The Tower Power
             </span>
             <span
               className="hidden text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--landing-muted)] sm:block"

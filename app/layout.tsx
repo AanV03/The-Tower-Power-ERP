@@ -6,7 +6,7 @@ import { LandingRouteTransitionProvider } from "@/components/landing/landing-rou
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Gerpy ERP | Gym Operations Platform",
+  title: "The Tower Power | Gym Operations Platform",
   description:
     "ERP software for gym memberships, billing, access, inventory, payroll, and analytics.",
 };

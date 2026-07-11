@@ -17,7 +17,7 @@ export default async function LocaleHomePage({ params }: { params: Promise<{ loc
             {dictionary.landing.eyebrow}
           </p>
           <h1 className="text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
-            Gerpy ERP
+            The Tower Power
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground">
             {dictionary.landing.description}

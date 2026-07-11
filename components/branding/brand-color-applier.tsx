@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 /** localStorage key for persisting tenant brand colors */
-export const BRAND_STORAGE_KEY = "gerpy-brand-colors";
+export const BRAND_STORAGE_KEY = "tower-power-brand-colors";
 
 /**
  * Brand color tokens exposed to the admin panel.

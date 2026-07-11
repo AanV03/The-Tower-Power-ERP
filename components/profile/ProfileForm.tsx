@@ -303,7 +303,7 @@ export default function ProfileForm({ user, dict, locale }: ProfileFormProps) {
           </button>
 
           <div className="space-y-2 text-center md:text-left flex-1">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">{user.name || "Usuario Gerpy"}</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">{user.name || "Usuario The Tower Power"}</h2>
             <p className="text-sm text-muted-foreground">{user.email}</p>
             <div className="mt-2 flex flex-wrap justify-center gap-2 md:justify-start">
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20 shadow-sm">

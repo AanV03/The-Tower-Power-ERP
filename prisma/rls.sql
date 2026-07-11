@@ -1,4 +1,4 @@
--- Supabase RLS policies for Gerpy multi-tenant tables.
+-- Supabase RLS policies for The Tower Power multi-tenant tables.
 -- The application JWT must include a tenantId claim.
 -- For server-side Prisma transactions, set app.current_tenant_id when using a
 -- non-bypassing database role, or connect with a role whose JWT claims are

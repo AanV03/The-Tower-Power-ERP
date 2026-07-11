@@ -4,9 +4,9 @@ import { loginSchema } from '@/modules/auth/schemas/auth.schema';
 import { AuthService } from '@/modules/auth/services/auth.service';
 import {
   createAuthToken,
-  GERPY_SESSION_COOKIE,
-  GERPY_TWO_FACTOR_COOKIE,
-  GERPY_TWO_FACTOR_SETUP_COOKIE,
+  TOWER_POWER_SESSION_COOKIE,
+  TOWER_POWER_TWO_FACTOR_COOKIE,
+  TOWER_POWER_TWO_FACTOR_SETUP_COOKIE,
   TWO_FACTOR_CHALLENGE_MAX_AGE_SECONDS,
   TWO_FACTOR_SETUP_MAX_AGE_SECONDS,
 } from '@/lib/auth/session';
@@ -33,9 +33,9 @@ export async function POST(req: NextRequest) {
         { status: 200 },
       );
 
-      response.cookies.delete(GERPY_SESSION_COOKIE);
-      response.cookies.delete(GERPY_TWO_FACTOR_SETUP_COOKIE);
-      response.cookies.set(GERPY_TWO_FACTOR_COOKIE, challengeToken, {
+      response.cookies.delete(TOWER_POWER_SESSION_COOKIE);
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_SETUP_COOKIE);
+      response.cookies.set(TOWER_POWER_TWO_FACTOR_COOKIE, challengeToken, {
         httpOnly: true,
         secure: secureCookie,
         sameSite: 'lax',
@@ -60,9 +60,9 @@ export async function POST(req: NextRequest) {
         { status: 200 },
       );
 
-      response.cookies.delete(GERPY_SESSION_COOKIE);
-      response.cookies.delete(GERPY_TWO_FACTOR_COOKIE);
-      response.cookies.set(GERPY_TWO_FACTOR_SETUP_COOKIE, setupToken, {
+      response.cookies.delete(TOWER_POWER_SESSION_COOKIE);
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_COOKIE);
+      response.cookies.set(TOWER_POWER_TWO_FACTOR_SETUP_COOKIE, setupToken, {
         httpOnly: true,
         secure: secureCookie,
         sameSite: 'lax',

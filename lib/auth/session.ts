@@ -1,8 +1,8 @@
 import type { TenantContext } from "@/lib/auth/rbac";
 
-export const GERPY_SESSION_COOKIE = "gerpy_session";
-export const GERPY_TWO_FACTOR_COOKIE = "gerpy_2fa_challenge";
-export const GERPY_TWO_FACTOR_SETUP_COOKIE = "gerpy_2fa_setup";
+export const TOWER_POWER_SESSION_COOKIE = "tower_power_session";
+export const TOWER_POWER_TWO_FACTOR_COOKIE = "tower_power_2fa_challenge";
+export const TOWER_POWER_TWO_FACTOR_SETUP_COOKIE = "tower_power_2fa_setup";
 
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 export const TWO_FACTOR_CHALLENGE_MAX_AGE_SECONDS = 60 * 5;
@@ -44,10 +44,10 @@ export function getAuthSecret() {
   if (secret) return secret;
 
   if (process.env.NODE_ENV !== "production") {
-    return "dev-only-gerpy-session-secret-change-me";
+    return "dev-only-tower-power-session-secret-change-me";
   }
 
-  throw new Error("AUTH_SECRET is required for Gerpy auth sessions.");
+  throw new Error("AUTH_SECRET is required for The Tower Power auth sessions.");
 }
 
 function bytesToBase64Url(bytes: Uint8Array) {

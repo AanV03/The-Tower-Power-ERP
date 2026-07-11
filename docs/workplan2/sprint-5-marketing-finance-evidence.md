@@ -1,7 +1,7 @@
 # Workplan 2.0 Sprint 5 Marketing Funnels & Financial Reconciliation Evidence
 
 Date: 2026-07-11
-Repository: `C:\Dev\Gerpy`
+Repository: `C:\Dev\The Tower Power`
 Sprint: Marketing Funnels & Financial Reconciliation
 Status: Foundation Scaffolded; Core Functionality Pending
 
@@ -11,7 +11,7 @@ Implement automated customer relations tools alongside cash flow reconciliation 
 
 ## Current Worked State vs. Workplan 2.0
 
-| Workplan 2.0 Requirement | Implementation Status in Gerpy | Details / Gaps |
+| Workplan 2.0 Requirement | Implementation Status in The Tower Power | Details / Gaps |
 |---|---|---|
 | **Integrated CRM & Churn Analytics** | **Scaffolded** | Mongoose models for CRM profiles and analytics snapshots exist. Core algorithms to calculate churn risk scores and funnel stages are pending. |
 | **Marketing Automations & Accounts Receivable** | **Scaffolded** | Basic invoice and payment models exist in Prisma. The renewal reminder automation script and bank reconciliation ledger stream services are pending. |

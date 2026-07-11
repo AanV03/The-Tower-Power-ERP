@@ -44,7 +44,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
   const simulatedEmployee = {
     id: user.employee?.id ?? `EMP-SIM-${user.id.slice(-6).toUpperCase()}`,
     firstName: user.employee?.firstName ?? user.firstName ?? user.name?.split(" ")[0] ?? "Usuario",
-    lastName: user.employee?.lastName ?? user.lastName ?? user.name?.split(" ").slice(1).join(" ") ?? "Gerpy",
+    lastName: user.employee?.lastName ?? user.lastName ?? user.name?.split(" ").slice(1).join(" ") ?? "The Tower Power",
     phone: user.employee?.phone ?? user.phone ?? null,
     position: user.employee?.position?.name ?? (l === "es" ? "Administrador de Sistemas" : "Systems Administrator"),
     hireDate: user.employee?.hireDate ? user.employee.hireDate.toISOString() : user.createdAt.toISOString(),

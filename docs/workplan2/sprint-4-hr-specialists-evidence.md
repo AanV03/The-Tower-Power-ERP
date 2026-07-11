@@ -1,7 +1,7 @@
 # Workplan 2.0 Sprint 4 Human Resources & Specialist Models Evidence
 
 Date: 2026-07-11
-Repository: `C:\Dev\Gerpy`
+Repository: `C:\Dev\The Tower Power`
 Sprint: Human Resources & Specialist Models
 Status: Completed (with Branch Budgets Omitted from Scope)
 
@@ -11,7 +11,7 @@ Connect internal staff operations, daily employee time clocks, and specialized c
 
 ## Current Worked State vs. Workplan 2.0
 
-| Workplan 2.0 Requirement | Implementation Status in Gerpy | Details / Gaps |
+| Workplan 2.0 Requirement | Implementation Status in The Tower Power | Details / Gaps |
 |---|---|---|
 | **HR Portal & Time Clock** | **Completed** | Staff clock-in/out attendance API is active. Prevents double clock-in. Branch budgets were deferred/omitted from scope. |
 | **Specialist Commission & Fixed Rent** | **Completed** | Specialist settlements calculate fixed rent, commission splits (e.g. 85/15), or hybrid schemas using decimal-safe math within transactions. |
@@ -23,7 +23,7 @@ Connect internal staff operations, daily employee time clocks, and specialized c
   - `app/api/hr/attendance/clock-in/route.ts`
   - `app/api/hr/attendance/clock-out/route.ts`
 - **Specialist Settlements**: 
-  - [specialist-settlement-service.ts](file:///c:/Dev/Gerpy/lib/api/specialist-settlement-service.ts)
+  - [specialist-settlement-service.ts](file:///c:/Dev/The Tower Power/lib/api/specialist-settlement-service.ts)
   - `app/api/specialists/settlements/route.ts`
 - **UI Components**: 
   - `components/modules/hr`

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { defaultBrand } from "@/lib/branding";
 
-export const BRAND_IDENTITY_STORAGE_KEY = "gerpy-brand-identity";
+export const BRAND_IDENTITY_STORAGE_KEY = "tower-power-brand-identity";
 
 export type BrandIdentity = {
   name: string;

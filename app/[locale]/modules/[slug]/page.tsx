@@ -29,12 +29,12 @@ export async function generateMetadata({
 
   if (!moduleItem) {
     return {
-      title: "Module not found | Gerpy ERP",
+      title: "Module not found | The Tower Power",
     };
   }
 
   return {
-    title: `${moduleItem.label} | Gerpy ERP`,
+    title: `${moduleItem.label} | The Tower Power`,
     description: moduleItem.description,
   };
 }

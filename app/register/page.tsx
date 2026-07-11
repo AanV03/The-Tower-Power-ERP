@@ -565,7 +565,7 @@ export default function RegisterPage() {
             <p className="auth-muted mt-1 text-sm">
               {setupQrCodeDataUrl
                 ? "Scan the QR code and verify 2FA before entering the dashboard."
-                : "Start managing your gym with Gerpy ERP."}
+                : "Start managing your gym with The Tower Power."}
             </p>
           </div>
         </div>
@@ -585,7 +585,7 @@ export default function RegisterPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={setupQrCodeDataUrl}
-                    alt="Gerpy 2FA QR code"
+                    alt="The Tower Power 2FA QR code"
                     className="mx-auto aspect-square w-full max-w-64 rounded-lg"
                   />
                 </div>
