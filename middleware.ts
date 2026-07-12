@@ -225,9 +225,9 @@ export async function middleware(request: NextRequest) {
 
   const isPublicPage = PUBLIC_PAGES.has(pathname);
 
-  if (!pathname.startsWith("/api") && !isPublicPage && !hasLocale(pathname)) {
+  if (pathname === "/" || (!pathname.startsWith("/api") && !isPublicPage && !hasLocale(pathname))) {
     const url = request.nextUrl.clone();
-    url.pathname = `/${defaultLocale}${pathname}`;
+    url.pathname = `/${defaultLocale}${pathname === "/" ? "" : pathname}`;
     return NextResponse.redirect(url);
   }
 

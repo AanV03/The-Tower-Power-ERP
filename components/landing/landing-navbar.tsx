@@ -8,21 +8,24 @@ import { motion } from "framer-motion";
 import { ArrowRight, Dumbbell, Search } from "lucide-react";
 import { LandingMegaMenu } from "@/components/landing/mega-menu";
 import { useLandingRouteTransition } from "@/components/landing/landing-route-transition";
-
-const navLinks = [
-  { label: "Operations", href: "#operations" },
-  { label: "Contact", href: "#contact" },
-];
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 const curtainPanels = Array.from({ length: 7 }, (_, index) => index);
 const curtainDuration = 420;
 const curtainStagger = 45;
 const curtainCoverDelay = curtainDuration + (curtainPanels.length - 1) * curtainStagger + 90;
 
-export function LandingNavbar() {
+export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
   const { startRouteTransition } = useLandingRouteTransition();
+  const dictionary = getDictionary(locale);
   const [curtainPhase, setCurtainPhase] = useState<"idle" | "enter" | "exit">("idle");
   const timersRef = useRef<number[]>([]);
+
+  const navLinks = [
+    { label: dictionary.landing.navbar.operations, href: "#operations" },
+    { label: dictionary.landing.navbar.contact, href: "#contact" },
+  ];
 
   useEffect(() => {
     return () => {
@@ -164,7 +167,8 @@ export function LandingNavbar() {
           ))}
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-end gap-3 px-4 sm:px-6 lg:px-8">
+          <LocaleSwitcher locale={locale} inHeader={true} />
           <LandingMegaMenu mode="mobile" />
           <a
             href="#modules"
@@ -174,12 +178,12 @@ export function LandingNavbar() {
             <Search className="h-4 w-4" aria-hidden="true" />
           </a>
           <Link
-            href={"/register" as Route}
-            onClick={(event) => handleRouteClick(event, "/register" as Route)}
+            href={`/${locale}/register` as Route}
+            onClick={(event) => handleRouteClick(event, `/${locale}/register` as Route)}
             className="inline-flex min-h-10 items-center justify-center gap-2 bg-[var(--landing-primary)] px-4 text-xs font-black uppercase tracking-[0.16em] text-white transition-all duration-300 hover:bg-[var(--landing-primary-light)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)] sm:px-5 lg:min-h-11 lg:px-7"
           >
-            <span className="hidden sm:inline">Start setup</span>
-            <span className="sm:hidden">Start</span>
+            <span className="hidden sm:inline">{dictionary.landing.navbar.startSetup}</span>
+            <span className="sm:hidden">{dictionary.landing.navbar.start}</span>
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>

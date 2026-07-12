@@ -13,6 +13,7 @@ import {
 import { gsap } from "gsap";
 import { animate, motion } from "framer-motion";
 import { AuthBackground } from "@/components/backgrounds/auth-background";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 const heroStats = [
   { label: "Active members", value: 3842, trend: "+12%" },
@@ -89,9 +90,23 @@ function AnimateNumber({
   );
 }
 
-export default function Hero() {
+export default function Hero({ locale = "es" }: { locale?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const dictionary = getDictionary(locale as Locale);
+
+  const heroStats = [
+    { label: dictionary.landing.heroStats?.activeMembers ?? "Active members", value: 3842, trend: dictionary.landing.heroStats?.trendPlus12 ?? "+12%" },
+    { label: dictionary.landing.heroStats?.monthlyRevenue ?? "Monthly revenue", value: 84.6, prefix: "$", suffix: "k", decimals: 1, trend: dictionary.landing.heroStats?.trendPlus18 ?? "+18%" },
+    { label: dictionary.landing.heroStats?.checkinsToday ?? "Check-ins today", value: 716, trend: dictionary.landing.heroStats?.trendLive ?? "Live" },
+  ];
+
+  const operations = [
+    { icon: Users, label: dictionary.modules.memberships, value: dictionary.landing.ops?.renewalsQueued ?? "Renewals queued" },
+    { icon: CreditCard, label: dictionary.modules.pos, value: dictionary.landing.ops?.salesSynced ?? "42 sales synced" },
+    { icon: CalendarClock, label: dictionary.common.dashboard, value: dictionary.landing.ops?.occupancy ?? "91% occupancy" },
+    { icon: ShieldCheck, label: dictionary.modules.access, value: dictionary.landing.ops?.devicesOnline ?? "Devices online" },
+  ];
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -132,10 +147,12 @@ export default function Hero() {
     };
   }, []);
 
+  const titleText = dictionary.landing.heroTitle ?? "ALL GYM OPS ONE PLATFORM";
+
   return (
     <section
       ref={containerRef}
-      className="landing-hero relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-[var(--landing-background)] px-4 py-28 sm:px-6 sm:py-32 lg:px-8"
+      className="landing-hero relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-[var(--landing-background)] px-4 py-16 sm:py-20 md:py-24 lg:py-28"
     >
       {/* Layer 1 */}
       <AuthBackground variant="hero" />
@@ -144,13 +161,13 @@ export default function Hero() {
 
       {/* Layer 3 — soft edge vignette, keeps center colorful */}
 
-      <div className="relative z-10 grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[1.03fr_0.97fr]">
-        <div className="flex min-w-0 flex-col items-start">
+      <div className="relative z-10 grid w-full max-w-7xl items-start gap-6 sm:gap-8 lg:grid-cols-[1.03fr_0.97fr] lg:gap-10">
+        <div className="flex min-w-0 flex-col items-start pt-4 lg:pt-8">
           <h1
             ref={titleRef}
-            className="flex max-w-5xl flex-wrap gap-x-2 overflow-hidden px-1 text-[clamp(2.65rem,14vw,7.5rem)] font-black uppercase leading-[0.92] tracking-normal text-[var(--landing-text)] sm:gap-x-4 sm:text-[clamp(3.7rem,10vw,8rem)] lg:text-[clamp(4.6rem,8.6vw,8.5rem)]"
+            className="flex max-w-5xl flex-wrap gap-x-1 sm:gap-x-2 overflow-hidden px-1 text-[clamp(1.8rem,5vw,3rem)] sm:text-[clamp(2.3rem,6vw,4.5rem)] lg:text-[clamp(2.6rem,5vw,5rem)] xl:text-[clamp(3rem,5.5vw,5.8rem)] font-black uppercase leading-[0.98] tracking-normal text-[var(--landing-text)]"
           >
-            {"ALL GYM OPS ONE PLATFORM".split(" ").map((word, i) => (
+            {titleText.split(" ").map((word, i) => (
               <span
                 key={i}
                 className="inline-block overflow-hidden py-1 sm:py-2"
@@ -167,19 +184,17 @@ export default function Hero() {
             ))}
           </h1>
 
-          <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--landing-copy)] sm:text-lg md:text-xl">
-            The Tower Power brings memberships, billing, access, classes, payroll,
-            stock, and finance into one connected operating layer for fitness
-            teams that move fast across every branch.
+          <p className="mt-4 sm:mt-5 max-w-2xl text-xs sm:text-sm md:text-base leading-relaxed text-[var(--landing-copy)]">
+            {dictionary.landing.heroSubtitle ?? "The Tower Power brings memberships, billing, access, classes, payroll, stock, and finance into one connected operating layer."}
           </p>
 
-          <div className="mt-10 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="mt-6 sm:mt-8 grid w-full max-w-2xl grid-cols-1 gap-2.5 sm:grid-cols-3">
             {heroStats.map((stat, index) => (
               <div
                 key={stat.label}
-                className="border border-[color:var(--landing-border)] bg-[var(--landing-panel)] p-4"
+                className="border border-[color:var(--landing-border)] bg-[var(--landing-panel)] p-3.5"
               >
-                <div className="text-2xl font-black text-[var(--landing-text)]">
+                <div className="text-xl sm:text-2xl font-black text-[var(--landing-text)]">
                   <AnimateNumber
                     value={stat.value}
                     prefix={stat.prefix}
@@ -188,10 +203,10 @@ export default function Hero() {
                     delay={0.25 + index * 0.12}
                   />
                 </div>
-                <div className="mt-1 text-xs uppercase tracking-[0.16em] text-[var(--landing-muted)]">
+                <div className="mt-1 text-[10px] uppercase tracking-[0.16em] text-[var(--landing-muted)]">
                   {stat.label}
                 </div>
-                <div className="mt-3 text-sm font-bold text-[var(--landing-mint)]">
+                <div className="mt-2 text-xs font-bold text-[var(--landing-mint)]">
                   {stat.trend}
                 </div>
               </div>
@@ -199,20 +214,20 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="relative hidden lg:block">
-          <div className="border border-[color:var(--landing-border)] bg-[var(--landing-panel-strong)] p-5 shadow-2xl shadow-slate-900/10 dark:shadow-black/50">
-            <div className="mb-5 flex items-center justify-between border-b border-[color:var(--landing-border)] pb-4">
+        <div className="relative hidden lg:block self-start pt-4 lg:pt-8">
+          <div className="border border-[color:var(--landing-border)] bg-[var(--landing-panel-strong)] p-4 sm:p-5 shadow-2xl shadow-slate-900/10 dark:shadow-black/50">
+            <div className="mb-4 flex items-center justify-between border-b border-[color:var(--landing-border)] pb-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--landing-accent-strong)]">
-                  Operations command
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--landing-accent-strong)]">
+                  {dictionary.landing.ops?.commandTitle ?? "Operations command"}
                 </p>
-                <h2 className="mt-2 text-2xl font-black uppercase text-[var(--landing-text)]">
-                  Downtown branch
+                <h2 className="mt-1.5 text-xl font-black uppercase text-[var(--landing-text)]">
+                  {dictionary.landing.ops?.downtownBranch ?? "Downtown branch"}
                 </h2>
               </div>
-              <div className="flex items-center gap-2 text-sm font-bold text-[var(--landing-accent-strong)]">
-                <Activity className="h-4 w-4" aria-hidden="true" />
-                Live
+              <div className="flex items-center gap-2 text-xs font-bold text-[var(--landing-accent-strong)]">
+                <Activity className="h-3.5 w-3.5" aria-hidden="true" />
+                {dictionary.landing.ops?.trendLive ?? "Live"}
               </div>
             </div>
 

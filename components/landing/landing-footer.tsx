@@ -2,12 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { Dumbbell, FileText, Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
 
-const productLinks = [
-  { label: "Dashboard", href: "/en/dashboard" as Route },
-  { label: "Memberships", href: "/en/memberships" as Route },
-  { label: "Inventory", href: "/en/inventory" as Route },
-  { label: "Analytics", href: "/en/analytics" as Route },
-];
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 const legalLinks = [
   { label: "Privacy Policy", href: "/legal/privacy" },
@@ -21,7 +16,16 @@ const contactLinks = [
   { label: "Austin, TX", href: "https://maps.example.com/tower_power", icon: MapPin },
 ];
 
-export function LandingFooter() {
+export function LandingFooter({ locale = "es" }: { locale?: Locale }) {
+  const dictionary = getDictionary(locale);
+
+  const productLinks = [
+    { label: dictionary.modules.dashboard, href: `/${locale}/dashboard` as Route },
+    { label: dictionary.modules.memberships, href: `/${locale}/memberships` as Route },
+    { label: dictionary.modules.inventory, href: `/${locale}/inventory` as Route },
+    { label: dictionary.common.dashboard, href: `/${locale}/analytics` as Route },
+  ];
+
   return (
     <footer id="contact" className="relative border-t border-[color:var(--landing-border)] bg-[var(--landing-bg-deep)] text-[var(--landing-text)]">
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:px-8 lg:py-16">
@@ -38,9 +42,7 @@ export function LandingFooter() {
             </div>
           </div>
           <p className="mt-6 max-w-md text-sm leading-6 text-[var(--landing-copy)]">
-            Fake-for-now operating hub for gym networks, billing desks,
-            coaches, access devices, inventory rooms, and the teams keeping
-            every branch moving.
+            {dictionary.landing.footerDesc}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <a
