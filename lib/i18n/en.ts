@@ -27,6 +27,54 @@ export const en = {
       alertDesc: "Protein bars transferred from North branch.",
       synced: "Synced",
     },
+    classGrid: [
+      {
+        title: "Membership CRM",
+        desc: "Plans, renewals, freezes, family accounts, waivers, and branch-level member history.",
+        metric: "3,842 members",
+      },
+      {
+        title: "POS & Billing",
+        desc: "Retail sales, invoices, failed payments, recurring charges, refunds, and register control.",
+        metric: "$84.6k MRR",
+      },
+      {
+        title: "Access Control",
+        desc: "Door devices, check-ins, plan permissions, guest passes, and attendance exceptions.",
+        metric: "716 check-ins",
+      },
+      {
+        title: "Classes & Coaches",
+        desc: "Capacity, waitlists, trainer calendars, room allocation, payroll links, and attendance.",
+        metric: "91% occupancy",
+      },
+      {
+        title: "Inventory",
+        desc: "Supplements, apparel, stock transfers, purchase orders, warehouse counts, and low-stock alerts.",
+        metric: "18 alerts",
+      },
+      {
+        title: "Finance Analytics",
+        desc: "Branch P&L, churn, cohort value, payroll cost, product margins, and executive reporting.",
+        metric: "+18% growth",
+      },
+    ],
+    ticker: {
+      primary: "Members. Payments. Access. Stock. Payroll.",
+      outline: "One gym operating system.",
+    },
+    megaMenu: {
+      button: "Modules",
+      eyebrow: "The Tower Power modules",
+      description: "Explore public pages with previews, descriptions, and screenshot slots ready to fill later.",
+      sections: {
+        operations: "Operations",
+        logistics: "Logistics",
+        finance: "Finance",
+        people: "People",
+        growth: "Growth",
+      },
+    },
     oneClickOps: "// ONE-CLICK OPERATIONS",
     gymWorkflowTitle: "Apps for every gym workflow",
     builtForGyms: "// BUILT FOR GYM OPERATIONS",

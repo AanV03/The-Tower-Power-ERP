@@ -1,14 +1,14 @@
 import Link from "next/link";
-import type { Route } from "next";
 import { Dumbbell, FileText, Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
 
 import { getDictionary, type Locale } from "@/lib/i18n";
+import { localizedPath } from "@/lib/localized-routing";
 
 const legalLinks = [
-  { label: "Privacy Policy", href: "/legal/privacy" },
-  { label: "Terms of Service", href: "/legal/terms" },
-  { label: "Security", href: "/legal/security" },
-];
+  { labelKey: "privacy", path: "legal/privacy" },
+  { labelKey: "terms", path: "legal/terms" },
+  { labelKey: "security", path: "legal/security" },
+] as const;
 
 const contactLinks = [
   { label: "hello@towerpower.example", href: "mailto:hello@towerpower.example", icon: Mail },
@@ -19,16 +19,9 @@ const contactLinks = [
 export function LandingFooter({ locale = "es" }: { locale?: Locale }) {
   const dictionary = getDictionary(locale);
 
-  const productLinks = [
-    { label: dictionary.modules.dashboard, href: `/${locale}/dashboard` as Route },
-    { label: dictionary.modules.memberships, href: `/${locale}/memberships` as Route },
-    { label: dictionary.modules.inventory, href: `/${locale}/inventory` as Route },
-    { label: dictionary.common.dashboard, href: `/${locale}/analytics` as Route },
-  ];
-
   return (
     <footer id="contact" className="relative border-t border-[color:var(--landing-border)] bg-[var(--landing-bg-deep)] text-[var(--landing-text)]">
-      <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:px-8 lg:py-16">
+      <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:py-16">
         <div>
           <div className="flex items-center gap-3">
             <span className="grid size-12 place-items-center border border-[color:var(--landing-border)] bg-[var(--landing-primary)] text-white">
@@ -57,31 +50,7 @@ export function LandingFooter({ locale = "es" }: { locale?: Locale }) {
             >
               Instagram
             </a>
-            <a
-              href="https://status.example.com/tower_power"
-              className="text-sm font-bold text-[var(--landing-copy)] underline-offset-4 hover:text-[var(--landing-accent-strong)] hover:underline"
-            >
-              Status
-            </a>
           </div>
-        </div>
-
-        <div>
-          <h2 className="text-sm font-black uppercase tracking-[0.16em] text-[var(--landing-accent-strong)]">
-            Product
-          </h2>
-          <ul className="mt-5 space-y-3">
-            {productLinks.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="text-sm font-semibold text-[var(--landing-copy)] transition-colors hover:text-[var(--landing-text)]"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
         </div>
 
         <div>
@@ -111,9 +80,9 @@ export function LandingFooter({ locale = "es" }: { locale?: Locale }) {
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             {legalLinks.map((link, index) => (
-              <a
-                key={link.href}
-                href={link.href}
+              <Link
+                key={link.path}
+                href={localizedPath(locale, link.path)}
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--landing-copy)] transition-colors hover:text-[var(--landing-accent-strong)]"
               >
                 {index === 0 ? (
@@ -121,8 +90,8 @@ export function LandingFooter({ locale = "es" }: { locale?: Locale }) {
                 ) : (
                   <FileText className="h-4 w-4" aria-hidden="true" />
                 )}
-                {link.label}
-              </a>
+                {dictionary.landing.legal[link.labelKey]}
+              </Link>
             ))}
           </div>
         </div>

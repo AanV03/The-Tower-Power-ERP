@@ -10,6 +10,7 @@ import { LandingMegaMenu } from "@/components/landing/mega-menu";
 import { useLandingRouteTransition } from "@/components/landing/landing-route-transition";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { getDictionary, type Locale } from "@/lib/i18n";
+import { localizedHome, localizedPath } from "@/lib/localized-routing";
 
 const curtainPanels = Array.from({ length: 7 }, (_, index) => index);
 const curtainDuration = 420;
@@ -23,8 +24,8 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
   const timersRef = useRef<number[]>([]);
 
   const navLinks = [
-    { label: dictionary.landing.navbar.operations, href: "#operations" },
-    { label: dictionary.landing.navbar.contact, href: "#contact" },
+    { label: dictionary.landing.navbar.operations, hash: "#operations" },
+    { label: dictionary.landing.navbar.contact, hash: "#contact" },
   ];
 
   useEffect(() => {
@@ -40,9 +41,9 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
 
   const handleSectionClick = (
     event: MouseEvent<HTMLAnchorElement>,
-    href: string
+    hash: string
   ) => {
-    const target = document.querySelector<HTMLElement>(href);
+    const target = document.querySelector<HTMLElement>(hash);
 
     if (!target || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
@@ -54,7 +55,7 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
 
     timersRef.current = [
       window.setTimeout(() => {
-        window.history.pushState(null, "", href);
+        window.history.pushState(null, "", hash);
         target.scrollIntoView({ block: "start", behavior: "auto" });
       }, curtainCoverDelay),
       window.setTimeout(() => setCurtainPhase("exit"), curtainCoverDelay + 140),
@@ -114,7 +115,7 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
         className="grid w-full grid-cols-[1fr_auto] items-stretch lg:grid-cols-[minmax(260px,0.9fr)_auto_minmax(260px,0.9fr)]"
       >
         <Link
-          href={"/" as Route}
+          href={localizedHome(locale)}
           className="group inline-flex min-w-0 items-center gap-3  px-4 py-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)] sm:px-6 lg:px-8"
           aria-label="The Tower Power home"
         >
@@ -134,12 +135,12 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
         </Link>
 
         <div className="hidden items-center justify-center gap-3 px-6 lg:flex xl:gap-4 xl:px-12">
-          <LandingMegaMenu mode="desktop" />
+          <LandingMegaMenu locale={locale} mode="desktop" />
           {navLinks.map((link) => (
             <a
-              key={link.href}
-              href={link.href}
-              onClick={(event) => handleSectionClick(event, link.href)}
+              key={link.hash}
+              href={localizedPath(locale, link.hash)}
+              onClick={(event) => handleSectionClick(event, link.hash)}
               className="group relative inline-flex min-h-10 min-w-32 items-center justify-center border border-[color:var(--landing-border)] bg-[var(--landing-panel-muted)] px-4 text-xs font-black uppercase tracking-[0.22em] text-[var(--landing-copy)] transition-colors hover:border-[color:var(--landing-accent-strong)] hover:bg-[var(--landing-panel-hover)] hover:text-[var(--landing-accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)]"
             >
               <span
@@ -169,17 +170,17 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
 
         <div className="flex items-center justify-end gap-3 px-4 sm:px-6 lg:px-8">
           <LocaleSwitcher locale={locale} inHeader={true} />
-          <LandingMegaMenu mode="mobile" />
+          <LandingMegaMenu locale={locale} mode="mobile" />
           <a
-            href="#modules"
+            href={localizedPath(locale, "#modules")}
             aria-label="Search modules"
             className="hidden size-10 place-items-center border border-[color:var(--landing-border)] text-[var(--landing-copy)] transition-colors hover:border-[color:var(--landing-accent-strong)] hover:text-[var(--landing-accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)] sm:grid lg:size-11"
           >
             <Search className="h-4 w-4" aria-hidden="true" />
           </a>
           <Link
-            href={`/${locale}/register` as Route}
-            onClick={(event) => handleRouteClick(event, `/${locale}/register` as Route)}
+            href={"/register" as Route}
+            onClick={(event) => handleRouteClick(event, "/register" as Route)}
             className="inline-flex min-h-10 items-center justify-center gap-2 bg-[var(--landing-primary)] px-4 text-xs font-black uppercase tracking-[0.16em] text-white transition-all duration-300 hover:bg-[var(--landing-primary-light)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)] sm:px-5 lg:min-h-11 lg:px-7"
           >
             <span className="hidden sm:inline">{dictionary.landing.navbar.startSetup}</span>

@@ -8,6 +8,11 @@ const moduleDataSource = await readFile(new URL("../lib/modules.ts", import.meta
 const megaMenuSource = await readFile(new URL("../components/landing/mega-menu.tsx", import.meta.url), "utf8").catch(() => "");
 const moduleTemplateSource = await readFile(new URL("../components/landing/module-page-template.tsx", import.meta.url), "utf8").catch(() => "");
 const navbarSource = await readFile(new URL("../components/landing/landing-navbar.tsx", import.meta.url), "utf8").catch(() => "");
+const footerSource = await readFile(new URL("../components/landing/landing-footer.tsx", import.meta.url), "utf8").catch(() => "");
+const homeSource = await readFile(new URL("../app/[locale]/page.tsx", import.meta.url), "utf8").catch(() => "");
+const classGridSource = await readFile(new URL("../components/ClassGrid.tsx", import.meta.url), "utf8").catch(() => "");
+const tickerSource = await readFile(new URL("../components/KineticTicker.tsx", import.meta.url), "utf8").catch(() => "");
+const legalPageSource = await readFile(new URL("../components/landing/legal-page.tsx", import.meta.url), "utf8").catch(() => "");
 
 function landingPaletteBlock(source) {
   const match = source.match(/\.landing-palette\s*\{(?<body>[\s\S]*?)\n\}/);
@@ -134,4 +139,45 @@ test("landing navbar and mega menu avoid clipping on tablet widths", () => {
   assert.match(megaMenuSource, /max-h-\[calc\(100svh-5rem\)\]/);
   assert.match(megaMenuSource, /overflow-y-auto/);
   assert.doesNotMatch(megaMenuSource, /left-1\/2 top-\[calc\(100%\+0\.75rem\)\][\s\S]*-translate-x-1\/2/);
+});
+
+test("workflow app cards stay wide enough for labels", () => {
+  assert.match(homeSource, /lg:grid-cols-\[0\.55fr_1\.45fr\]/);
+  assert.match(homeSource, /lg:grid-cols-3/);
+  assert.doesNotMatch(homeSource, /\[overflow-wrap:anywhere\]/);
+  assert.match(homeSource, /min-h-20/);
+  assert.doesNotMatch(homeSource, /min-h-24/);
+});
+
+test("landing footer removes product and status links", () => {
+  assert.doesNotMatch(footerSource, /Product/);
+  assert.doesNotMatch(footerSource, /Status/);
+  assert.match(footerSource, /dictionary\.landing\.legal\[link\.labelKey\]/);
+  assert.match(footerSource, /localizedPath\(locale,\s*link\.path\)/);
+});
+
+test("standard legal pages exist for footer links", async () => {
+  assert.match(footerSource, /localizedPath\(locale,\s*link\.path\)/);
+  await access(new URL("../app/[locale]/legal/privacy/page.tsx", import.meta.url));
+  await access(new URL("../app/[locale]/legal/terms/page.tsx", import.meta.url));
+  await access(new URL("../app/[locale]/legal/security/page.tsx", import.meta.url));
+});
+
+test("localized legal pages keep locale-aware navigation", () => {
+  assert.match(legalPageSource, /<LandingNavbar locale=\{locale\}/);
+  assert.match(legalPageSource, /<LandingFooter locale=\{locale\}/);
+  assert.match(navbarSource, /href=\{localizedHome\(locale\)\}/);
+  assert.doesNotMatch(navbarSource, /href=\{\/"/);
+  assert.match(navbarSource, /href=\{localizedPath\(locale,\s*link\.hash\)\}/);
+});
+
+test("landing mega menu and screenshot sections use localized dictionaries", () => {
+  assert.match(navbarSource, /<LandingMegaMenu locale=\{locale\} mode="desktop"/);
+  assert.match(navbarSource, /<LandingMegaMenu locale=\{locale\} mode="mobile"/);
+  assert.match(megaMenuSource, /getDictionary\(safeLocale\)/);
+  assert.match(megaMenuSource, /dictionary\.landing\.megaMenu\.button/);
+  assert.match(megaMenuSource, /localizedModuleLabel/);
+  assert.match(classGridSource, /dictionary\.landing\.classGrid/);
+  assert.match(tickerSource, /dictionary\.landing\.ticker\.primary/);
+  assert.match(tickerSource, /dictionary\.landing\.ticker\.outline/);
 });

@@ -28,6 +28,54 @@ export const fr = {
       synced: "Synchronisé",
     },
     oneClickOps: "// OPÉRATIONS EN UN CLIC",
+    classGrid: [
+      {
+        title: "CRM des abonnements",
+        desc: "Plans, renouvellements, gels, comptes famille, decharges et historique par succursale.",
+        metric: "3,842 membres",
+      },
+      {
+        title: "POS et facturation",
+        desc: "Ventes retail, factures, paiements echoues, prelevements recurrents, remboursements et caisse.",
+        metric: "$84.6k MRR",
+      },
+      {
+        title: "Controle d'acces",
+        desc: "Portes, check-ins, permissions par plan, invites et exceptions de presence.",
+        metric: "716 check-ins",
+      },
+      {
+        title: "Cours et coachs",
+        desc: "Capacite, listes d'attente, calendriers coachs, salles, paie et presence.",
+        metric: "91% occupation",
+      },
+      {
+        title: "Inventaire",
+        desc: "Supplements, vetements, transferts, achats, comptages d'entrepot et alertes de stock bas.",
+        metric: "18 alertes",
+      },
+      {
+        title: "Analyse financiere",
+        desc: "P&L par succursale, churn, cohortes, cout de paie, marges et rapports executifs.",
+        metric: "+18% croissance",
+      },
+    ],
+    ticker: {
+      primary: "Membres. Paiements. Acces. Stock. Paie.",
+      outline: "Un systeme d'exploitation pour salles.",
+    },
+    megaMenu: {
+      button: "Modules",
+      eyebrow: "Modules The Tower Power",
+      description: "Explorez des pages publiques avec apercus, descriptions et emplacements de captures prets a completer.",
+      sections: {
+        operations: "Operations",
+        logistics: "Logistique",
+        finance: "Finance",
+        people: "Equipe",
+        growth: "Croissance",
+      },
+    },
     gymWorkflowTitle: "Des applications pour chaque flux de travail",
     builtForGyms: "// CONÇU POUR LES OPÉRATIONS EN SALLE",
     chooseWorkflowTitle: "Choisissez le flux. The Tower Power connecte le reste.",
