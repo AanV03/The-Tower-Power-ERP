@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { ModuleKey, Prisma, RoleScope, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { hashPassword, normalizeEmail } from "@/lib/auth/password";
@@ -153,6 +154,7 @@ async function bootstrapTenantForUser(
 
   await tx.userRole.create({
     data: {
+      id: randomUUID(),
       userId: input.userId,
       roleId: role.id,
       branchId: branch.id,

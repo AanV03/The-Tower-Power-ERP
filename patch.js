@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from "node:fs";
 
 let css = fs.readFileSync('app/globals.css', 'utf8');
 
