@@ -4,16 +4,18 @@ import { ArrowLeft, ArrowRight, ImageIcon, Sparkles } from "lucide-react";
 
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
+import type { Locale } from "@/lib/i18n";
 import type { ModuleItem } from "@/lib/modules";
 
 type ModulePageTemplateProps = {
   module: ModuleItem;
+  locale: Locale;
 };
 
-export function ModulePageTemplate({ module }: ModulePageTemplateProps) {
+export function ModulePageTemplate({ module, locale }: ModulePageTemplateProps) {
   return (
     <main className="landing-palette min-h-screen bg-[var(--landing-bg)] text-[var(--landing-text)]">
-      <LandingNavbar />
+      <LandingNavbar locale={locale} />
 
       <section className="relative overflow-hidden border-b border-[color:var(--landing-border)] bg-[var(--landing-hero-bg)]">
         <div className="landing-dot-grid absolute inset-0" aria-hidden="true" />
@@ -95,7 +97,7 @@ export function ModulePageTemplate({ module }: ModulePageTemplateProps) {
         </div>
       </section>
 
-      <LandingFooter />
+      <LandingFooter locale={locale} />
     </main>
   );
 }

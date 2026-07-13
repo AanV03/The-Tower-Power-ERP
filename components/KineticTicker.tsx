@@ -2,10 +2,12 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
-export default function KineticTicker() {
+export default function KineticTicker({ locale = "es" }: { locale?: Locale }) {
   const sectionRef = useRef<HTMLElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
+  const dictionary = getDictionary(locale);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -41,21 +43,21 @@ export default function KineticTicker() {
         ref={textRef}
         className="flex gap-8 whitespace-nowrap px-4 text-[14vw] font-black uppercase tracking-normal text-white will-change-transform sm:text-[12vw] md:gap-16 md:text-[10vw]"
       >
-        <span>Members. Payments. Access. Stock. Payroll.</span>
+        <span>{dictionary.landing.ticker.primary}</span>
         <span
           className="text-transparent"
           style={{ WebkitTextStroke: "2px rgba(255,255,255,0.85)" }}
         >
-          One gym operating system.
+          {dictionary.landing.ticker.outline}
         </span>
-        <span>Members. Payments. Access. Stock. Payroll.</span>
+        <span>{dictionary.landing.ticker.primary}</span>
         <span
           className="text-transparent"
           style={{ WebkitTextStroke: "2px rgba(255,255,255,0.85)" }}
         >
-          One gym operating system.
+          {dictionary.landing.ticker.outline}
         </span>
-        <span>Members. Payments. Access. Stock. Payroll.</span>
+        <span>{dictionary.landing.ticker.primary}</span>
       </div>
     </section>
   );

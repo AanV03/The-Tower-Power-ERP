@@ -165,7 +165,7 @@ export function VendorsView({
                 <div className="flex flex-wrap items-center gap-2 mt-3">
                   <span className="text-xs text-muted-foreground">{t.activeFilters}:</span>
                   <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-                    "{searchQuery}"
+                    &quot;{searchQuery}&quot;
                     <button onClick={() => onSearchChange("")} className="cursor-pointer">
                       <X className="size-3" />
                     </button>

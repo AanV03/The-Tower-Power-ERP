@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { ChevronDown, Layers3 } from "lucide-react";
 
 import { useLandingRouteTransition } from "@/components/landing/landing-route-transition";
 import { megaMenuSections } from "@/lib/modules";
+import { getDictionary } from "@/lib/i18n";
+import { normalizeLocale } from "@/lib/localized-routing";
 import { cn } from "@/lib/utils";
 
 type LandingMegaMenuProps = {
@@ -51,11 +53,58 @@ function moduleHref(locale: string, slug: string) {
   return `/${locale}/modules/${slug}` as Route;
 }
 
+function localizedModuleLabel(
+  slug: string,
+  dictionary: ReturnType<typeof getDictionary>
+) {
+  const isSpanish = dictionary.common.language === "Idioma";
+  const isFrench = dictionary.common.language === "Langue";
+  const labels: Record<string, string> = {
+    "panel-operativo": dictionary.modules.dashboard,
+    "punto-de-venta": dictionary.modules.pos,
+    suscripciones: dictionary.modules.memberships,
+    acceso: dictionary.modules.access,
+    catalogo: isSpanish ? "Catalogo" : isFrench ? "Catalogue" : "Catalog",
+    compras: isSpanish ? "Compras" : isFrench ? "Achats" : "Purchases",
+    almacenes: isSpanish ? "Almacenes" : isFrench ? "Entrepots" : "Warehouses",
+    inventario: dictionary.modules.inventory,
+    finanzas: dictionary.modules.finance,
+    contabilidad: isSpanish ? "Contabilidad" : isFrench ? "Comptabilite" : "Accounting",
+    "rh-y-nomina": dictionary.modules.hr,
+    nomina: isSpanish ? "Nomina" : isFrench ? "Paie" : "Payroll",
+    especialistas: dictionary.modules.specialists,
+    marketing: dictionary.modules.marketing,
+    analytics: isSpanish ? "Analitica" : "Analytics",
+  };
+
+  return labels[slug] ?? slug;
+}
+
 export function LandingMegaMenu({ locale = "es", mode }: LandingMegaMenuProps) {
   const { startRouteTransition } = useLandingRouteTransition();
+  const safeLocale = normalizeLocale(locale);
+  const dictionary = getDictionary(safeLocale);
+  const localizedSections = useMemo(() => megaMenuSections.map((section, index) => {
+    const sectionKeys = ["operations", "logistics", "finance", "people", "growth"] as const;
+    const sectionKey = sectionKeys[index] ?? "operations";
+
+    return {
+      ...section,
+      title: dictionary.landing.megaMenu.sections[sectionKey],
+      items: section.items.map((item) => ({
+        ...item,
+        label: localizedModuleLabel(item.slug, dictionary),
+      })),
+    };
+  }), [dictionary]);
+  const firstSectionTitle = localizedSections[0]?.title ?? "";
   const rootRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [openSection, setOpenSection] = useState(megaMenuSections[0]?.title ?? "");
+  const [openSection, setOpenSection] = useState<string>(firstSectionTitle);
+
+  useEffect(() => {
+    setOpenSection(firstSectionTitle);
+  }, [firstSectionTitle]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -98,7 +147,7 @@ export function LandingMegaMenu({ locale = "es", mode }: LandingMegaMenuProps) {
           className="inline-flex min-h-10 items-center justify-center gap-2 border border-[color:var(--landing-border)] bg-[var(--landing-panel-muted)] px-3 text-xs font-black uppercase tracking-[0.14em] text-[var(--landing-copy)] transition-colors hover:border-[color:var(--landing-accent-strong)] hover:text-[var(--landing-accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)]"
         >
           <Layers3 className="h-4 w-4" aria-hidden="true" />
-          Menu
+          {dictionary.common.moduleMenu}
           <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} aria-hidden="true" />
         </button>
 
@@ -113,7 +162,7 @@ export function LandingMegaMenu({ locale = "es", mode }: LandingMegaMenuProps) {
               className="fixed inset-x-2 top-[calc(3.75rem+0.75rem)] z-50 mx-auto max-h-[calc(100svh-5rem)] w-[calc(100vw-1rem)] max-w-xl overflow-y-auto border border-[color:var(--landing-border)] bg-[var(--landing-panel-strong)] p-3 shadow-2xl shadow-slate-950/15 backdrop-blur-xl dark:shadow-black/45 sm:inset-x-4 sm:w-[calc(100vw-2rem)]"
             >
               <div className="grid gap-2">
-                {megaMenuSections.map((section) => {
+                {localizedSections.map((section) => {
                   const expanded = openSection === section.title;
 
                   return (
@@ -137,7 +186,7 @@ export function LandingMegaMenu({ locale = "es", mode }: LandingMegaMenuProps) {
                           >
                             <div className="grid gap-1 border-t border-[color:var(--landing-border)] p-2">
                               {section.items.map((item) => {
-                                const href = moduleHref(locale, item.slug);
+                                const href = moduleHref(safeLocale, item.slug);
 
                                 return (
                                   <Link
@@ -184,7 +233,7 @@ export function LandingMegaMenu({ locale = "es", mode }: LandingMegaMenuProps) {
         aria-controls="landing-desktop-module-menu"
         className="group relative inline-flex min-h-10 min-w-32 items-center justify-center gap-2 border border-[color:var(--landing-border)] bg-[var(--landing-panel-muted)] px-4 text-xs font-black uppercase tracking-[0.22em] text-[var(--landing-copy)] transition-colors hover:border-[color:var(--landing-accent-strong)] hover:bg-[var(--landing-panel-hover)] hover:text-[var(--landing-accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)]"
       >
-        Modules
+        {dictionary.landing.megaMenu.button}
         <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} aria-hidden="true" />
         <AnimatePresence>
           {isOpen ? (
@@ -213,17 +262,17 @@ export function LandingMegaMenu({ locale = "es", mode }: LandingMegaMenuProps) {
             <div className="mb-4 flex items-center justify-between gap-5 border-b border-[color:var(--landing-border)] pb-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--landing-accent-strong)]">
-                  Módulos The Tower Power
+                  {dictionary.landing.megaMenu.eyebrow}
                 </p>
                 <p className="mt-1 max-w-2xl text-sm text-[var(--landing-copy)]">
-                  Explora páginas públicas con previews, descripciones y capturas listas para agregar después.
+                  {dictionary.landing.megaMenu.description}
                 </p>
               </div>
               <Layers3 className="h-6 w-6 shrink-0 text-[var(--landing-accent-strong)]" aria-hidden="true" />
             </div>
 
             <div className="grid gap-4 lg:grid-cols-3 xl:grid-cols-5">
-              {megaMenuSections.map((section) => (
+              {localizedSections.map((section) => (
                 <motion.div key={section.title} variants={columnVariants} className="min-w-0">
                   <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--landing-text)]">
                     {section.title}
@@ -231,7 +280,7 @@ export function LandingMegaMenu({ locale = "es", mode }: LandingMegaMenuProps) {
                   <div className="mt-2 h-px w-full bg-[var(--landing-border)]" />
                   <div className="mt-3 grid gap-1.5">
                     {section.items.map((item) => {
-                      const href = moduleHref(locale, item.slug);
+                      const href = moduleHref(safeLocale, item.slug);
 
                       return (
                         <motion.div key={item.slug} variants={itemVariants}>

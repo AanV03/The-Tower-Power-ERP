@@ -74,10 +74,14 @@ function hasLocale(pathname: string) {
   );
 }
 
-function stripLocale(pathname: string) {
-  const locale = locales.find(
-    (candidate) => pathname === `/${candidate}` || pathname.startsWith(`/${candidate}/`),
+function getLocaleFromPath(pathname: string) {
+  return locales.find(
+    (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
   );
+}
+
+function stripLocale(pathname: string) {
+  const locale = getLocaleFromPath(pathname);
 
   if (!locale) return pathname;
 
@@ -91,11 +95,11 @@ function getLegacyAuthRedirect(pathname: string) {
 
   for (const locale of locales) {
     if (pathname === `/${locale}/signin` || pathname.startsWith(`/${locale}/signin/`)) {
-      return "/login";
+      return `/${locale}/login`;
     }
 
     if (pathname === `/${locale}/signup` || pathname.startsWith(`/${locale}/signup/`)) {
-      return "/register";
+      return `/${locale}/register`;
     }
   }
 
@@ -176,7 +180,8 @@ function unauthorizedResponse(request: NextRequest) {
     );
   }
 
-  const loginUrl = new URL("/login", request.url);
+  const locale = getLocaleFromPath(request.nextUrl.pathname);
+  const loginUrl = new URL(locale ? `/${locale}/login` : "/login", request.url);
   loginUrl.searchParams.set(
     "next",
     `${request.nextUrl.pathname}${request.nextUrl.search}`,

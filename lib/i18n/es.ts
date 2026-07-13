@@ -27,6 +27,54 @@ export const es = {
       alertDesc: "Barras de proteína transferidas desde sucursal Norte.",
       synced: "Sincronizado",
     },
+    classGrid: [
+      {
+        title: "CRM de membresias",
+        desc: "Planes, renovaciones, congelamientos, cuentas familiares, deslindes e historial por sucursal.",
+        metric: "3,842 miembros",
+      },
+      {
+        title: "POS y facturacion",
+        desc: "Ventas retail, facturas, pagos fallidos, cargos recurrentes, reembolsos y control de caja.",
+        metric: "$84.6k MRR",
+      },
+      {
+        title: "Control de acceso",
+        desc: "Puertas, check-ins, permisos por plan, pases de invitado y excepciones de asistencia.",
+        metric: "716 check-ins",
+      },
+      {
+        title: "Clases y coaches",
+        desc: "Capacidad, listas de espera, calendarios de entrenadores, salas, nomina y asistencia.",
+        metric: "91% ocupacion",
+      },
+      {
+        title: "Inventario",
+        desc: "Suplementos, ropa, transferencias, compras, conteos de almacen y alertas de bajo stock.",
+        metric: "18 alertas",
+      },
+      {
+        title: "Analitica financiera",
+        desc: "P&L por sucursal, churn, cohortes, costo de nomina, margenes y reportes ejecutivos.",
+        metric: "+18% crecimiento",
+      },
+    ],
+    ticker: {
+      primary: "Miembros. Pagos. Acceso. Stock. Nomina.",
+      outline: "Un sistema operativo para gimnasios.",
+    },
+    megaMenu: {
+      button: "Modulos",
+      eyebrow: "Modulos The Tower Power",
+      description: "Explora paginas publicas con previews, descripciones y espacios para capturas listas para agregar despues.",
+      sections: {
+        operations: "Operacion",
+        logistics: "Logistica",
+        finance: "Finanzas",
+        people: "Personas",
+        growth: "Crecimiento",
+      },
+    },
     oneClickOps: "// OPERACIONES EN UN CLIC",
     gymWorkflowTitle: "Apps para cada flujo de trabajo en el gimnasio",
     builtForGyms: "// DISEÑADO PARA OPERACIONES DE GIMNASIO",
@@ -138,6 +186,7 @@ export const es = {
     admin: "SaaS Admin",
   },
   auth: {
+    backToHome: "Volver al inicio",
     passwordRules: {
       length: "Mínimo 8 caracteres",
       upper: "Al menos una letra mayúscula",
@@ -165,6 +214,7 @@ export const es = {
     errors: {
       nameMin: "El nombre debe tener al menos 2 caracteres",
       emailRequired: "El correo es obligatorio",
+      invalidCredentials: "Credenciales invalidas o usuario suspendido.",
       emailInvalid: "Ingresa un correo válido",
       passwordRequired: "La contraseña es obligatoria",
       passwordRequirements: "La contraseña no cumple los requisitos",
@@ -201,6 +251,41 @@ export const es = {
       footerPrefix: "¿Ya tienes cuenta?",
       footerAction: "Iniciar sesión",
       passwordMatch: "Las contraseñas coinciden",
+    },
+    passwordRecovery: {
+      title: "Recuperar contrasena",
+      subtitle: "Ingresa tu correo y The Tower Power enviara instrucciones si la cuenta existe.",
+      submit: "Enviar correo de recuperacion",
+      loading: "Enviando correo...",
+      footerPrefix: "Recordaste tu contrasena?",
+      footerAction: "Iniciar sesion",
+    },
+    emailValidation: {
+      title: "Validacion de correo",
+      subtitle: "Esta funcion se activara cuando el backend este listo.",
+      unavailableTitle: "La validacion de correo aun no esta disponible.",
+      unavailableDescription: "Esta pagina esta desactivada intencionalmente y no llama ninguna API.",
+      back: "Volver a The Tower Power",
+    },
+    twoFactor: {
+      verifyTitle: "Verificar acceso",
+      verifySubtitle: "Ingresa el codigo de 6 digitos de tu app autenticadora.",
+      setupTitle: "Protege tu cuenta",
+      setupSubtitle: "Escanea el codigo QR y verifica 2FA antes de entrar a The Tower Power.",
+      setupDashboardSubtitle: "Escanea el codigo QR y verifica 2FA antes de entrar al panel.",
+      code: "Codigo de autenticacion",
+      manualKey: "Clave manual",
+      verify: "Verificar codigo",
+      verifying: "Verificando...",
+      enable: "Activar 2FA y continuar",
+      useAnotherAccount: "Usar otra cuenta",
+      setupFailed: "No se pudo generar la configuracion 2FA.",
+      codeRequired: "Ingresa el codigo de 6 digitos del autenticador.",
+      invalidCode: "Codigo de autenticacion invalido.",
+      verifyFailed: "No se pudo verificar el codigo de autenticacion.",
+    },
+    registration: {
+      failed: "No se pudo crear la cuenta. Intentalo de nuevo.",
     },
   },
   quickActions: {

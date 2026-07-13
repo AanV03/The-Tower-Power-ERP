@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { ModulePageTemplate } from "@/components/landing/module-page-template";
 import { getModuleBySlug, modules } from "@/lib/modules";
-import { isLocale, locales } from "@/lib/i18n";
+import { isLocale, locales, type Locale } from "@/lib/i18n";
 
 type ModuleRouteParams = {
   locale: string;
@@ -56,5 +56,5 @@ export default async function PublicModulePage({
     notFound();
   }
 
-  return <ModulePageTemplate module={moduleItem} />;
+  return <ModulePageTemplate module={moduleItem} locale={locale as Locale} />;
 }

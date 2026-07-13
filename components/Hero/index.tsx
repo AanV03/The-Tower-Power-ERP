@@ -245,7 +245,7 @@ export default function Hero({ locale = "es" }: { locale?: string }) {
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-bold text-[var(--landing-text)]">
                   <BarChart3 className="h-4 w-4 text-[var(--landing-accent-strong)]" aria-hidden="true" />
-                  Revenue by hour
+                  {dictionary.landing.ops?.revenueHour ?? "Revenue by hour"}
                 </div>
                 <BadgeCheck className="h-5 w-5 text-[var(--landing-accent-strong)]" aria-hidden="true" />
               </div>
@@ -273,14 +273,14 @@ export default function Hero({ locale = "es" }: { locale?: string }) {
             <div className="mt-5 grid grid-cols-[1fr_auto] items-center gap-4 border border-[color:var(--landing-alert-border)] bg-[var(--landing-alert-bg)] p-4">
               <div>
                 <p className="text-sm font-bold text-[var(--landing-text)]">
-                  Low stock alert resolved
+                  {dictionary.landing.ops?.alertTitle ?? "Low stock alert resolved"}
                 </p>
                 <p className="mt-1 text-sm text-[var(--landing-copy)]">
-                  Protein bars transferred from North branch.
+                  {dictionary.landing.ops?.alertDesc ?? "Protein bars transferred from North branch."}
                 </p>
               </div>
               <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--landing-accent-strong)]">
-                Synced
+                {dictionary.landing.ops?.synced ?? "Synced"}
               </span>
             </div>
           </div>

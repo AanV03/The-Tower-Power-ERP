@@ -73,7 +73,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <Hero locale={locale as Locale} />
 
       <section className="relative border-y border-[color:var(--landing-border)] bg-[var(--landing-bg-deep)]">
-        <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[0.75fr_1.25fr] lg:px-8">
+        <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[0.55fr_1.45fr] lg:px-8">
           <div>
             <span className="block font-mono text-xs uppercase tracking-[0.24em] text-[var(--landing-accent-strong)]">
               {dictionary.landing.oneClickOps}
@@ -82,15 +82,15 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
               {dictionary.landing.gymWorkflowTitle}
             </h2>
           </div>
-          <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-3">
             {appPills.map(({ label, icon: Icon }) => (
               <a
                 key={label}
                 href="#modules"
-                className="group flex min-h-20 min-w-0 items-center gap-3 overflow-hidden border border-[color:var(--landing-border)] bg-[var(--landing-panel)] px-3 py-3 transition-colors hover:border-[color:var(--landing-accent-strong)] hover:bg-[var(--landing-panel-hover)]"
+                className="group flex min-h-20 min-w-0 items-center gap-4 border border-[color:var(--landing-border)] bg-[var(--landing-panel)] px-5 py-4 transition-colors hover:border-[color:var(--landing-accent-strong)] hover:bg-[var(--landing-panel-hover)]"
               >
                 <Icon className="h-5 w-5 shrink-0 text-[var(--landing-accent-strong)]" aria-hidden="true" />
-                <span className="min-w-0 text-xs font-black uppercase leading-snug tracking-[0.08em] text-[var(--landing-copy)] [overflow-wrap:anywhere] group-hover:text-[var(--landing-text)] sm:tracking-[0.1em]">
+                <span className="min-w-0 break-words text-xs font-black uppercase leading-snug tracking-[0.08em] text-[var(--landing-copy)] group-hover:text-[var(--landing-text)] sm:tracking-[0.1em]">
                   {label}
                 </span>
               </a>
@@ -113,10 +113,10 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             {dictionary.landing.chooseWorkflowDesc}
           </p>
         </div>
-        <ClassGrid />
+        <ClassGrid locale={locale as Locale} />
       </section>
 
-      <KineticTicker />
+      <KineticTicker locale={locale as Locale} />
 
       <section id="operations" className="relative mx-auto grid w-full max-w-7xl scroll-mt-24 gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[0.85fr_1.15fr] lg:px-8 lg:py-24">
         <div>

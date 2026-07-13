@@ -1,4 +1,7 @@
+import { notFound } from "next/navigation";
+
 import { EmailValidationPlaceholder } from "@/components/auth/email-validation-placeholder";
+import { isLocale, type Locale } from "@/lib/i18n";
 
 export default async function LocaleEmailValidationPage({
   params,
@@ -7,5 +10,9 @@ export default async function LocaleEmailValidationPage({
 }) {
   const { locale } = await params;
 
-  return <EmailValidationPlaceholder locale={locale} />;
+  if (!isLocale(locale)) {
+    notFound();
+  }
+
+  return <EmailValidationPlaceholder locale={locale as Locale} />;
 }
