@@ -7,8 +7,8 @@ import {
   TOWER_POWER_SESSION_COOKIE,
   TOWER_POWER_TWO_FACTOR_COOKIE,
   TOWER_POWER_TWO_FACTOR_SETUP_COOKIE,
+  SESSION_MAX_AGE_SECONDS,
   TWO_FACTOR_CHALLENGE_MAX_AGE_SECONDS,
-  TWO_FACTOR_SETUP_MAX_AGE_SECONDS,
 } from '@/lib/auth/session';
 
 const secureCookie = process.env.NODE_ENV === 'production';
@@ -46,28 +46,29 @@ export async function POST(req: NextRequest) {
       return response;
     }
 
-    if (result.status === 'TWO_FACTOR_SETUP_REQUIRED') {
-      const setupToken = await createAuthToken(
-        result.payload,
-        TWO_FACTOR_SETUP_MAX_AGE_SECONDS,
-      );
+    if (result.status === 'AUTHENTICATED') {
+      const sessionToken = await createAuthToken(result.payload, SESSION_MAX_AGE_SECONDS);
       const response = NextResponse.json(
         {
           ok: true,
-          twoFactorSetupRequired: true,
-          message: 'Configura 2FA para completar el acceso.',
+          user: result.user,
+          session: {
+            userId: result.payload.userId,
+            tenantId: result.payload.tenantId,
+            role: result.payload.role,
+          },
         },
         { status: 200 },
       );
 
-      response.cookies.delete(TOWER_POWER_SESSION_COOKIE);
       response.cookies.delete(TOWER_POWER_TWO_FACTOR_COOKIE);
-      response.cookies.set(TOWER_POWER_TWO_FACTOR_SETUP_COOKIE, setupToken, {
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_SETUP_COOKIE);
+      response.cookies.set(TOWER_POWER_SESSION_COOKIE, sessionToken, {
         httpOnly: true,
         secure: secureCookie,
         sameSite: 'lax',
         path: '/',
-        maxAge: TWO_FACTOR_SETUP_MAX_AGE_SECONDS,
+        maxAge: SESSION_MAX_AGE_SECONDS,
       });
 
       return response;
