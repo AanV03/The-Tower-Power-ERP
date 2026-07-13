@@ -40,11 +40,12 @@ export function HrExportButton({
 
     try {
       downloadCsv("gerpy-hr-export.csv", [
-        ["Section", "ID", "Name/Employee", "Detail 1", "Detail 2", "Status"],
+        ["Section", "ID", "Name/Employee", "Phone", "Detail 1", "Detail 2", "Status"],
         ...employees.map((employee) => [
           "Employees",
           employee.id,
           employee.name,
+          employee.phone,
           employee.position,
           employee.branch,
           employee.status,
@@ -53,6 +54,7 @@ export function HrExportButton({
           "Attendance",
           record.id,
           record.employee,
+          "",
           record.clockIn,
           record.clockOut,
           record.status,
@@ -61,6 +63,7 @@ export function HrExportButton({
           "Contracts",
           contract.id,
           contract.employee,
+          "",
           contract.type,
           contract.compensation,
           contract.status,

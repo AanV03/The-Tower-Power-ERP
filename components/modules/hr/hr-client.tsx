@@ -18,6 +18,7 @@ import { AttendancePanel, type HrAttendanceRow } from "@/components/modules/hr/a
 import { ContractSummary, type HrContractRow } from "@/components/modules/hr/contract-summary";
 import { EmployeeFormDialog } from "@/components/modules/hr/employee-form-dialog";
 import { HrExportButton } from "@/components/modules/hr/hr-export-button";
+import { HR_POSITION_OPTIONS } from "@/components/modules/hr/hr-config";
 import { TimeClockDialog, type TimeClockEmployeeOption } from "@/components/modules/hr/time-clock-dialog";
 
 const hrLabels = {
@@ -36,6 +37,7 @@ const hrLabels = {
     incidents: "Incidencias",
     openAttendances: "Asistencias abiertas",
     employee: "Empleado",
+    phone: "Telefono",
     position: "Puesto",
     contract: "Contrato",
     status: "Estado",
@@ -71,6 +73,7 @@ const hrLabels = {
     incidents: "Incidents",
     openAttendances: "Open Attendances",
     employee: "Employee",
+    phone: "Phone",
     position: "Position",
     contract: "Contract",
     status: "Status",
@@ -106,6 +109,7 @@ const hrLabels = {
     incidents: "Incidents",
     openAttendances: "Présences ouvertes",
     employee: "Employé",
+    phone: "Telephone",
     position: "Poste",
     contract: "Contrat",
     status: "Statut",
@@ -159,6 +163,9 @@ export function HrClient({
   };
 }) {
   const t = hrLabels[locale] ?? hrLabels.es;
+  const positionOptions = HR_POSITION_OPTIONS;
+  // TODO: Conectar aqui con useHrDashboardData({ locale, branchId }) y reemplazar initialEmployees/metrics.
+  // TODO: Conectar aqui con useHrPositionOptions() cuando el catalogo de puestos venga de API.
 
   // Search & Navigation States
   const [activeTab, setActiveTab] = useState("employees");
@@ -182,6 +189,7 @@ export function HrClient({
       (e) =>
         e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         e.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        e.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
         e.position.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [initialEmployees, searchQuery]);
@@ -238,6 +246,7 @@ export function HrClient({
           <BranchScopeSelector locale={locale} />
           <div className="flex gap-2">
             <EmployeeFormDialog
+              positionOptions={positionOptions}
               trigger={
                 <Button size="sm" className={headerPrimaryActionClass}>
                   <Plus className="mr-1.5 size-4" />
@@ -313,7 +322,7 @@ export function HrClient({
                 <div className="flex flex-col gap-4">
                   {/* Desktop View Table */}
                   <div className="hidden md:block">
-                    <EmployeeTable employees={filteredEmployees} />
+                    <EmployeeTable employees={filteredEmployees} positionOptions={positionOptions} />
                   </div>
 
                   {/* Mobile View: Grid of cards */}
@@ -331,19 +340,25 @@ export function HrClient({
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           <div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t.phone}</p>
+                            <p className="font-medium text-foreground mt-0.5 break-all">{e.phone}</p>
+                          </div>
+                          <div>
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t.position}</p>
                             <p className="font-medium text-foreground mt-0.5 break-all">{e.position}</p>
                           </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
                           <div>
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t.contract}</p>
                             <p className="font-medium text-foreground mt-0.5">{e.contract}</p>
                           </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/40 text-xs">
                           <div>
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t.branch}</p>
                             <p className="font-medium text-foreground mt-0.5">{e.branch}</p>
                           </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/40 text-xs">
                           <div>
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t.lastAttendance}</p>
                             <p className="font-medium text-foreground mt-0.5">{e.lastAttendance}</p>
@@ -353,6 +368,7 @@ export function HrClient({
                           <EmployeeFormDialog
                             employee={e}
                             mode="edit"
+                            positionOptions={positionOptions}
                             trigger={
                               <Button variant="outline" size="sm" className="h-7 text-xs px-3">
                                 <Edit className="size-3 mr-1" />

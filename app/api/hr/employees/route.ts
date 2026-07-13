@@ -4,30 +4,45 @@ import { z } from "zod";
 import { resolveWritableBranchId, scopedBranchWhere } from "@/lib/api/branch";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
-import { created, fail, ok } from "@/lib/api/response";
+import { ApiError, created, fail, ok } from "@/lib/api/response";
 import { normalizeEmail } from "@/lib/auth/password";
 import { prisma } from "@/lib/db/prisma";
 
 const CreateEmployeeSchema = z.object({
-  branchId: z.string().optional(),
+  branchId: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.string().optional(),
+  ),
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   email: z.preprocess(
-    (value) => (value === "" ? undefined : value),
+    (value) => (value === "" || value === null ? undefined : value),
     z.string().email().transform(normalizeEmail).optional(),
   ),
   phone: z.preprocess(
-    (value) => (value === "" ? undefined : value),
+    (value) => (value === "" || value === null ? undefined : value),
     z.string().trim().max(40).optional(),
   ),
-  positionId: z.string().optional(),
+  positionId: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.string().optional(),
+  ),
   positionName: z.preprocess(
-    (value) => (value === "" ? undefined : value),
+    (value) => (value === "" || value === null ? undefined : value),
     z.string().trim().min(2).max(120).optional(),
   ),
-  status: z.enum(BranchStatus).default(BranchStatus.ACTIVE),
-  hireDate: z.string().datetime().optional(),
-  contractType: z.enum(EmploymentContractType).optional(),
+  status: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.enum(BranchStatus).default(BranchStatus.ACTIVE),
+  ),
+  hireDate: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.string().datetime().optional(),
+  ),
+  contractType: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.enum(EmploymentContractType).optional(),
+  ),
   salary: z.coerce.number().nonnegative().optional(),
   hourlyRate: z.coerce.number().nonnegative().optional(),
 });
@@ -57,6 +72,10 @@ export async function GET(request: Request) {
 
     return ok({ items, total, pagination });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return fail(new ApiError("Ya existe un empleado con ese correo.", 409, "EMPLOYEE_EMAIL_EXISTS"));
+    }
+
     return fail(error);
   }
 }

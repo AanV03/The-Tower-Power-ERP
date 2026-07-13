@@ -83,6 +83,7 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
       id: employee.id,
       name: `${employee.firstName} ${employee.lastName}`,
       email: employee.email ?? "Sin correo",
+      phone: employee.phone ?? "Sin telefono",
       position: employee.position?.name ?? "Sin puesto",
       branch: employee.branch.name,
       contract: contract ? contract.type.replaceAll("_", " ") : "Sin contrato",

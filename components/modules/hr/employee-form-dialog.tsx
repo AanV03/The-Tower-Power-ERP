@@ -8,6 +8,11 @@ import { toast } from "sonner"
 
 import type { HrEmployeeRow } from "@/components/modules/hr/employee-table"
 import {
+  EMPLOYEE_FORM_COPY,
+  HR_POSITION_OPTIONS,
+  type HrSelectOption,
+} from "@/components/modules/hr/hr-config"
+import {
   StandardDialogContent,
   StandardDialogDescription,
   StandardDialogFooter,
@@ -37,12 +42,14 @@ export function EmployeeFormDialog({
   trigger,
   open,
   onOpenChange,
+  positionOptions = HR_POSITION_OPTIONS,
 }: {
   employee?: HrEmployeeRow
   mode?: "create" | "edit"
   trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  positionOptions?: HrSelectOption[]
 }) {
   const isEditing = mode === "edit"
   const formId = useId()
@@ -63,6 +70,10 @@ export function EmployeeFormDialog({
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
     const endpoint = isEditing && employee?.id ? `/api/hr/employees/${employee.id}` : "/api/hr/employees"
+    const optionalValue = (key: string) => {
+      const value = formData.get(key)
+      return value === null || value === "" ? undefined : value
+    }
 
     setIsSubmitting(true)
     try {
@@ -72,11 +83,11 @@ export function EmployeeFormDialog({
         body: JSON.stringify({
           firstName: formData.get("firstName"),
           lastName: formData.get("lastName"),
-          email: formData.get("email"),
-          phone: formData.get("phone"),
-          positionName: formData.get("positionName"),
-          contractType: formData.get("contractType"),
-          status: formData.get("status"),
+          email: optionalValue("email"),
+          phone: optionalValue("phone"),
+          positionName: optionalValue("positionName"),
+          contractType: optionalValue("contractType"),
+          status: formData.get("status") ?? "ACTIVE",
         }),
       })
       const result = await response.json()
@@ -105,16 +116,16 @@ export function EmployeeFormDialog({
           render={
             <Button size="sm">
               <Plus className="size-4" />
-              Alta empleado
+              {EMPLOYEE_FORM_COPY.createTitle}
             </Button>
           }
         />
       ) : null}
       <StandardDialogContent>
         <StandardDialogHeader>
-          <StandardDialogTitle>{isEditing ? "Editar empleado" : "Alta de empleado"}</StandardDialogTitle>
+          <StandardDialogTitle>{isEditing ? EMPLOYEE_FORM_COPY.editTitle : EMPLOYEE_FORM_COPY.createTitle}</StandardDialogTitle>
           <StandardDialogDescription>
-            Captura la informacion operativa del colaborador.
+            {EMPLOYEE_FORM_COPY.description}
           </StandardDialogDescription>
         </StandardDialogHeader>
 
@@ -137,14 +148,30 @@ export function EmployeeFormDialog({
             </label>
             <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-phone`}>
               Telefono
-              <Input id={`${formId}-phone`} name="phone" type="tel" placeholder="+52 55 0000 0000" disabled={isSubmitting} />
+              <Input id={`${formId}-phone`} name="phone" type="tel" defaultValue={employee?.phone === EMPLOYEE_FORM_COPY.phoneFallback ? "" : employee?.phone} placeholder="+52 55 0000 0000" disabled={isSubmitting} />
             </label>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
             <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-position`}>
               Puesto
-              <Input id={`${formId}-position`} name="positionName" defaultValue={employee?.position === "Sin puesto" ? "" : employee?.position} placeholder="Puesto" disabled={isSubmitting} />
+              <Select id={`${formId}-position`} name="positionName" defaultValue={employee?.position === EMPLOYEE_FORM_COPY.positionFallback ? positionOptions[0]?.value : employee?.position ?? positionOptions[0]?.value} disabled={isSubmitting}>
+                <StandardSelectTrigger id={`${formId}-position`}>
+                  <StandardSelectValue placeholder="Selecciona puesto" />
+                </StandardSelectTrigger>
+                <StandardSelectContent>
+                  {positionOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <span className="flex flex-col">
+                        <span>{option.label}</span>
+                        {option.description ? (
+                          <span className="text-xs text-muted-foreground">{option.description}</span>
+                        ) : null}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </StandardSelectContent>
+              </Select>
             </label>
             <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-contract-type`}>
               Contrato
@@ -175,11 +202,11 @@ export function EmployeeFormDialog({
 
           <StandardDialogFooter>
             <DialogClose render={<Button type="button" variant="outline" disabled={isSubmitting} />}>
-              Cancelar
+              {EMPLOYEE_FORM_COPY.cancel}
             </DialogClose>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? null : isEditing ? <Edit className="size-4" /> : <Plus className="size-4" />}
-              {isSubmitting ? "Guardando..." : isEditing ? "Guardar cambios" : "Crear empleado"}
+              {isSubmitting ? EMPLOYEE_FORM_COPY.submitting : isEditing ? EMPLOYEE_FORM_COPY.submitEdit : EMPLOYEE_FORM_COPY.submitCreate}
             </Button>
           </StandardDialogFooter>
         </form>
