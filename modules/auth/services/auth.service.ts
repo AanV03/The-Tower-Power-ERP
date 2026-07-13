@@ -202,16 +202,13 @@ export class AuthService {
     }
 
     return {
-      status: 'TWO_FACTOR_SETUP_REQUIRED' as const,
+      status: 'AUTHENTICATED' as const,
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
       },
-      payload: {
-        ...basePayload,
-        typ: '2fa_setup' as const,
-      } satisfies SessionPayloadInput,
+      payload: basePayload,
     };
   }
 
