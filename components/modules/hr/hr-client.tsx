@@ -145,6 +145,7 @@ export function HrClient({
   initialAttendances,
   initialContracts,
   timeClockEmployees,
+  positionOptions,
   metrics,
 }: {
   locale: Locale;
@@ -152,6 +153,7 @@ export function HrClient({
   initialAttendances: HrAttendanceRow[];
   initialContracts: HrContractRow[];
   timeClockEmployees: TimeClockEmployeeOption[];
+  positionOptions?: string[];
   metrics: {
     activeEmployees: number;
     attendanceToday: number;
@@ -182,6 +184,7 @@ export function HrClient({
       (e) =>
         e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         e.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        e.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
         e.position.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [initialEmployees, searchQuery]);
@@ -238,6 +241,7 @@ export function HrClient({
           <BranchScopeSelector locale={locale} />
           <div className="flex gap-2">
             <EmployeeFormDialog
+              positionOptions={positionOptions}
               trigger={
                 <Button size="sm" className={headerPrimaryActionClass}>
                   <Plus className="mr-1.5 size-4" />
@@ -313,7 +317,7 @@ export function HrClient({
                 <div className="flex flex-col gap-4">
                   {/* Desktop View Table */}
                   <div className="hidden md:block">
-                    <EmployeeTable employees={filteredEmployees} />
+                    <EmployeeTable employees={filteredEmployees} positionOptions={positionOptions} />
                   </div>
 
                   {/* Mobile View: Grid of cards */}
@@ -330,6 +334,10 @@ export function HrClient({
                           </Badge>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Telefono</p>
+                            <p className="font-medium text-foreground mt-0.5 break-all">{e.phone}</p>
+                          </div>
                           <div>
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">{t.position}</p>
                             <p className="font-medium text-foreground mt-0.5 break-all">{e.position}</p>
@@ -353,6 +361,7 @@ export function HrClient({
                           <EmployeeFormDialog
                             employee={e}
                             mode="edit"
+                            positionOptions={positionOptions}
                             trigger={
                               <Button variant="outline" size="sm" className="h-7 text-xs px-3">
                                 <Edit className="size-3 mr-1" />
