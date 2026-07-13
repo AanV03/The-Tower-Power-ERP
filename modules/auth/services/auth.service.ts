@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { generateSecret, generateURI, verify } from 'otplib';
 
@@ -124,6 +125,7 @@ export class AuthService {
 
       await tx.userRole.create({
         data: {
+          id: randomUUID(),
           userId: user.id,
           roleId: role.id,
           branchId: branch.id,
