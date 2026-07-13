@@ -1,0 +1,380 @@
+import type {
+  AccountType,
+  AccountingAccount,
+  AccountingDashboardData,
+  AccountingDashboardState,
+  JournalEntryDraft,
+  JournalEntryLine,
+  JournalEntryStatus,
+  JournalEntryType,
+  NormalBalance,
+} from "./types";
+
+type EditableEntryField = "date" | "type" | "concept" | "reference";
+
+export type AccountingDemoState = {
+  data: AccountingDashboardData;
+  uiState: AccountingDashboardState;
+  searchQuery: string;
+};
+
+export type AccountingDemoAction =
+  | { type: "entry-field"; field: EditableEntryField; value: string }
+  | { type: "line-field"; lineId: string; field: keyof JournalEntryLine; value: string | number }
+  | { type: "add-line" }
+  | { type: "remove-line"; lineId: string }
+  | { type: "select-account"; accountId: string }
+  | { type: "select-entry"; entryId: string }
+  | { type: "delete-entry"; entryId: string }
+  | { type: "search"; value: string }
+  | { type: "register-entry" }
+  | { type: "save-draft" }
+  | { type: "refresh" }
+  | { type: "export" }
+  | { type: "retry" };
+
+function toJournalEntryStatus(isBalanced: boolean): JournalEntryStatus {
+  return isBalanced ? "balanced" : "draft";
+}
+
+export function recalculateEntry(entry: JournalEntryDraft): JournalEntryDraft {
+  const debit = entry.lines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0);
+  const credit = entry.lines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0);
+  const difference = Math.abs(debit - credit);
+  const isBalanced = debit === credit && debit > 0;
+
+  return {
+    ...entry,
+    status: toJournalEntryStatus(isBalanced),
+    totals: {
+      debit,
+      credit,
+      difference,
+      isBalanced,
+    },
+  };
+}
+
+export function updateJournalEntryField(
+  entry: JournalEntryDraft,
+  field: EditableEntryField,
+  value: string,
+): JournalEntryDraft {
+  const nextValue = field === "type" ? (value as JournalEntryType) : value;
+
+  return {
+    ...entry,
+    [field]: nextValue,
+  };
+}
+
+export function updateJournalLine(
+  entry: JournalEntryDraft,
+  lineId: string,
+  field: keyof JournalEntryLine,
+  value: string | number,
+): JournalEntryDraft {
+  const lines = entry.lines.map((line) =>
+    line.id === lineId
+      ? {
+          ...line,
+          [field]: value,
+        }
+      : line,
+  );
+
+  return recalculateEntry({ ...entry, lines });
+}
+
+export function addJournalLine(entry: JournalEntryDraft): JournalEntryDraft {
+  const lineNumber = entry.lines.length + 1;
+
+  return {
+    ...entry,
+    lines: [
+      ...entry.lines,
+      {
+        id: `line-${lineNumber}`,
+        accountId: "",
+        accountCode: "",
+        accountName: "",
+        description: "",
+        debit: 0,
+        credit: 0,
+      },
+    ],
+  };
+}
+
+export function removeJournalLine(entry: JournalEntryDraft, lineId: string): JournalEntryDraft {
+  if (entry.lines.length <= 2) {
+    return { ...entry, lines: [...entry.lines] };
+  }
+
+  return recalculateEntry({
+    ...entry,
+    lines: entry.lines.filter((line) => line.id !== lineId),
+  });
+}
+
+function applyAccountToLine(line: JournalEntryLine, account: AccountingAccount): JournalEntryLine {
+  return {
+    ...line,
+    accountId: account.id,
+    accountCode: account.code,
+    accountName: account.name,
+  };
+}
+
+function selectAccount(entry: JournalEntryDraft, account: AccountingAccount): JournalEntryDraft {
+  const targetLine = entry.lines.find((line) => !line.accountId)?.id ?? entry.lines[0]?.id;
+
+  if (!targetLine) return entry;
+
+  return {
+    ...entry,
+    lines: entry.lines.map((line) => (line.id === targetLine ? applyAccountToLine(line, account) : line)),
+  };
+}
+
+function loadEntrySummary(state: AccountingDemoState, entryId: string): AccountingDemoState {
+  const summary = state.data.recentEntries.find((entry) => entry.id === entryId);
+
+  if (!summary) return state;
+
+  return {
+    ...state,
+    data: {
+      ...state.data,
+      draftEntry: {
+        ...state.data.draftEntry,
+        id: summary.id,
+        entryNumber: summary.entryNumber,
+        concept: summary.concept,
+        type: summary.type,
+        status: summary.status,
+      },
+    },
+  };
+}
+
+function metricToneForDifference(difference: number) {
+  return difference > 0 ? "danger" : "success";
+}
+
+function formatCurrency(value: number, currency: string) {
+  return new Intl.NumberFormat("es-MX", { style: "currency", currency }).format(value);
+}
+
+function formatDateLabel(date: string) {
+  if (!date) return "Sin fecha";
+
+  return date;
+}
+
+function createBlankDraft(entry: JournalEntryDraft): JournalEntryDraft {
+  return {
+    ...entry,
+    id: `draft-${Date.now()}`,
+    entryNumber: "POL-BORRADOR",
+    concept: "",
+    reference: "",
+    status: "draft",
+    lines: [
+      {
+        id: "line-1",
+        accountId: "",
+        accountCode: "",
+        accountName: "",
+        description: "",
+        debit: 0,
+        credit: 0,
+      },
+      {
+        id: "line-2",
+        accountId: "",
+        accountCode: "",
+        accountName: "",
+        description: "",
+        debit: 0,
+        credit: 0,
+      },
+    ],
+    totals: { debit: 0, credit: 0, difference: 0, isBalanced: false },
+  };
+}
+
+function syncDifferenceMetric(data: AccountingDashboardData): AccountingDashboardData {
+  return {
+    ...data,
+    metrics: data.metrics.map((metric) =>
+      metric.id === "difference"
+        ? {
+            ...metric,
+            value: formatCurrency(data.draftEntry.totals.difference, data.draftEntry.currency),
+            tone: metricToneForDifference(data.draftEntry.totals.difference),
+          }
+        : metric,
+    ),
+  };
+}
+
+export function createAccountingDemoState(data: AccountingDashboardData, uiState: AccountingDashboardState) {
+  return {
+    data,
+    uiState,
+    searchQuery: "",
+  };
+}
+
+export function accountingDemoReducer(
+  state: AccountingDemoState,
+  action: AccountingDemoAction,
+): AccountingDemoState {
+  switch (action.type) {
+    case "entry-field":
+      return {
+        ...state,
+        data: syncDifferenceMetric({
+          ...state.data,
+          draftEntry: updateJournalEntryField(state.data.draftEntry, action.field, action.value),
+        }),
+      };
+    case "line-field":
+      return {
+        ...state,
+        data: syncDifferenceMetric({
+          ...state.data,
+          draftEntry: updateJournalLine(
+            state.data.draftEntry,
+            action.lineId,
+            action.field,
+            action.value,
+          ),
+        }),
+      };
+    case "add-line":
+      return {
+        ...state,
+        data: {
+          ...state.data,
+          draftEntry: addJournalLine(state.data.draftEntry),
+        },
+      };
+    case "remove-line":
+      return {
+        ...state,
+        data: syncDifferenceMetric({
+          ...state.data,
+          draftEntry: removeJournalLine(state.data.draftEntry, action.lineId),
+        }),
+      };
+    case "select-account": {
+      const account = state.data.accounts.find((item) => item.id === action.accountId);
+
+      if (!account) return state;
+
+      return {
+        ...state,
+        data: {
+          ...state.data,
+          draftEntry: selectAccount(state.data.draftEntry, account),
+        },
+      };
+    }
+    case "select-entry":
+      return loadEntrySummary(state, action.entryId);
+    case "delete-entry":
+      return {
+        ...state,
+        data: {
+          ...state.data,
+          recentEntries: state.data.recentEntries.filter((entry) => entry.id !== action.entryId),
+        },
+        uiState: { ...state.uiState, page: "success", message: "Poliza eliminada localmente." },
+      };
+    case "search":
+      return { ...state, searchQuery: action.value };
+    case "register-entry":
+      if (!state.data.draftEntry.totals.isBalanced) {
+        return {
+          ...state,
+          uiState: {
+            ...state.uiState,
+            message: "La poliza debe cuadrar antes de registrarse.",
+          },
+        };
+      }
+
+      return {
+        ...state,
+        data: syncDifferenceMetric({
+          ...state.data,
+          recentEntries: [
+            {
+              id: `je-${Date.now()}`,
+              entryNumber: state.data.draftEntry.entryNumber,
+              dateLabel: formatDateLabel(state.data.draftEntry.date),
+              concept: state.data.draftEntry.concept || "Poliza sin concepto",
+              type: state.data.draftEntry.type,
+              amount: formatCurrency(
+                Math.max(state.data.draftEntry.totals.debit, state.data.draftEntry.totals.credit),
+                state.data.draftEntry.currency,
+              ),
+              status: "posted",
+            },
+            ...state.data.recentEntries,
+          ],
+          draftEntry: createBlankDraft(state.data.draftEntry),
+        }),
+        uiState: {
+          ...state.uiState,
+          page: "success",
+          message: "Poliza registrada localmente.",
+        },
+      };
+    case "save-draft":
+      return {
+        ...state,
+        uiState: { ...state.uiState, page: "success", message: "Borrador actualizado localmente." },
+      };
+    case "refresh":
+      return { ...state, uiState: { ...state.uiState, page: "success", message: "Datos demo actualizados." } };
+    case "retry":
+      return { ...state, uiState: { ...state.uiState, page: "idle", message: undefined } };
+    case "export":
+      return {
+        ...state,
+        uiState: { ...state.uiState, page: "success", message: "Exportacion simulada lista." },
+      };
+    default:
+      return state;
+  }
+}
+
+export function filterAccountingDemoData(state: AccountingDemoState): AccountingDashboardData {
+  const query = state.searchQuery.trim().toLowerCase();
+
+  if (!query) return state.data;
+
+  return {
+    ...state.data,
+    accounts: state.data.accounts.filter((account) =>
+      [account.code, account.name, account.branchScope, account.type, account.normalBalance, account.status]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    ),
+    recentEntries: state.data.recentEntries.filter((entry) =>
+      [entry.entryNumber, entry.concept, entry.type, entry.status, entry.amount, entry.dateLabel]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    ),
+  };
+}
+
+export type AccountingDemoFieldOptions = {
+  accountTypes: AccountType[];
+  normalBalances: NormalBalance[];
+};
