@@ -53,7 +53,7 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
   const todayClockWhere = { ...branchScopedWhere, clockIn: { gte: today.start, lt: today.end } };
   const todayOpenClockWhere = { ...todayClockWhere, clockOut: null };
 
-  const [employees, timeClocks, activeEmployees, attendanceToday, openAttendance] = await Promise.all([
+  const [employees, positions, timeClocks, activeEmployees, attendanceToday, openAttendance] = await Promise.all([
     prisma.employee.findMany({
       where: branchScopedWhere,
       include: {
@@ -64,6 +64,11 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
       },
       orderBy: { createdAt: "desc" },
       take: 12,
+    }),
+    prisma.position.findMany({
+      where: { tenantId: context.tenantId },
+      orderBy: { name: "asc" },
+      select: { name: true },
     }),
     prisma.timeClock.findMany({
       where: todayClockWhere,
@@ -83,6 +88,7 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
       id: employee.id,
       name: `${employee.firstName} ${employee.lastName}`,
       email: employee.email ?? "Sin correo",
+      phone: employee.phone ?? "Sin telefono",
       position: employee.position?.name ?? "Sin puesto",
       branch: employee.branch.name,
       contract: contract ? contract.type.replaceAll("_", " ") : "Sin contrato",
@@ -129,6 +135,7 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
       initialAttendances={attendanceRows}
       initialContracts={contractRows}
       timeClockEmployees={timeClockEmployees}
+      positionOptions={positions.map((position) => position.name)}
       metrics={{
         activeEmployees,
         attendanceToday,
