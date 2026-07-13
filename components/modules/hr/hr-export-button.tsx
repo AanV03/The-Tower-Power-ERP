@@ -39,7 +39,7 @@ export function HrExportButton({
     setIsExporting(true);
 
     try {
-      downloadCsv("gerpy-hr-export.csv", [
+      downloadCsv("tower-power-hr-export.csv", [
         ["Section", "ID", "Name/Employee", "Phone", "Detail 1", "Detail 2", "Status"],
         ...employees.map((employee) => [
           "Employees",
