@@ -37,20 +37,6 @@ export function LandingFooter({ locale = "es" }: { locale?: Locale }) {
           <p className="mt-6 max-w-md text-sm leading-6 text-[var(--landing-copy)]">
             {dictionary.landing.footerDesc}
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <a
-              href="https://www.linkedin.example/tower_power"
-              className="text-sm font-bold text-[var(--landing-copy)] underline-offset-4 hover:text-[var(--landing-accent-strong)] hover:underline"
-            >
-              LinkedIn
-            </a>
-            <a
-              href="https://www.instagram.example/tower_power"
-              className="text-sm font-bold text-[var(--landing-copy)] underline-offset-4 hover:text-[var(--landing-accent-strong)] hover:underline"
-            >
-              Instagram
-            </a>
-          </div>
         </div>
 
         <div>

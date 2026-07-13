@@ -186,6 +186,7 @@ export const fr = {
     admin: "Admin SaaS",
   },
   auth: {
+    backToHome: "Retour a l'accueil",
     passwordRules: {
       length: "Minimum 8 caractères",
       upper: "Au moins une lettre majuscule",
@@ -213,6 +214,7 @@ export const fr = {
     errors: {
       nameMin: "Le nom doit contenir au moins 2 caractères",
       emailRequired: "L'e-mail est obligatoire",
+      invalidCredentials: "Identifiants invalides ou utilisateur suspendu.",
       emailInvalid: "Saisissez un e-mail valide",
       passwordRequired: "Le mot de passe est obligatoire",
       passwordRequirements: "Le mot de passe ne respecte pas les exigences",
@@ -249,6 +251,41 @@ export const fr = {
       footerPrefix: "Vous avez déjà un compte ?",
       footerAction: "Se connecter",
       passwordMatch: "Les mots de passe correspondent",
+    },
+    passwordRecovery: {
+      title: "Recuperation du mot de passe",
+      subtitle: "Saisissez votre e-mail et The Tower Power enverra des instructions si le compte existe.",
+      submit: "Envoyer l'e-mail de recuperation",
+      loading: "Envoi de l'e-mail...",
+      footerPrefix: "Mot de passe retrouve ?",
+      footerAction: "Se connecter",
+    },
+    emailValidation: {
+      title: "Validation de l'e-mail",
+      subtitle: "Cette fonction sera activee lorsque le backend sera pret.",
+      unavailableTitle: "La validation de l'e-mail n'est pas encore disponible.",
+      unavailableDescription: "Cette page est desactivee intentionnellement et n'appelle aucune API.",
+      back: "Retour a The Tower Power",
+    },
+    twoFactor: {
+      verifyTitle: "Verifier l'acces",
+      verifySubtitle: "Saisissez le code a 6 chiffres de votre application d'authentification.",
+      setupTitle: "Securisez votre compte",
+      setupSubtitle: "Scannez le code QR et verifiez la 2FA avant d'entrer dans The Tower Power.",
+      setupDashboardSubtitle: "Scannez le code QR et verifiez la 2FA avant d'entrer dans le tableau de bord.",
+      code: "Code d'authentification",
+      manualKey: "Cle manuelle",
+      verify: "Verifier le code",
+      verifying: "Verification...",
+      enable: "Activer la 2FA et continuer",
+      useAnotherAccount: "Utiliser un autre compte",
+      setupFailed: "Impossible de generer la configuration 2FA.",
+      codeRequired: "Saisissez le code d'authentification a 6 chiffres.",
+      invalidCode: "Code d'authentification invalide.",
+      verifyFailed: "Impossible de verifier le code d'authentification.",
+    },
+    registration: {
+      failed: "Impossible de creer le compte. Reessayez.",
     },
   },
   quickActions: {

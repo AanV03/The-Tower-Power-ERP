@@ -5,7 +5,7 @@ import type { Route } from "next";
 import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Dumbbell, Search } from "lucide-react";
+import { ArrowRight, Dumbbell } from "lucide-react";
 import { LandingMegaMenu } from "@/components/landing/mega-menu";
 import { useLandingRouteTransition } from "@/components/landing/landing-route-transition";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
@@ -20,6 +20,7 @@ const curtainCoverDelay = curtainDuration + (curtainPanels.length - 1) * curtain
 export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
   const { startRouteTransition } = useLandingRouteTransition();
   const dictionary = getDictionary(locale);
+  const registerHref = localizedPath(locale, "register");
   const [curtainPhase, setCurtainPhase] = useState<"idle" | "enter" | "exit">("idle");
   const timersRef = useRef<number[]>([]);
 
@@ -171,16 +172,9 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
         <div className="flex items-center justify-end gap-3 px-4 sm:px-6 lg:px-8">
           <LocaleSwitcher locale={locale} inHeader={true} />
           <LandingMegaMenu locale={locale} mode="mobile" />
-          <a
-            href={localizedPath(locale, "#modules")}
-            aria-label="Search modules"
-            className="hidden size-10 place-items-center border border-[color:var(--landing-border)] text-[var(--landing-copy)] transition-colors hover:border-[color:var(--landing-accent-strong)] hover:text-[var(--landing-accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)] sm:grid lg:size-11"
-          >
-            <Search className="h-4 w-4" aria-hidden="true" />
-          </a>
           <Link
-            href={"/register" as Route}
-            onClick={(event) => handleRouteClick(event, "/register" as Route)}
+            href={registerHref}
+            onClick={(event) => handleRouteClick(event, registerHref)}
             className="inline-flex min-h-10 items-center justify-center gap-2 bg-[var(--landing-primary)] px-4 text-xs font-black uppercase tracking-[0.16em] text-white transition-all duration-300 hover:bg-[var(--landing-primary-light)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)] sm:px-5 lg:min-h-11 lg:px-7"
           >
             <span className="hidden sm:inline">{dictionary.landing.navbar.startSetup}</span>

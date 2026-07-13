@@ -1,16 +1,16 @@
 import Link from "next/link";
-import type { Route } from "next";
 import { Clock, Dumbbell } from "lucide-react";
 
 import { AuthShell } from "@/components/layout/auth-shell";
+import { getDictionary, type Locale } from "@/lib/i18n";
+import { localizedHome } from "@/lib/localized-routing";
 
-function homeHref(locale?: string) {
-  return (locale ? `/${locale}` : "/") as Route;
-}
+export function EmailValidationPlaceholder({ locale = "es" }: { locale?: Locale }) {
+  const dictionary = getDictionary(locale);
+  const copy = dictionary.auth.emailValidation;
 
-export function EmailValidationPlaceholder({ locale }: { locale?: string }) {
   return (
-    <AuthShell>
+    <AuthShell locale={locale} backLabel={dictionary.auth.backToHome}>
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <div
@@ -20,10 +20,10 @@ export function EmailValidationPlaceholder({ locale }: { locale?: string }) {
           </div>
           <div>
             <h1 className="auth-heading text-2xl font-bold tracking-tight">
-              Email Validation
+              {copy.title}
             </h1>
             <p className="auth-muted mt-1 text-sm">
-              This feature will be enabled once the backend is ready.
+              {copy.subtitle}
             </p>
           </div>
         </div>
@@ -36,17 +36,17 @@ export function EmailValidationPlaceholder({ locale }: { locale?: string }) {
             </div>
             <div>
               <p className="auth-heading text-sm font-semibold">
-                Email validation is not available yet.
+                {copy.unavailableTitle}
               </p>
               <p className="auth-muted mt-2 text-sm leading-6">
-                This page is intentionally disabled and does not call any API.
+                {copy.unavailableDescription}
               </p>
             </div>
             <Link
-              href={homeHref(locale)}
+              href={localizedHome(locale)}
               className="auth-primary-button inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold transition-all duration-200 hover:brightness-110"
             >
-              Back to The Tower Power
+              {copy.back}
             </Link>
           </div>
         </div>
