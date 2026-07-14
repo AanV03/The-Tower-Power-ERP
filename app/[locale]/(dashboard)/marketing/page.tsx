@@ -1,8 +1,15 @@
 import type { Locale } from "@/lib/i18n";
-import { getDictionary } from "@/lib/i18n";
 import { moduleConfigs } from "@/data/modules";
 import { requireApiContext } from "@/lib/api/context";
 import { getModuleSummary } from "@/lib/api/module-summary";
+import {
+  campaignStatusConfig,
+  channelOptions,
+  churnRiskConfig,
+  marketingLabels,
+  statusOptions,
+} from "./components/config";
+import { createMarketingDemoData, marketingInitialState } from "./components/mock-data";
 import { MarketingDashboard } from "./components/marketing-dashboard";
 
 export default async function MarketingPage({
@@ -14,7 +21,6 @@ export default async function MarketingPage({
   const typedLocale = locale as Locale;
 
   const config = moduleConfigs["marketing"];
-  const dictionary = getDictionary(typedLocale);
   const context = await requireApiContext({ moduleId: "marketing" });
   const summary = await getModuleSummary("marketing", context);
 
@@ -29,17 +35,25 @@ export default async function MarketingPage({
     };
   });
 
-  const marketingTranslations = dictionary.marketing;
-
   return (
     <section className="erp-section space-y-6" role="main" aria-label={config.title[typedLocale]}>
       <MarketingDashboard
         locale={typedLocale}
-        metrics={metrics}
-        title={config.title[typedLocale]}
-        subtitle={config.subtitle[typedLocale]}
-        primaryActionLabel={config.primaryAction[typedLocale]}
-        translations={marketingTranslations}
+        data={createMarketingDemoData({
+          title: config.title[typedLocale],
+          subtitle: config.subtitle[typedLocale],
+          primaryActionLabel: config.primaryAction[typedLocale],
+          metrics: metrics.map((metric, index) => ({
+            id: `metric-${index}`,
+            ...metric,
+          })),
+        })}
+        state={marketingInitialState}
+        labels={marketingLabels}
+        channelOptions={channelOptions}
+        statusOptions={statusOptions}
+        campaignStatusConfig={campaignStatusConfig}
+        churnRiskConfig={churnRiskConfig}
       />
     </section>
   );
