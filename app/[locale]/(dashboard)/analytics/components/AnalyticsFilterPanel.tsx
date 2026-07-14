@@ -2,92 +2,96 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Building2, Calendar } from "lucide-react";
-import { getDictionary, type Locale } from "@/lib/i18n";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { scopeOptions } from "@/data/navigation";
-import { NativeSelect } from "@/components/ui/native-select";
+import type { Locale } from "@/lib/i18n";
+import { analyticsLabels, analyticsRangeOptions } from "./config";
+import type { AnalyticsLabels, AnalyticsRange, SelectOption } from "./types";
 
 type AnalyticsFilterPanelProps = {
   locale: Locale;
-  range: string;
-  onRangeChange?: (range: string) => void;
+  range: AnalyticsRange;
   branch: string;
+  labels?: AnalyticsLabels;
+  rangeOptions?: SelectOption<AnalyticsRange>[];
+  branchOptions?: SelectOption[];
+  onRangeChange?: (range: AnalyticsRange) => void;
   onBranchChange?: (branch: string) => void;
 };
 
 export function AnalyticsFilterPanel({
   locale,
   range,
-  onRangeChange,
   branch,
+  labels = analyticsLabels,
+  rangeOptions = analyticsRangeOptions,
+  branchOptions = [
+    { value: "", label: analyticsLabels.filters.allBranches },
+    ...scopeOptions.map((option) => ({ value: option.id, label: option.label[locale] })),
+  ],
+  onRangeChange,
   onBranchChange,
 }: AnalyticsFilterPanelProps) {
-  const dictionary = getDictionary(locale);
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const handleBranchChange = (newBranch: string) => {
+  const pushFilter = (key: "range" | "branchId", value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (newBranch) {
-      params.set("branchId", newBranch);
-    } else {
-      params.delete("branchId");
-    }
-    router.push(`?${params.toString()}`, { scroll: false });
-    if (onBranchChange) onBranchChange(newBranch);
-  };
 
-  const handleRangeChange = (newRange: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (newRange) {
-      params.set("range", newRange);
+    if (value) {
+      params.set(key, value);
     } else {
-      params.delete("range");
+      params.delete(key);
     }
+
     router.push(`?${params.toString()}`, { scroll: false });
-    if (onRangeChange) onRangeChange(newRange);
   };
 
   return (
-    <div className="glass-panel rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 w-full shadow-md">
+    <div className="glass-panel flex w-full flex-wrap items-center justify-between gap-4 rounded-xl p-4 shadow-md">
       <div className="flex flex-wrap items-center gap-6">
-        {/* Branch Filter */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="analytics-branch-selector" className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-            <Building2 className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>{dictionary.analytics.filters.branch}</span>
+          <label htmlFor="analytics-branch-selector" className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <Building2 className="size-3.5" aria-hidden="true" />
+            <span>{labels.filters.branch}</span>
           </label>
           <NativeSelect
             id="analytics-branch-selector"
-            className="glass-control text-sm h-9 px-3 rounded-md"
+            className="glass-control h-9 rounded-md px-3 text-sm"
             value={branch}
-            onChange={(e) => handleBranchChange(e.target.value)}
+            onChange={(event) => {
+              pushFilter("branchId", event.target.value);
+              onBranchChange?.(event.target.value);
+            }}
           >
-            <option value="" className="text-foreground bg-card">{dictionary.common.consolidated}</option>
-            {scopeOptions.map((opt) => (
-              <option key={opt.id} value={opt.id} className="text-foreground bg-card">
-                {opt.label[locale]}
-              </option>
+            {branchOptions.map((option) => (
+              <NativeSelectOption key={option.value} value={option.value}>
+                {option.label}
+              </NativeSelectOption>
             ))}
           </NativeSelect>
         </div>
 
-        {/* Date Range Filter */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="analytics-range-selector" className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>{dictionary.analytics.filters.range}</span>
+          <label htmlFor="analytics-range-selector" className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <Calendar className="size-3.5" aria-hidden="true" />
+            <span>{labels.filters.range}</span>
           </label>
           <NativeSelect
             id="analytics-range-selector"
-            className="glass-control text-sm h-9 px-3 rounded-md"
+            className="glass-control h-9 rounded-md px-3 text-sm"
             value={range}
-            onChange={(e) => handleRangeChange(e.target.value)}
+            onChange={(event) => {
+              const value = event.target.value as AnalyticsRange;
+              pushFilter("range", value);
+              onRangeChange?.(value);
+            }}
           >
-            <option value="today" className="text-foreground bg-card">{dictionary.analytics.filters.today}</option>
-            <option value="7d" className="text-foreground bg-card">{dictionary.analytics.filters.last7Days}</option>
-            <option value="30d" className="text-foreground bg-card">{dictionary.analytics.filters.last30Days}</option>
-            <option value="90d" className="text-foreground bg-card">{dictionary.analytics.filters.last90Days}</option>
-            <option value="all" className="text-foreground bg-card">{dictionary.analytics.filters.allTime}</option>
+            {rangeOptions.map((option) => (
+              <NativeSelectOption key={option.value} value={option.value}>
+                {option.label}
+              </NativeSelectOption>
+            ))}
           </NativeSelect>
         </div>
       </div>
