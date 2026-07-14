@@ -129,8 +129,8 @@ export function JournalEntryEditor({
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>
-                  <TableHead className="min-w-[220px]">Cuenta</TableHead>
-                  <TableHead className="min-w-[220px]">Descripcion</TableHead>
+                  <TableHead className="min-w-[220px]">{labels.account}</TableHead>
+                  <TableHead className="min-w-[220px]">{labels.description}</TableHead>
                   <TableHead className="min-w-[120px] text-right">{labels.debit}</TableHead>
                   <TableHead className="min-w-[120px] text-right">{labels.credit}</TableHead>
                   <TableHead className="w-12" />
@@ -188,7 +188,7 @@ export function JournalEntryEditor({
                         size="icon-sm"
                         disabled={disabled || entry.lines.length <= 2}
                         onClick={() => actions?.onRemoveLine?.(line.id)}
-                        aria-label="Eliminar partida"
+                        aria-label={labels.removeLine}
                       >
                         <Trash2 className="size-4" aria-hidden="true" />
                       </Button>

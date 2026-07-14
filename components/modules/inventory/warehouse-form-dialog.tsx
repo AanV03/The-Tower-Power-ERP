@@ -17,13 +17,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { formatMessage, getDictionary, type Locale } from "@/lib/i18n";
 
 type BranchOption = {
   id: string;
   name: string;
 };
 
-export function WarehouseFormDialog({ branches }: { branches: BranchOption[] }) {
+export function WarehouseFormDialog({ branches, locale }: { branches: BranchOption[]; locale: Locale }) {
+  const t = getDictionary(locale).inventory;
   const router = useRouter();
   const formId = useId();
   const [open, setOpen] = useState(false);
@@ -34,7 +36,7 @@ export function WarehouseFormDialog({ branches }: { branches: BranchOption[] }) 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
-      toast.error("El nombre del almacén es obligatorio");
+      toast.error(t.toast.warehouseNameRequired);
       return;
     }
 
@@ -51,16 +53,16 @@ export function WarehouseFormDialog({ branches }: { branches: BranchOption[] }) 
 
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.message || "Error al crear el almacén");
+        throw new Error(result.message || t.toast.warehouseCreateFailed);
       }
 
-      toast.success(`Almacén "${result.data.name}" creado correctamente`);
+      toast.success(formatMessage(t.toast.warehouseCreated, { name: result.data.name }));
       setOpen(false);
       setName("");
       setBranchId("");
       router.refresh();
     } catch (err: any) {
-      toast.error(err.message || "Ocurrió un error inesperado");
+      toast.error(err.message || t.toast.unexpected);
     } finally {
       setLoading(false);
     }
@@ -72,39 +74,39 @@ export function WarehouseFormDialog({ branches }: { branches: BranchOption[] }) 
         render={
           <Button size="sm" variant="outline">
             <Plus className="size-4" />
-            Nuevo Almacén
+            {t.actions.newWarehouse}
           </Button>
         }
       />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nuevo Almacén</DialogTitle>
+          <DialogTitle>{t.warehouseDialog.title}</DialogTitle>
           <DialogDescription>
-            Registra una nueva bodega o almacén para almacenar inventario de productos.
+            {t.warehouseDialog.description}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="grid gap-4">
           <label className="grid gap-1.5 text-sm font-medium text-foreground" htmlFor={`${formId}-name`}>
-            <span>Nombre del Almacén</span>
+            <span>{t.warehouseDialog.name}</span>
             <Input
               id={`${formId}-name`}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ej. Almacén de Suplementos"
+              placeholder={t.warehouseDialog.namePlaceholder}
               required
             />
           </label>
 
           <label className="grid gap-1.5 text-sm font-medium text-foreground" htmlFor={`${formId}-branch`}>
-            <span>Sucursal (Opcional)</span>
+            <span>{t.warehouseDialog.branch}</span>
             <NativeSelect
               id={`${formId}-branch`}
               value={branchId}
               onChange={(e) => setBranchId(e.target.value)}
               className="w-full"
             >
-              <NativeSelectOption value="">Seleccionar sucursal...</NativeSelectOption>
+              <NativeSelectOption value="">{t.warehouseDialog.selectBranch}</NativeSelectOption>
               {branches.map((branch) => (
                 <NativeSelectOption key={branch.id} value={branch.id}>
                   {branch.name}
@@ -120,10 +122,10 @@ export function WarehouseFormDialog({ branches }: { branches: BranchOption[] }) 
               onClick={() => setOpen(false)}
               disabled={loading}
             >
-              Cancelar
+              {t.actions.cancel}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creando..." : "Crear Almacén"}
+              {loading ? t.actions.creating : t.actions.createWarehouse}
             </Button>
           </DialogFooter>
         </form>

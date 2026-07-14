@@ -10,7 +10,7 @@ import { requireApiContext } from "@/lib/api/context";
 import { formatCurrency } from "@/lib/api/pagination";
 import { prisma } from "@/lib/db/prisma";
 import { DEFAULT_TIME_ZONE, getDayBoundsForTimeZone } from "@/lib/date/timezone";
-import type { Locale } from "@/lib/i18n";
+import { formatMessage, getDictionary, type Locale } from "@/lib/i18n";
 
 export type PayrollStatusLabel = "DRAFT" | "APPROVED" | "PAID";
 
@@ -61,8 +61,8 @@ function toNumber(value: { toNumber(): number } | number | null | undefined) {
   return typeof value === "number" ? value : value?.toNumber() ?? 0;
 }
 
-function formatPeriodRange(startDate: Date, endDate: Date) {
-  const formatter = new Intl.DateTimeFormat("es-MX", {
+function formatPeriodRange(startDate: Date, endDate: Date, locale: Locale) {
+  const formatter = new Intl.DateTimeFormat({ es: "es-MX", en: "en-US", fr: "fr-FR" }[locale], {
     day: "2-digit",
     month: "short",
   });
@@ -70,13 +70,13 @@ function formatPeriodRange(startDate: Date, endDate: Date) {
   return `${formatter.format(startDate)} - ${formatter.format(endDate)}`;
 }
 
-function formatPeriodLabel(startDate: Date, endDate: Date) {
-  const formatter = new Intl.DateTimeFormat("es-MX", {
+function formatPeriodLabel(startDate: Date, endDate: Date, locale: Locale) {
+  const formatter = new Intl.DateTimeFormat({ es: "es-MX", en: "en-US", fr: "fr-FR" }[locale], {
     month: "long",
     year: "numeric",
   });
 
-  return `${formatter.format(startDate)} · ${formatPeriodRange(startDate, endDate)}`;
+  return `${formatter.format(startDate)} · ${formatPeriodRange(startDate, endDate, locale)}`;
 }
 
 export async function PayrollDashboard({
@@ -86,6 +86,7 @@ export async function PayrollDashboard({
   locale: Locale;
   selectedPeriodId?: string;
 }) {
+  const t = getDictionary(locale).payroll;
   const context = await requireApiContext({ moduleId: "payroll" });
   const employeeWhere = {
     tenantId: context.tenantId,
@@ -176,8 +177,8 @@ export async function PayrollDashboard({
 
     return {
       id: period.id,
-      label: index === 0 ? "Periodo reciente" : `Periodo ${index + 1}`,
-      range: formatPeriodRange(period.startDate, period.endDate),
+      label: index === 0 ? t.recentPeriod : formatMessage(t.period, { number: index + 1 }),
+      range: formatPeriodRange(period.startDate, period.endDate, locale),
       status: period.status as PayrollStatusLabel,
       employeeCount: items.length,
       netTotal,
@@ -198,11 +199,11 @@ export async function PayrollDashboard({
         return {
           id: item.id,
           employeeName: `${item.employee.firstName} ${item.employee.lastName}`,
-          employeeEmail: item.employee.email ?? "Sin correo",
-          position: item.employee.position?.name ?? "Sin puesto",
+          employeeEmail: item.employee.email ?? t.noEmail,
+          position: item.employee.position?.name ?? t.noPosition,
           branch: item.employee.branch.name,
-          periodLabel: activePeriod ? formatPeriodLabel(activePeriod.startDate, activePeriod.endDate) : "Sin periodo",
-          periodRange: activePeriod ? formatPeriodRange(activePeriod.startDate, activePeriod.endDate) : "Sin rango",
+          periodLabel: activePeriod ? formatPeriodLabel(activePeriod.startDate, activePeriod.endDate, locale) : t.noPeriod,
+          periodRange: activePeriod ? formatPeriodRange(activePeriod.startDate, activePeriod.endDate, locale) : t.noRange,
           status: activePeriod?.status as PayrollStatusLabel,
           base,
           overtime,
@@ -220,8 +221,8 @@ export async function PayrollDashboard({
   const draftPeriods = periods.filter((period) => period.status === "DRAFT").length;
   const missingReceipts = Math.max(activeEmployees - receiptViews.length, 0);
   const activePeriodLabel = activePeriod
-    ? formatPeriodLabel(activePeriod.startDate, activePeriod.endDate)
-    : "Sin periodo activo";
+    ? formatPeriodLabel(activePeriod.startDate, activePeriod.endDate, locale)
+    : t.noActivePeriod;
 
   const summary: PayrollSummaryView = {
     activePeriodLabel,
@@ -241,28 +242,28 @@ export async function PayrollDashboard({
         <div className="min-w-0">
           <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
             <ReceiptText className="size-7 text-primary" aria-hidden="true" />
-            Nómina y comisiones
+            {t.title}
           </h1>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Recibos, comisiones, deducciones y cierre operativo del periodo.
+            {t.subtitle}
           </p>
         </div>
-        <PayrollActionBar periods={periodViews} activePeriodId={activePeriod?.id} />
+        <PayrollActionBar locale={locale} periods={periodViews} activePeriodId={activePeriod?.id} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-        <MetricCard label="Periodos borrador" value={String(draftPeriods)} change="Draft" locale={locale} tone="warning" />
-        <MetricCard label="Empleados incluidos" value={String(receiptViews.length)} change="Recibos" locale={locale} tone="success" />
-        <MetricCard label="Neto pendiente" value={summary.totalNetLabel} change="MXN" locale={locale} />
-        <MetricCard label="Comisiones" value={summary.totalCommissionsLabel} change="Ventas" locale={locale} tone="success" />
-        <MetricCard label="Deducciones" value={summary.totalDeductionsLabel} change="Retenciones" locale={locale} />
-        <MetricCard label="Incidencias" value={String(openAttendances + missingReceipts)} change="Revisar" locale={locale} tone={openAttendances + missingReceipts > 0 ? "danger" : "success"} />
+        <MetricCard label={t.draftPeriods} value={String(draftPeriods)} change={t.draft} locale={locale} tone="warning" />
+        <MetricCard label={t.employeesIncluded} value={String(receiptViews.length)} change={t.receipts} locale={locale} tone="success" />
+        <MetricCard label={t.pendingNet} value={summary.totalNetLabel} change="MXN" locale={locale} />
+        <MetricCard label={t.commissions} value={summary.totalCommissionsLabel} change={t.sales} locale={locale} tone="success" />
+        <MetricCard label={t.deductions} value={summary.totalDeductionsLabel} change={t.withholdings} locale={locale} />
+        <MetricCard label={t.incidents} value={String(openAttendances + missingReceipts)} change={t.review} locale={locale} tone={openAttendances + missingReceipts > 0 ? "danger" : "success"} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)_320px]">
-        <PayrollPeriodsPanel periods={periodViews} activePeriodId={activePeriod?.id} />
-        <PayrollItemsTable receipts={receiptViews} />
-        <PayrollSummaryPanel summary={summary} />
+        <PayrollPeriodsPanel locale={locale} periods={periodViews} activePeriodId={activePeriod?.id} />
+        <PayrollItemsTable locale={locale} receipts={receiptViews} />
+        <PayrollSummaryPanel locale={locale} summary={summary} />
       </div>
 
       {receiptViews.length === 0 ? (
@@ -270,21 +271,21 @@ export async function PayrollDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ReceiptText className="size-4" aria-hidden="true" />
-              Sin recibos para el periodo
+              {t.empty.noReceipts}
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-3">
             <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4">
               <Banknote className="size-5 text-muted-foreground" aria-hidden="true" />
-              <span className="text-sm text-muted-foreground">Genera una vista previa cuando el backend de cálculo esté disponible.</span>
+              <span className="text-sm text-muted-foreground">{t.help.preview}</span>
             </div>
             <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4">
               <BadgeDollarSign className="size-5 text-muted-foreground" aria-hidden="true" />
-              <span className="text-sm text-muted-foreground">Las comisiones se mostrarán desde los recibos existentes.</span>
+              <span className="text-sm text-muted-foreground">{t.help.commissions}</span>
             </div>
             <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4">
               <AlertCircle className="size-5 text-muted-foreground" aria-hidden="true" />
-              <span className="text-sm text-muted-foreground">Las incidencias quedan visibles antes del cierre.</span>
+              <span className="text-sm text-muted-foreground">{t.help.incidents}</span>
             </div>
           </CardContent>
         </Card>

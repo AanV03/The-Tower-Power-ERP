@@ -1,3 +1,5 @@
+import { dashboardModuleDictionaries } from "./dashboard-modules";
+
 export const fr = {
   landing: {
     eyebrow: "ERP multi-succursale pour salles de sport",
@@ -378,6 +380,7 @@ export const fr = {
       },
     },
   },
+  ...dashboardModuleDictionaries.fr,
   marketing: {
     funnel: {
       title: "Entonnoir de Conversion",

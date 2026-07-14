@@ -1,3 +1,5 @@
+import { dashboardModuleDictionaries } from "./dashboard-modules";
+
 export const en = {
   landing: {
     eyebrow: "Multi-branch ERP for gyms",
@@ -380,6 +382,7 @@ export const en = {
       },
     },
   },
+  ...dashboardModuleDictionaries.en,
   marketing: {
     funnel: {
       title: "Conversion Funnel",

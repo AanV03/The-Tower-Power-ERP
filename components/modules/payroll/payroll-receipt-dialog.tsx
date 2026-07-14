@@ -15,12 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-const statusLabel: Record<PayrollStatusLabel, string> = {
-  DRAFT: "Borrador",
-  APPROVED: "Aprobado",
-  PAID: "Pagado",
-};
+import { formatMessage, getDictionary, type Locale } from "@/lib/i18n";
 
 const statusVariant: Record<PayrollStatusLabel, "default" | "secondary" | "outline"> = {
   DRAFT: "secondary",
@@ -46,12 +41,15 @@ function BreakdownRow({
 }
 
 export function PayrollReceiptDialog({
+  locale,
   receipt,
   children,
 }: {
+  locale: Locale;
   receipt: PayrollReceiptView;
   children: ReactElement;
 }) {
+  const t = getDictionary(locale).payroll;
   return (
     <Dialog>
       <DialogTrigger render={children} />
@@ -59,9 +57,9 @@ export function PayrollReceiptDialog({
         <DialogHeader className="pr-8">
           <div className="flex flex-wrap items-center gap-2">
             <WalletCards className="size-5 text-muted-foreground" aria-hidden="true" />
-            <Badge variant={statusVariant[receipt.status]}>{statusLabel[receipt.status]}</Badge>
+            <Badge variant={statusVariant[receipt.status]}>{t.status[receipt.status]}</Badge>
           </div>
-          <DialogTitle className="text-xl">Recibo de nómina</DialogTitle>
+          <DialogTitle className="text-xl">{t.receipt.title}</DialogTitle>
           <DialogDescription>
             {receipt.employeeName} · {receipt.periodLabel}
           </DialogDescription>
@@ -69,44 +67,44 @@ export function PayrollReceiptDialog({
 
         <div className="grid gap-4 md:grid-cols-[1fr_220px]">
           <div className="rounded-lg border border-border bg-muted/20 p-4">
-            <p className="text-xs font-medium uppercase text-muted-foreground">Colaborador</p>
+            <p className="text-xs font-medium uppercase text-muted-foreground">{t.fields.collaborator}</p>
             <p className="mt-2 font-medium text-foreground">{receipt.employeeName}</p>
             <p className="text-sm text-muted-foreground">{receipt.position}</p>
             <p className="text-sm text-muted-foreground">{receipt.branch}</p>
           </div>
           <div className="rounded-lg border border-border bg-muted/20 p-4">
-            <p className="text-xs font-medium uppercase text-muted-foreground">Periodo</p>
+            <p className="text-xs font-medium uppercase text-muted-foreground">{t.fields.period}</p>
             <p className="mt-2 font-medium text-foreground">{receipt.periodRange}</p>
-            <p className="text-sm text-muted-foreground">Estatus: {statusLabel[receipt.status]}</p>
+            <p className="text-sm text-muted-foreground">{formatMessage(t.receipt.status, { status: t.status[receipt.status] })}</p>
           </div>
         </div>
 
         <div className="rounded-lg border border-border p-4">
-          <BreakdownRow label="Base" value={receipt.baseLabel} />
-          <BreakdownRow label="Horas extra" value={receipt.overtimeLabel} />
-          <BreakdownRow label="Comisión" value={receipt.commissionLabel} />
-          <BreakdownRow label="Deducciones" value={`-${receipt.deductionsLabel}`} />
+          <BreakdownRow label={t.fields.base} value={receipt.baseLabel} />
+          <BreakdownRow label={t.fields.overtime} value={receipt.overtimeLabel} />
+          <BreakdownRow label={t.fields.commission} value={receipt.commissionLabel} />
+          <BreakdownRow label={t.deductions} value={`-${receipt.deductionsLabel}`} />
           <div className="mt-2 border-t border-border pt-2">
-            <BreakdownRow label="Neto a pagar" value={receipt.netLabel} strong />
+            <BreakdownRow label={t.receipt.netPay} value={receipt.netLabel} strong />
           </div>
         </div>
 
         <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-          Contrato aplicado, asistencia relacionada y notas de incidencia quedan listos para conectarse cuando exista el flujo de cálculo.
+          {t.receipt.note}
         </div>
 
         <DialogFooter>
           <Button type="button" variant="outline" disabled>
             <Download className="size-4" aria-hidden="true" />
-            Exportar
+            {t.actions.export}
           </Button>
           <Button type="button" variant="outline" disabled>
             <CheckCircle className="size-4" aria-hidden="true" />
-            Aprobar
+            {t.actions.approve}
           </Button>
           <Button type="button" disabled>
             <FileText className="size-4" aria-hidden="true" />
-            Marcar pagado
+            {t.actions.markPaid}
           </Button>
         </DialogFooter>
       </DialogContent>

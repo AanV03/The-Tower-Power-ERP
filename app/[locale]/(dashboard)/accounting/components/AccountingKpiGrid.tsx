@@ -19,16 +19,18 @@ const icons = [FileText, AlertTriangle, CheckCircle2, CircleDollarSign];
 export function AccountingKpiGrid({
   metrics,
   status,
+  ariaLabel,
 }: {
   metrics: AccountingMetric[];
   status: AccountingUiStatus;
+  ariaLabel: string;
 }) {
   if (status === "loading") {
     return <CardGridSkeleton count={4} columns={4} />;
   }
 
   return (
-    <div className="erp-page-grid" aria-label="Indicadores contables">
+    <div className="erp-page-grid" aria-label={ariaLabel}>
       {metrics.map((metric, index) => {
         const Icon = icons[index] ?? FileText;
 

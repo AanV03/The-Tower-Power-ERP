@@ -98,6 +98,9 @@ export type AccountingLabels = {
   balanced: string;
   unbalanced: string;
   addLine: string;
+  removeLine: string;
+  account: string;
+  description: string;
   saveDraft: string;
   accountsTitle: string;
   accountsDescription: string;
@@ -109,6 +112,7 @@ export type AccountingLabels = {
   emptyEntriesDescription: string;
   errorTitle: string;
   retry: string;
+  kpiLabel: string;
 };
 
 export type AccountingDashboardData = {
@@ -155,6 +159,7 @@ export type AccountingDashboardProps = {
   actions?: AccountingActionHandlers;
   accountTypeLabels: Record<AccountType, string>;
   normalBalanceLabels: Record<NormalBalance, string>;
+  accountStatusLabels: Record<AccountStatus, string>;
   journalEntryTypeOptions: SelectOption<JournalEntryType>[];
   journalEntryStatusConfig: Record<JournalEntryStatus, StatusVisualConfig>;
 };
@@ -169,7 +174,7 @@ export type JournalEntryEditorProps = Pick<
 
 export type AccountsPanelProps = Pick<
   AccountingDashboardProps,
-  "labels" | "actions" | "accountTypeLabels" | "normalBalanceLabels"
+  "labels" | "actions" | "accountTypeLabels" | "normalBalanceLabels" | "accountStatusLabels"
 > & {
   accounts: AccountingAccount[];
   status: AccountingUiStatus;
