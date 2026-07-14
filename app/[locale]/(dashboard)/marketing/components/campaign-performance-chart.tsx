@@ -1,147 +1,138 @@
 "use client";
 
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
   Area,
   AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
+import { EmptyState } from "@/components/empty-state";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp } from "lucide-react";
+import type { CampaignPerformancePoint, MarketingLabels, MarketingUiStatus } from "./types";
 
-const CAMPAIGN_DATA = [
-  { week: "Sem 1", enviados: 3200, abiertos: 2100, convertidos: 280 },
-  { week: "Sem 2", enviados: 4100, abiertos: 2800, convertidos: 390 },
-  { week: "Sem 3", enviados: 3700, abiertos: 2350, convertidos: 315 },
-  { week: "Sem 4", enviados: 5200, abiertos: 3600, convertidos: 480 },
-  { week: "Sem 5", enviados: 4800, abiertos: 3200, convertidos: 430 },
-  { week: "Sem 6", enviados: 6100, abiertos: 4100, convertidos: 560 },
-  { week: "Sem 7", enviados: 5600, abiertos: 3800, convertidos: 510 },
-  { week: "Sem 8", enviados: 7200, abiertos: 5000, convertidos: 680 },
-];
+const series = [
+  { key: "sent", color: "var(--chart-4)", gradient: "sentGradient" },
+  { key: "opened", color: "var(--chart-3)", gradient: "openedGradient" },
+  { key: "converted", color: "var(--chart-2)", gradient: "convertedGradient" },
+] as const;
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg text-xs space-y-1.5">
-        <p className="font-bold text-foreground">{label}</p>
-        {payload.map((entry: any) => (
-          <div key={entry.name} className="flex items-center gap-2">
-            <span
-              className="inline-block size-2 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-muted-foreground">{entry.name}:</span>
-            <span className="font-semibold text-foreground tabular-nums">
-              {entry.value.toLocaleString()}
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
+type TooltipPayload = {
+  name: string;
+  value: number;
+  color: string;
 };
 
-export function CampaignPerformanceChart() {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-1.5 rounded-xl border border-border bg-card/95 px-4 py-3 text-xs shadow-lg backdrop-blur-sm">
+      <p className="font-bold text-foreground">{label}</p>
+      {payload.map((entry) => (
+        <div key={entry.name} className="flex items-center gap-2">
+          <span className="inline-block size-2 rounded-full" style={{ backgroundColor: entry.color }} />
+          <span className="text-muted-foreground">{entry.name}:</span>
+          <span className="font-semibold tabular-nums text-foreground">{entry.value.toLocaleString()}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function CampaignPerformanceChart({
+  data,
+  status,
+  labels,
+}: {
+  data: CampaignPerformancePoint[];
+  status: MarketingUiStatus;
+  labels: MarketingLabels;
+}) {
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-start justify-between gap-4">
+      <CardHeader className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1">
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="size-4 text-primary" />
-            Rendimiento de Campañas
+            <TrendingUp className="size-4 text-primary" aria-hidden="true" />
+            {labels.performanceTitle}
           </CardTitle>
-          <CardDescription>
-            Métricas acumuladas de envíos, aperturas y conversiones — últimas 8 semanas.
-          </CardDescription>
+          <CardDescription>{labels.performanceDescription}</CardDescription>
         </div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground shrink-0">
-          <div className="flex items-center gap-1.5">
-            <span className="inline-block size-2 rounded-full bg-blue-500" />
-            Enviados
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="inline-block size-2 rounded-full bg-emerald-500" />
-            Abiertos
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="inline-block size-2 rounded-full bg-amber-500" />
-            Convertidos
-          </div>
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+          {series.map((item) => (
+            <div key={item.key} className="flex items-center gap-1.5">
+              <span className="inline-block size-2 rounded-full" style={{ backgroundColor: item.color }} />
+              {labels.performanceSeries[item.key]}
+            </div>
+          ))}
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-60">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={CAMPAIGN_DATA} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="gradSent" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="gradOpen" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="gradConv" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.07} />
-              <XAxis
-                dataKey="week"
-                tick={{ fontSize: 11, fill: "currentColor", opacity: 0.5 }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "currentColor", opacity: 0.5 }}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v)}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Area
-                type="monotone"
-                dataKey="enviados"
-                name="Enviados"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                fill="url(#gradSent)"
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 0 }}
-              />
-              <Area
-                type="monotone"
-                dataKey="abiertos"
-                name="Abiertos"
-                stroke="#10b981"
-                strokeWidth={2}
-                fill="url(#gradOpen)"
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 0 }}
-              />
-              <Area
-                type="monotone"
-                dataKey="convertidos"
-                name="Convertidos"
-                stroke="#f59e0b"
-                strokeWidth={2}
-                fill="url(#gradConv)"
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 0 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+        {status === "loading" ? <Skeleton className="h-64 w-full rounded-lg" /> : null}
+        {status === "error" ? (
+          <EmptyState
+            variant="error"
+            title={labels.errorTitle}
+            description={labels.errorDescription}
+            className="bg-transparent"
+          />
+        ) : null}
+        {status !== "loading" && status !== "error" && data.length === 0 ? (
+          <EmptyState title={labels.emptyCampaignsTitle} description={labels.emptyCampaignsDescription} />
+        ) : null}
+        {status !== "loading" && status !== "error" && data.length > 0 ? (
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <defs>
+                  {series.map((item) => (
+                    <linearGradient key={item.gradient} id={item.gradient} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={item.color} stopOpacity={0.24} />
+                      <stop offset="95%" stopColor={item.color} stopOpacity={0} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.07} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: "currentColor", opacity: 0.5 }} tickLine={false} axisLine={false} />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "currentColor", opacity: 0.5 }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => (Number(value) >= 1000 ? `${(Number(value) / 1000).toFixed(0)}k` : value)}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                {series.map((item) => (
+                  <Area
+                    key={item.key}
+                    type="monotone"
+                    dataKey={item.key}
+                    name={labels.performanceSeries[item.key]}
+                    stroke={item.color}
+                    strokeWidth={2}
+                    fill={`url(#${item.gradient})`}
+                    dot={false}
+                    activeDot={{ r: 4, strokeWidth: 0 }}
+                  />
+                ))}
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
