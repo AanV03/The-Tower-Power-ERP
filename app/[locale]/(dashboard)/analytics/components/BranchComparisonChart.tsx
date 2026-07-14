@@ -1,129 +1,110 @@
 "use client";
 
-import type { ComponentType } from "react";
-import {
-  BarChart,
-  Bar,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Building2 } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
+import { ChartSkeleton } from "@/components/skeletons";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { AnalyticsLabels, AnalyticsUiStatus, BranchComparisonPoint } from "./types";
 
-const BRANCH_DATA = [
-  { branch: "Centro", miembros: 1240, retencion: 87, ingresos: 148 },
-  { branch: "Norte", miembros: 890, retencion: 82, ingresos: 102 },
-  { branch: "Campus", miembros: 1560, retencion: 91, ingresos: 204 },
-  { branch: "Sur", miembros: 620, retencion: 76, ingresos: 78 },
-];
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="rounded-xl border border-border bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg text-xs space-y-1.5">
-        <p className="font-bold text-foreground flex items-center gap-1.5">
-          <Building2 className="size-3" />
-          {label}
-        </p>
-        {payload.map((entry: any) => (
-          <div key={entry.name} className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-1.5">
-              <span
-                className="inline-block size-2 rounded-sm"
-                style={{ backgroundColor: entry.fill }}
-              />
-              <span className="text-muted-foreground">{entry.name}</span>
-            </div>
-            <span className="font-semibold text-foreground tabular-nums">
-              {entry.name === "Retención" ? `${entry.value}%` : entry.name === "Ingresos" ? `$${entry.value}k` : entry.value.toLocaleString()}
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
+type TooltipPayload = {
+  name: string;
+  value: number;
+  fill: string;
 };
 
-export function BranchComparisonChart() {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-1.5 rounded-xl border border-border bg-card/95 px-4 py-3 text-xs shadow-lg backdrop-blur-sm">
+      <p className="flex items-center gap-1.5 font-bold text-foreground">
+        <Building2 className="size-3" aria-hidden="true" />
+        {label}
+      </p>
+      {payload.map((entry) => (
+        <div key={entry.name} className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block size-2 rounded-sm" style={{ backgroundColor: entry.fill }} />
+            <span className="text-muted-foreground">{entry.name}</span>
+          </div>
+          <span className="font-semibold tabular-nums text-foreground">
+            {entry.name.includes("%") ? `${entry.value}%` : entry.name.includes("$") ? `$${entry.value}k` : entry.value.toLocaleString()}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function BranchComparisonChart({
+  data,
+  status,
+  labels,
+}: {
+  data: BranchComparisonPoint[];
+  status: AnalyticsUiStatus;
+  labels: AnalyticsLabels;
+}) {
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-col sm:flex-row items-start justify-between gap-4">
+      <CardHeader className="flex flex-col items-start justify-between gap-4 sm:flex-row">
         <div className="space-y-1">
           <CardTitle className="flex items-center gap-2">
-            <Building2 className="size-4 text-primary" />
-            Comparativa por Sucursal
+            <Building2 className="size-4 text-primary" aria-hidden="true" />
+            {labels.charts.branchTitle}
           </CardTitle>
-          <CardDescription>
-            Miembros activos, tasa de retención e ingresos mensuales por sucursal.
-          </CardDescription>
+          <CardDescription>{labels.charts.branchDescription}</CardDescription>
         </div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground shrink-0 flex-wrap">
-          <div className="flex items-center gap-1.5">
-            <span className="inline-block size-2 rounded-sm bg-blue-500" />
-            Miembros
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="inline-block size-2 rounded-sm bg-emerald-500" />
-            Retención %
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="inline-block size-2 rounded-sm bg-amber-500" />
-            Ingresos $k
-          </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-3 text-xs text-muted-foreground">
+          <LegendDot className="bg-blue-500" label={labels.charts.members} />
+          <LegendDot className="bg-emerald-500" label={`${labels.charts.retention} %`} />
+          <LegendDot className="bg-amber-500" label={labels.charts.revenue} />
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={BRANCH_DATA}
-              margin={{ top: 4, right: 4, left: -16, bottom: 0 }}
-              barCategoryGap="24%"
-              barGap={3}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.07} vertical={false} />
-              <XAxis
-                dataKey="branch"
-                tick={{ fontSize: 12, fill: "currentColor", opacity: 0.6 }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "currentColor", opacity: 0.5 }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "currentColor", opacity: 0.04 }} />
-              <Bar
-                dataKey="miembros"
-                name="Miembros"
-                fill="#3b82f6"
-                radius={[4, 4, 0, 0]}
-                maxBarSize={36}
-              />
-              <Bar
-                dataKey="retencion"
-                name="Retención"
-                fill="#10b981"
-                radius={[4, 4, 0, 0]}
-                maxBarSize={36}
-              />
-              <Bar
-                dataKey="ingresos"
-                name="Ingresos"
-                fill="#f59e0b"
-                radius={[4, 4, 0, 0]}
-                maxBarSize={36}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        {status === "loading" ? <ChartSkeleton /> : null}
+        {status === "error" ? (
+          <EmptyState variant="error" title={labels.error.title} description={labels.error.description} />
+        ) : null}
+        {status !== "loading" && status !== "error" && data.length === 0 ? (
+          <EmptyState title={labels.empty.branchesTitle} description={labels.empty.branchesDescription} />
+        ) : null}
+        {status !== "loading" && status !== "error" && data.length > 0 ? (
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data} margin={{ top: 4, right: 4, left: -16, bottom: 0 }} barCategoryGap="24%" barGap={3}>
+                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.07} vertical={false} />
+                <XAxis dataKey="branch" tick={{ fontSize: 12, fill: "currentColor", opacity: 0.6 }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "currentColor", opacity: 0.5 }} tickLine={false} axisLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "currentColor", opacity: 0.04 }} />
+                <Bar dataKey="members" name={labels.charts.members} fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={36} />
+                <Bar dataKey="retention" name={`${labels.charts.retention} %`} fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={36} />
+                <Bar dataKey="revenue" name={labels.charts.revenue} fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={36} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
+  );
+}
+
+function LegendDot({ className, label }: { className: string; label: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className={`inline-block size-2 rounded-sm ${className}`} />
+      {label}
+    </div>
   );
 }
