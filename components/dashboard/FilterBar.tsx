@@ -1,6 +1,4 @@
-import { Download, Save, SlidersHorizontal } from "lucide-react";
-
-import { cn, headerPrimaryActionClass } from "@/lib/utils";
+import { SlidersHorizontal } from "lucide-react";
 
 export default function FilterBar() {
   return (
@@ -19,21 +17,6 @@ export default function FilterBar() {
           <option>This year</option>
         </select>
       </div>
-
-      <button
-        className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted"
-        type="button"
-      >
-        <Download className="size-4" aria-hidden="true" />
-        Export
-      </button>
-      <button
-        className={cn(headerPrimaryActionClass, "inline-flex h-11 items-center gap-2 rounded-lg px-3 text-sm")}
-        type="button"
-      >
-        <Save className="size-4" aria-hidden="true" />
-        Save view
-      </button>
     </div>
   );
 }
