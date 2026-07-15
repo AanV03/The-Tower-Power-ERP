@@ -1,273 +1,258 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Mail, MessageSquare, Pause, Play, Search, Share2, SlidersHorizontal, BarChart3 } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mail, MessageSquare, Share2, Play, Pause, BarChart3, TrendingUp } from "lucide-react";
-import { toast } from "sonner";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import type {
+  CampaignFilterState,
+  CampaignStatus,
+  MarketingCampaign,
+  MarketingChannel,
+  MarketingLabels,
+  MarketingUiStatus,
+  SelectOption,
+  StatusVisualConfig,
+} from "./types";
 
-type Campaign = {
-  id: string;
-  name: string;
-  channel: "email" | "sms" | "social";
-  status: "active" | "draft" | "scheduled" | "paused";
-  sent: number;
-  openRate: number;
-  clickRate: number;
-  conversion: number;
+const channelIcons = {
+  email: Mail,
+  sms: MessageSquare,
+  social: Share2,
 };
 
-// Simulated sparkline data per campaign
-const SPARKLINES: Record<string, number[]> = {
-  "1": [40, 65, 58, 72, 68, 80, 75, 90],
-  "2": [0, 0, 0, 0, 0, 0, 0, 0],
-  "3": [30, 45, 52, 48, 55, 50, 60, 64],
-  "4": [20, 18, 22, 25, 21, 19, 23, 26],
+const channelClasses: Record<MarketingChannel, string> = {
+  email: "border-blue-500/30 text-blue-600 dark:text-blue-400",
+  sms: "border-emerald-500/30 text-emerald-600 dark:text-emerald-400",
+  social: "border-primary/30 text-primary",
 };
 
-const CHANNEL_STYLES: Record<Campaign["channel"], { icon: React.ReactNode; border: string; bg: string; label: string }> = {
-  email: {
-    icon: <Mail className="size-4" aria-hidden="true" />,
-    border: "border-blue-500/30 hover:border-blue-500/60",
-    bg: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-    label: "Email",
-  },
-  sms: {
-    icon: <MessageSquare className="size-4" aria-hidden="true" />,
-    border: "border-emerald-500/30 hover:border-emerald-500/60",
-    bg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    label: "SMS",
-  },
-  social: {
-    icon: <Share2 className="size-4" aria-hidden="true" />,
-    border: "border-purple-500/30 hover:border-purple-500/60",
-    bg: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-    label: "Social",
-  },
-};
-
-const MiniSparkline = ({ data, color }: { data: number[]; color: string }) => {
+function MiniSparkline({ data }: { data: number[] }) {
   const max = Math.max(...data, 1);
-  const points = data.map((v, i) => {
-    const x = (i / (data.length - 1)) * 100;
-    const y = 100 - (v / max) * 100;
+  const points = data.map((value, index) => {
+    const x = data.length === 1 ? 0 : (index / (data.length - 1)) * 100;
+    const y = 100 - (value / max) * 100;
     return `${x},${y}`;
   });
+
   return (
-    <svg width="56" height="24" viewBox="0 0 100 100" preserveAspectRatio="none" className="opacity-70">
+    <svg width="64" height="28" viewBox="0 0 100 100" preserveAspectRatio="none" className="opacity-75">
       <polyline
         points={points.join(" ")}
         fill="none"
-        stroke={color}
-        strokeWidth="8"
+        stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
+        strokeWidth="8"
       />
     </svg>
   );
-};
+}
 
 export function CampaignsGrid({
-  translations,
+  campaigns,
+  filters,
+  onFiltersChange,
+  status,
+  labels,
+  channelOptions,
+  statusOptions,
+  campaignStatusConfig,
+  onToggleStatus,
+  onPreview,
 }: {
-  translations: {
-    title: string;
-    description: string;
-    status: {
-      active: string;
-      draft: string;
-      scheduled: string;
-      paused: string;
-    };
-    metrics: {
-      sent: string;
-      openRate: string;
-      clickRate: string;
-      conversion: string;
-    };
-    actions: {
-      pause: string;
-      resume: string;
-      viewDetails: string;
-    };
-  };
+  campaigns: MarketingCampaign[];
+  filters: CampaignFilterState;
+  onFiltersChange: (filters: CampaignFilterState) => void;
+  status: MarketingUiStatus;
+  labels: MarketingLabels;
+  channelOptions: SelectOption<MarketingChannel | "all">[];
+  statusOptions: SelectOption<CampaignStatus | "all">[];
+  campaignStatusConfig: Record<CampaignStatus, StatusVisualConfig>;
+  onToggleStatus: (campaignId: string) => void;
+  onPreview: (campaignId: string) => void;
 }) {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([
-    {
-      id: "1",
-      name: "Recordatorio de Renovación Anual",
-      channel: "email",
-      status: "active",
-      sent: 2104,
-      openRate: 68.2,
-      clickRate: 24.5,
-      conversion: 8.7,
-    },
-    {
-      id: "2",
-      name: "Promoción Suplementos Junio",
-      channel: "sms",
-      status: "scheduled",
-      sent: 0,
-      openRate: 0,
-      clickRate: 0,
-      conversion: 0,
-    },
-    {
-      id: "3",
-      name: "Campaña Churn Back (Inactivos 21d)",
-      channel: "email",
-      status: "active",
-      sent: 412,
-      openRate: 52.4,
-      clickRate: 18.9,
-      conversion: 6.2,
-    },
-    {
-      id: "4",
-      name: "Retargeting Facebook & Instagram",
-      channel: "social",
-      status: "paused",
-      sent: 8430,
-      openRate: 0,
-      clickRate: 3.2,
-      conversion: 1.8,
-    },
-  ]);
-
-  const toggleStatus = (id: string) => {
-    setCampaigns((prev) =>
-      prev.map((c) => {
-        if (c.id === id) {
-          const newStatus = c.status === "active" ? "paused" : "active";
-          toast.success(
-            `Campaña "${c.name}" ${newStatus === "active" ? "activada" : "pausada"} con éxito.`
-          );
-          return { ...c, status: newStatus };
-        }
-        return c;
-      })
-    );
-  };
-
-  const getStatusBadge = (status: Campaign["status"]) => {
-    switch (status) {
-      case "active":
-        return (
-          <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400 gap-1">
-            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            {translations.status.active}
-          </Badge>
-        );
-      case "draft":
-        return <Badge variant="outline">{translations.status.draft}</Badge>;
-      case "scheduled":
-        return (
-          <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400">
-            {translations.status.scheduled}
-          </Badge>
-        );
-      case "paused":
-        return <Badge variant="destructive">{translations.status.paused}</Badge>;
-    }
-  };
-
-  const getSparklineColor = (channel: Campaign["channel"]) => {
-    switch (channel) {
-      case "email": return "#3b82f6";
-      case "sms": return "#10b981";
-      case "social": return "#a855f7";
-    }
-  };
+  const showCards = status !== "loading" && status !== "error" && campaigns.length > 0;
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div className="space-y-1">
-          <CardTitle>{translations.title}</CardTitle>
-          <CardDescription>{translations.description}</CardDescription>
-        </div>
-        <TrendingUp className="size-5 text-muted-foreground" />
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
-        {campaigns.map((campaign) => {
-          const channelStyle = CHANNEL_STYLES[campaign.channel];
-          const sparkData = SPARKLINES[campaign.id] ?? [0];
-          return (
-            <div
-              key={campaign.id}
-              className={`flex flex-col justify-between p-4 rounded-xl border transition-all duration-200 shadow-xs ${channelStyle.border} bg-card/50 hover:bg-card`}
+      <CardHeader className="gap-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <MegaphoneTitleIcon />
+              {labels.campaignsTitle}
+            </CardTitle>
+            <CardDescription>{labels.campaignsDescription}</CardDescription>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-[minmax(180px,1fr)_160px_160px] lg:min-w-[600px]">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={filters.query}
+                onChange={(event) => onFiltersChange({ ...filters, query: event.target.value })}
+                placeholder={labels.searchPlaceholder}
+                className="pl-8"
+              />
+            </div>
+            <NativeSelect
+              aria-label={labels.channelFilter}
+              value={filters.channel}
+              onChange={(event) =>
+                onFiltersChange({ ...filters, channel: event.target.value as MarketingChannel | "all" })
+              }
             >
-              {/* Header info */}
-              <div className="space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className={`p-1.5 rounded-lg ${channelStyle.bg} shrink-0`}>
-                      {channelStyle.icon}
-                    </span>
-                    <span className="font-semibold text-foreground text-sm line-clamp-2 leading-tight">{campaign.name}</span>
-                  </div>
-                  <div className="shrink-0">{getStatusBadge(campaign.status)}</div>
-                </div>
+              {channelOptions.map((option) => (
+                <NativeSelectOption key={option.value} value={option.value}>
+                  {option.label}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+            <NativeSelect
+              aria-label={labels.statusFilter}
+              value={filters.status}
+              onChange={(event) =>
+                onFiltersChange({ ...filters, status: event.target.value as CampaignStatus | "all" })
+              }
+            >
+              {statusOptions.map((option) => (
+                <NativeSelectOption key={option.value} value={option.value}>
+                  {option.label}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </div>
+        </div>
+      </CardHeader>
 
-                {/* Stats grid */}
-                <div className="grid grid-cols-4 gap-1 text-center py-2 bg-muted/30 rounded-lg text-xs border border-border/40">
-                  <div>
-                    <div className="text-muted-foreground text-[10px]">{translations.metrics.sent}</div>
-                    <div className="font-mono font-semibold text-foreground">{campaign.sent.toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground text-[10px]">{translations.metrics.openRate}</div>
-                    <div className="font-mono font-semibold text-foreground">
-                      {campaign.channel === "social" ? "—" : `${campaign.openRate}%`}
+      <CardContent>
+        {status === "loading" ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-44 rounded-xl" />
+            ))}
+          </div>
+        ) : null}
+
+        {status === "error" ? (
+          <EmptyState
+            variant="error"
+            title={labels.errorTitle}
+            description={labels.errorDescription}
+            className="bg-transparent"
+          />
+        ) : null}
+
+        {status !== "loading" && status !== "error" && campaigns.length === 0 ? (
+          <EmptyState
+            icon={<SlidersHorizontal className="size-10 text-muted-foreground" aria-hidden="true" />}
+            title={labels.emptyCampaignsTitle}
+            description={labels.emptyCampaignsDescription}
+            className="bg-transparent"
+          />
+        ) : null}
+
+        {showCards ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {campaigns.map((campaign) => {
+              const Icon = channelIcons[campaign.channel];
+              const statusConfig = campaignStatusConfig[campaign.status];
+              const canToggle = campaign.status === "active" || campaign.status === "paused";
+
+              return (
+                <article
+                  key={campaign.id}
+                  className={cn(
+                    "flex min-h-48 flex-col justify-between rounded-xl border bg-card/55 p-4 shadow-xs transition-colors hover:bg-card",
+                    channelClasses[campaign.channel],
+                  )}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="rounded-lg border bg-background/60 p-1.5">
+                          <Icon className="size-4" aria-hidden="true" />
+                        </span>
+                        <div className="min-w-0">
+                          <h3 className="line-clamp-2 text-sm font-semibold leading-tight text-foreground">
+                            {campaign.name}
+                          </h3>
+                          <p className="truncate text-xs text-muted-foreground">{campaign.segment}</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className={cn("shrink-0 gap-1", statusConfig.className)}>
+                        {statusConfig.dotClassName ? (
+                          <span className={cn("size-1.5 rounded-full", statusConfig.dotClassName)} />
+                        ) : null}
+                        {statusConfig.label}
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-1 rounded-lg border border-border/50 bg-muted/30 py-2 text-center text-xs">
+                      <Metric label={labels.campaignMetrics.sent} value={campaign.sent.toLocaleString()} />
+                      <Metric
+                        label={labels.campaignMetrics.openRate}
+                        value={campaign.channel === "social" ? "-" : `${campaign.openRate}%`}
+                      />
+                      <Metric label={labels.campaignMetrics.clickRate} value={`${campaign.clickRate}%`} />
+                      <Metric label={labels.campaignMetrics.conversion} value={`${campaign.conversion}%`} />
                     </div>
                   </div>
-                  <div>
-                    <div className="text-muted-foreground text-[10px]">{translations.metrics.clickRate}</div>
-                    <div className="font-mono font-semibold text-foreground">{campaign.clickRate}%</div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground text-[10px]">{translations.metrics.conversion}</div>
-                    <div className="font-mono font-semibold text-foreground">{campaign.conversion}%</div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Actions + sparkline */}
-              <div className="flex items-center justify-between gap-2 mt-3">
-                <MiniSparkline data={sparkData} color={getSparklineColor(campaign.channel)} />
-                <div className="flex items-center gap-1.5">
-                  {(campaign.status === "active" || campaign.status === "paused") && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toggleStatus(campaign.id)}
-                      className="h-7 gap-1 text-xs"
-                    >
-                      {campaign.status === "active" ? (
-                        <>
-                          <Pause className="size-3" aria-hidden="true" />
-                          {translations.actions.pause}
-                        </>
-                      ) : (
-                        <>
-                          <Play className="size-3" aria-hidden="true" />
-                          {translations.actions.resume}
-                        </>
-                      )}
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs hover:bg-muted">
-                    <BarChart3 className="size-3" aria-hidden="true" />
-                    {translations.actions.viewDetails}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <div className={channelClasses[campaign.channel]}>
+                      <MiniSparkline data={campaign.sparkline} />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {canToggle ? (
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          onClick={() => onToggleStatus(campaign.id)}
+                          className="gap-1"
+                        >
+                          {campaign.status === "active" ? (
+                            <Pause className="size-3" aria-hidden="true" />
+                          ) : (
+                            <Play className="size-3" aria-hidden="true" />
+                          )}
+                          <span className="hidden lg:inline">
+                            {campaign.status === "active"
+                              ? labels.campaignActions.pause
+                              : labels.campaignActions.resume}
+                          </span>
+                        </Button>
+                      ) : null}
+                      <Button variant="ghost" size="icon-xs" onClick={() => onPreview(campaign.id)}>
+                        <BarChart3 className="size-3" aria-hidden="true" />
+                        <span className="sr-only">{labels.preview}</span>
+                      </Button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-[10px] text-muted-foreground">{label}</div>
+      <div className="font-mono text-xs font-semibold text-foreground">{value}</div>
+    </div>
+  );
+}
+
+function MegaphoneTitleIcon() {
+  return <BarChart3 className="size-4 text-primary" aria-hidden="true" />;
 }

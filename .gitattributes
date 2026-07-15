@@ -1,1 +1,4 @@
+* text=auto eol=lf
+.gitattributes text eol=lf
 components/modules/hr/*.tsx text eol=lf
+components/integrations/*.tsx text eol=lf

@@ -1,113 +1,83 @@
 "use client";
 
-import { ComponentType } from "react";
-import { ArrowDownRight, ArrowUpRight, Minus, TrendingUp, TrendingDown, Users, Network, Percent } from "lucide-react";
+import type { ComponentType } from "react";
+import { ArrowDownRight, ArrowUpRight, Minus, Network, Percent, TrendingUp, Users } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatMessage, getDictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import type { AnalyticsMetric, AnalyticsMetricTone } from "./types";
 
-const ChartArea = Area as unknown as ComponentType<any>;
+const ChartArea = Area as unknown as ComponentType<{
+  type: string;
+  dataKey: string;
+  stroke: string;
+  strokeWidth: number;
+  fill: string;
+  dot: boolean;
+}>;
 
-type MetricTone = "default" | "success" | "warning" | "danger";
-
-const toneStyles: Record<MetricTone, string> = {
+const toneStyles: Record<AnalyticsMetricTone, string> = {
   default: "bg-secondary text-secondary-foreground",
-  success: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
-  warning: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20",
-  danger: "bg-destructive/10 text-destructive dark:text-destructive-foreground border border-destructive/20",
+  success: "border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  warning: "border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  danger: "border border-destructive/20 bg-destructive/10 text-destructive",
 };
 
-const toneColors: Record<MetricTone, string> = {
+const toneColors: Record<AnalyticsMetricTone, string> = {
   default: "var(--brand-orange)",
   success: "var(--brand-green)",
   warning: "var(--brand-yellow)",
   danger: "var(--brand-red)",
 };
 
-const metricIcons: Record<string, any> = {
+const metricIcons: Record<string, typeof TrendingUp> = {
   branches: Network,
   audience: Users,
   retention: Percent,
   churn: Percent,
 };
 
-type AnalyticsMetricCardProps = {
-  metricKey: string;
-  label: string;
-  value: string;
-  change: string;
-  locale: Locale;
-  tone?: MetricTone;
-  sparklineData?: { value: number }[];
-  isDoubleWidth?: boolean;
-};
-
-export function AnalyticsMetricCard({
-  metricKey,
-  label,
-  value,
-  change,
-  locale,
-  tone = "default",
-  sparklineData,
-  isDoubleWidth = false,
-}: AnalyticsMetricCardProps) {
-  const dictionary = getDictionary(locale);
-  
-  const StatusIcon = tone === "success" ? ArrowUpRight : tone === "danger" ? ArrowDownRight : Minus;
-  const MetricIcon = metricIcons[metricKey] || TrendingUp;
-
-  // Visual highlights for sparkline gradient
-  const sparkColor = toneColors[tone];
+export function AnalyticsMetricCard({ metric }: { metric: AnalyticsMetric }) {
+  const StatusIcon = metric.tone === "success" ? ArrowUpRight : metric.tone === "danger" ? ArrowDownRight : Minus;
+  const MetricIcon = metricIcons[metric.key] ?? TrendingUp;
+  const sparkColor = toneColors[metric.tone];
 
   return (
-    <Card 
-      className={cn(
-        "glass-effect overflow-hidden",
-        isDoubleWidth ? "lg:col-span-2" : "col-span-1"
-      )}
-    >
-      <CardContent className="p-5 flex flex-col justify-between h-full min-h-[148px]">
+    <Card className="glass-effect overflow-hidden">
+      <CardContent className="flex min-h-36 flex-col justify-between p-5">
         <div>
-          {/* Header Row */}
-          <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="mb-2 flex items-center justify-between gap-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {label}
+              {metric.label}
             </span>
-            <div className="p-1.5 rounded-lg bg-muted/30 text-muted-foreground">
-              <MetricIcon className="w-4 h-4" aria-hidden="true" />
+            <div className="rounded-lg bg-muted/30 p-1.5 text-muted-foreground">
+              <MetricIcon className="size-4" aria-hidden="true" />
             </div>
           </div>
 
-          {/* Value and Trend */}
           <div className="flex items-baseline justify-between gap-3">
-            <p className="text-3xl font-bold tracking-tight text-foreground">
-              {value}
-            </p>
+            <p className="text-3xl font-bold tracking-tight text-foreground">{metric.value}</p>
             <span
               className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors",
-                toneStyles[tone]
+                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                toneStyles[metric.tone],
               )}
-              aria-label={formatMessage(dictionary.metricCard.changeLabel, { change })}
               role="status"
             >
-              <StatusIcon className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>{change}</span>
+              <StatusIcon className="size-3.5" aria-hidden="true" />
+              <span>{metric.change}</span>
             </span>
           </div>
         </div>
 
-        {/* Sparkline Visualisation */}
-        {sparklineData && sparklineData.length > 0 && (
-          <div className="h-10 w-full mt-4 -mx-5 -mb-5 overflow-hidden" aria-hidden="true">
+        {metric.sparkline && metric.sparkline.length > 0 ? (
+          <div className="-mx-5 -mb-5 mt-4 h-10 w-full overflow-hidden" aria-hidden="true">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={sparklineData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+              <AreaChart data={metric.sparkline} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                 <defs>
-                  <linearGradient id={`gradient-${metricKey}`} x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id={`gradient-${metric.id}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={sparkColor} stopOpacity={0.2} />
-                    <stop offset="100%" stopColor={sparkColor} stopOpacity={0.0} />
+                    <stop offset="100%" stopColor={sparkColor} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <ChartArea
@@ -115,13 +85,13 @@ export function AnalyticsMetricCard({
                   dataKey="value"
                   stroke={sparkColor}
                   strokeWidth={1.5}
-                  fill={`url(#gradient-${metricKey})`}
+                  fill={`url(#gradient-${metric.id})`}
                   dot={false}
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   );

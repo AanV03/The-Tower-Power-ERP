@@ -14,6 +14,7 @@ export interface Integration {
   category: string;
   status: IntegrationStatus;
   icon: LucideIcon;
+  authType?: "oauth2" | "webhook";
 }
 
 interface IntegrationCardProps {
@@ -29,7 +30,7 @@ interface IntegrationCardProps {
 }
 
 export function IntegrationCard({ integration, onConfigure, labels }: IntegrationCardProps) {
-  const { name, description, category, status, icon: Icon } = integration;
+  const { name, description, category, status, icon: Icon, authType = "oauth2" } = integration;
 
   const statusStyles = {
     connected: {
@@ -39,7 +40,7 @@ export function IntegrationCard({ integration, onConfigure, labels }: Integratio
     },
     inactive: {
       dot: "bg-[var(--text-muted)]",
-      badge: "border-border text-[var(--text-muted)] bg-muted/50",
+      badge: "border-border bg-muted text-muted-foreground",
       label: labels.inactive,
     },
     error: {
@@ -52,14 +53,14 @@ export function IntegrationCard({ integration, onConfigure, labels }: Integratio
   const currentStatus = statusStyles[status];
 
   return (
-    <Card 
-      className="glass-effect flex flex-col justify-between hover:shadow-xs transition-shadow"
+    <Card
+      className="flex flex-col justify-between border-border bg-card text-card-foreground shadow-sm ring-1 ring-border/40 transition-shadow hover:shadow-md"
       role="region"
       aria-label={`${name} - ${currentStatus.label}`}
     >
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-[var(--glass-control-bg)] border border-[var(--sidebar-border-color)]">
+          <div className="rounded-lg border border-border bg-background p-2 shadow-sm">
             <Icon className="w-6 h-6 text-foreground" aria-hidden="true" />
           </div>
           <div>
@@ -81,8 +82,13 @@ export function IntegrationCard({ integration, onConfigure, labels }: Integratio
         <CardDescription className="text-xs text-muted-foreground line-clamp-2 min-h-[32px]">
           {description}
         </CardDescription>
+        <div className="mt-3">
+          <Badge variant="outline" className="rounded-md border-border bg-muted text-[10px] text-muted-foreground">
+            {authType === "oauth2" ? "Conexion segura" : "Envio automatico"}
+          </Badge>
+        </div>
       </CardContent>
-      <CardFooter className="pt-4 border-t border-[var(--sidebar-border-color)] flex justify-end gap-2 bg-[var(--header-glass-bg)]/20">
+      <CardFooter className="flex justify-end gap-2 border-t border-border bg-background px-6 py-4">
         <Button
           onClick={() => onConfigure(integration)}
           variant={status === "connected" ? "outline" : "default"}
@@ -90,11 +96,15 @@ export function IntegrationCard({ integration, onConfigure, labels }: Integratio
           className={cn(
             "w-full text-xs font-medium transition-colors",
             status === "connected" 
-              ? "border-[var(--sidebar-border-color)] hover:bg-[var(--glass-control-hover)]" 
+              ? "border-border hover:bg-muted"
               : "bg-primary text-primary-foreground hover:bg-primary/90"
           )}
         >
-          {status === "connected" ? labels.configure : labels.connect}
+          {status === "connected"
+            ? "Gestionar conexion"
+            : authType === "oauth2"
+              ? `Conectar con ${name.split(" ")[0]}`
+              : labels.connect}
         </Button>
       </CardFooter>
     </Card>

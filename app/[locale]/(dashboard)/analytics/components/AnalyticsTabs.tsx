@@ -1,74 +1,87 @@
 "use client";
 
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { LayoutDashboard, Building2, FileDown } from "lucide-react";
+import { Building2, FileDown, LayoutDashboard } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AnalyticsMultiChart } from "./AnalyticsMultiChart";
 import { AnalyticsTable } from "./AnalyticsTable";
 import { BranchComparisonChart } from "./BranchComparisonChart";
 import { PeriodSnapshotPanel } from "./PeriodSnapshotPanel";
-import type { Locale } from "@/lib/i18n";
-import type { ModuleRow } from "@/data/modules";
+import type {
+  AnalyticsActivityRow,
+  AnalyticsChartPoint,
+  AnalyticsDashboardState,
+  AnalyticsFilters,
+  AnalyticsLabels,
+  AnalyticsRowStatus,
+  BranchComparisonPoint,
+  PeriodSnapshot,
+  SelectOption,
+} from "./types";
 
-type AnalyticsTabsProps = {
-  locale: Locale;
-  chartTitle: string;
-  chartDesc: string;
-  chartData: { label: string; value: number; retention: number; churn: number }[];
-  tableRows: ModuleRow[];
+const tabIcons = {
+  overview: LayoutDashboard,
+  branches: Building2,
+  reports: FileDown,
 };
 
 export function AnalyticsTabs({
-  locale,
-  chartTitle,
-  chartDesc,
-  chartData,
-  tableRows,
-}: AnalyticsTabsProps) {
+  data,
+  state,
+  labels,
+  filters,
+  onFiltersChange,
+  statusOptions,
+}: {
+  locale: string;
+  data: {
+    chart: AnalyticsChartPoint[];
+    branchComparison: BranchComparisonPoint[];
+    rows: AnalyticsActivityRow[];
+    snapshots: PeriodSnapshot[];
+  };
+  state: AnalyticsDashboardState;
+  labels: AnalyticsLabels;
+  filters: AnalyticsFilters;
+  onFiltersChange: (filters: AnalyticsFilters) => void;
+  statusOptions: SelectOption<AnalyticsRowStatus | "all">[];
+}) {
   return (
     <Tabs defaultValue="overview" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-3 !h-auto sm:!h-10 bg-muted/60 p-1 rounded-lg border">
-        <TabsTrigger
-          value="overview"
-          className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold cursor-pointer"
-        >
-          <LayoutDashboard className="size-4 shrink-0" />
-          <span>Resumen</span>
-        </TabsTrigger>
-        <TabsTrigger
-          value="branches"
-          className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold cursor-pointer"
-        >
-          <Building2 className="size-4 shrink-0" />
-          <span>Sucursales</span>
-        </TabsTrigger>
-        <TabsTrigger
-          value="reports"
-          className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold cursor-pointer"
-        >
-          <FileDown className="size-4 shrink-0" />
-          <span>Reportes</span>
-        </TabsTrigger>
+      <TabsList className="grid h-auto w-full grid-cols-3 rounded-lg border bg-muted/60 p-1">
+        {(["overview", "branches", "reports"] as const).map((tab) => {
+          const Icon = tabIcons[tab];
+
+          return (
+            <TabsTrigger
+              key={tab}
+              value={tab}
+              className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold sm:text-sm"
+            >
+              <Icon className="size-4 shrink-0" aria-hidden="true" />
+              <span>{labels.tabs[tab]}</span>
+            </TabsTrigger>
+          );
+        })}
       </TabsList>
 
-      {/* TAB 1 — Resumen: gráfico multi-serie de retención/churn */}
       <TabsContent value="overview" className="mt-0">
-        <AnalyticsMultiChart
-          title={chartTitle}
-          description={chartDesc}
-          data={chartData}
-          locale={locale}
+        <AnalyticsMultiChart data={data.chart} status={state.overview} labels={labels} />
+      </TabsContent>
+
+      <TabsContent value="branches" className="mt-0 space-y-6">
+        <BranchComparisonChart data={data.branchComparison} status={state.branches} labels={labels} />
+        <AnalyticsTable
+          rows={data.rows}
+          status={state.branches}
+          labels={labels}
+          filters={filters}
+          onFiltersChange={onFiltersChange}
+          statusOptions={statusOptions}
         />
       </TabsContent>
 
-      {/* TAB 2 — Sucursales: comparativa de barras + tabla de actividad */}
-      <TabsContent value="branches" className="space-y-6 mt-0">
-        <BranchComparisonChart />
-        <AnalyticsTable rows={tableRows} locale={locale} />
-      </TabsContent>
-
-      {/* TAB 3 — Reportes: snapshots de periodos */}
-      <TabsContent value="reports" className="space-y-6 mt-0">
-        <PeriodSnapshotPanel />
+      <TabsContent value="reports" className="mt-0 space-y-6">
+        <PeriodSnapshotPanel snapshots={data.snapshots} status={state.reports} labels={labels} />
       </TabsContent>
     </Tabs>
   );
