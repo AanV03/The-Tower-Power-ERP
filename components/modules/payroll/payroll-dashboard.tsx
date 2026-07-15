@@ -1,61 +1,26 @@
-import { AlertCircle, BadgeDollarSign, Banknote, ReceiptText } from "lucide-react";
+import { AlertCircle, BadgeDollarSign, Banknote, CheckCircle2, ReceiptText } from "lucide-react";
 
 import { MetricCard } from "@/components/shared/metric-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { payrollLabels } from "@/components/modules/payroll/config";
+import { getPayrollReadiness } from "@/components/modules/payroll/demo-controller";
 import { PayrollActionBar } from "@/components/modules/payroll/payroll-action-bar";
 import { PayrollItemsTable } from "@/components/modules/payroll/payroll-items-table";
 import { PayrollPeriodsPanel } from "@/components/modules/payroll/payroll-periods-panel";
 import { PayrollSummaryPanel } from "@/components/modules/payroll/payroll-summary-panel";
+import type {
+  PayrollPeriodView,
+  PayrollReceiptView,
+  PayrollStatusLabel,
+  PayrollSummaryView,
+} from "@/components/modules/payroll/types";
 import { requireApiContext } from "@/lib/api/context";
 import { formatCurrency } from "@/lib/api/pagination";
 import { prisma } from "@/lib/db/prisma";
 import { DEFAULT_TIME_ZONE, getDayBoundsForTimeZone } from "@/lib/date/timezone";
 import type { Locale } from "@/lib/i18n";
 
-export type PayrollStatusLabel = "DRAFT" | "APPROVED" | "PAID";
-
-export type PayrollPeriodView = {
-  id: string;
-  label: string;
-  range: string;
-  status: PayrollStatusLabel;
-  employeeCount: number;
-  netTotal: number;
-  netTotalLabel: string;
-};
-
-export type PayrollReceiptView = {
-  id: string;
-  employeeName: string;
-  employeeEmail: string;
-  position: string;
-  branch: string;
-  periodLabel: string;
-  periodRange: string;
-  status: PayrollStatusLabel;
-  base: number;
-  overtime: number;
-  commission: number;
-  deductions: number;
-  net: number;
-  baseLabel: string;
-  overtimeLabel: string;
-  commissionLabel: string;
-  deductionsLabel: string;
-  netLabel: string;
-};
-
-export type PayrollSummaryView = {
-  activePeriodLabel: string;
-  totalBaseLabel: string;
-  totalOvertimeLabel: string;
-  totalCommissionsLabel: string;
-  totalDeductionsLabel: string;
-  totalNetLabel: string;
-  missingReceipts: number;
-  openAttendances: number;
-  draftPeriods: number;
-};
+export type { PayrollPeriodView, PayrollReceiptView, PayrollStatusLabel, PayrollSummaryView };
 
 function toNumber(value: { toNumber(): number } | number | null | undefined) {
   return typeof value === "number" ? value : value?.toNumber() ?? 0;
@@ -76,7 +41,7 @@ function formatPeriodLabel(startDate: Date, endDate: Date) {
     year: "numeric",
   });
 
-  return `${formatter.format(startDate)} · ${formatPeriodRange(startDate, endDate)}`;
+  return `${formatter.format(startDate)} / ${formatPeriodRange(startDate, endDate)}`;
 }
 
 export async function PayrollDashboard({
@@ -154,7 +119,10 @@ export async function PayrollDashboard({
     }),
   ]);
 
-  const activePeriod = periods.find((period) => period.id === selectedPeriodId) ?? periods.find((period) => period.status === "DRAFT") ?? periods[0];
+  const activePeriod =
+    periods.find((period) => period.id === selectedPeriodId) ??
+    periods.find((period) => period.status === "DRAFT") ??
+    periods[0];
   const visibleItems =
     activePeriod?.items.filter((item) => !context.branchId || item.employee.branchId === context.branchId) ?? [];
 
@@ -235,34 +203,72 @@ export async function PayrollDashboard({
     draftPeriods,
   };
 
+  const readiness = getPayrollReadiness({
+    receiptCount: receiptViews.length,
+    missingReceipts,
+    openAttendances,
+    draftPeriods,
+  });
+
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
             <ReceiptText className="size-7 text-primary" aria-hidden="true" />
-            Nómina y comisiones
+            {payrollLabels.title}
           </h1>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Recibos, comisiones, deducciones y cierre operativo del periodo.
+            {payrollLabels.subtitle}
           </p>
         </div>
         <PayrollActionBar periods={periodViews} activePeriodId={activePeriod?.id} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-        <MetricCard label="Periodos borrador" value={String(draftPeriods)} change="Draft" locale={locale} tone="warning" />
-        <MetricCard label="Empleados incluidos" value={String(receiptViews.length)} change="Recibos" locale={locale} tone="success" />
-        <MetricCard label="Neto pendiente" value={summary.totalNetLabel} change="MXN" locale={locale} />
-        <MetricCard label="Comisiones" value={summary.totalCommissionsLabel} change="Ventas" locale={locale} tone="success" />
-        <MetricCard label="Deducciones" value={summary.totalDeductionsLabel} change="Retenciones" locale={locale} />
-        <MetricCard label="Incidencias" value={String(openAttendances + missingReceipts)} change="Revisar" locale={locale} tone={openAttendances + missingReceipts > 0 ? "danger" : "success"} />
+        <MetricCard label={payrollLabels.metrics.draftPeriods} value={String(draftPeriods)} change="Draft" locale={locale} tone="warning" />
+        <MetricCard label={payrollLabels.metrics.includedEmployees} value={String(receiptViews.length)} change="Recibos" locale={locale} tone="success" />
+        <MetricCard label={payrollLabels.metrics.pendingNet} value={summary.totalNetLabel} change="MXN" locale={locale} />
+        <MetricCard label={payrollLabels.metrics.commissions} value={summary.totalCommissionsLabel} change="Ventas" locale={locale} tone="success" />
+        <MetricCard label={payrollLabels.metrics.deductions} value={summary.totalDeductionsLabel} change="Retenciones" locale={locale} />
+        <MetricCard
+          label={payrollLabels.metrics.incidents}
+          value={String(readiness.incidentCount)}
+          change={readiness.canApprove ? payrollLabels.summary.ready : payrollLabels.summary.review}
+          locale={locale}
+          tone={readiness.severity === "danger" ? "danger" : readiness.severity === "success" ? "success" : "warning"}
+        />
       </div>
+
+      <Card className={readiness.canApprove ? "border-emerald-500/20 bg-emerald-500/5" : "border-amber-500/20 bg-amber-500/5"}>
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            {readiness.canApprove ? (
+              <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600" aria-hidden="true" />
+            ) : (
+              <AlertCircle className="mt-0.5 size-5 shrink-0 text-amber-600" aria-hidden="true" />
+            )}
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                {readiness.canApprove ? "Periodo listo para aprobacion" : "Periodo con pendientes antes del cierre"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {readiness.canApprove
+                  ? "Los recibos estan generados y no hay incidencias abiertas para este corte."
+                  : "Revisa asistencias abiertas, empleados sin recibo y periodos en borrador antes de aprobar."}
+              </p>
+            </div>
+          </div>
+          <div className="rounded-lg border border-border bg-card/60 px-3 py-2 text-sm">
+            <span className="font-semibold text-foreground">{summary.activePeriodLabel}</span>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)_320px]">
         <PayrollPeriodsPanel periods={periodViews} activePeriodId={activePeriod?.id} />
         <PayrollItemsTable receipts={receiptViews} />
-        <PayrollSummaryPanel summary={summary} />
+        <PayrollSummaryPanel summary={summary} readiness={readiness} />
       </div>
 
       {receiptViews.length === 0 ? (
@@ -270,17 +276,17 @@ export async function PayrollDashboard({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ReceiptText className="size-4" aria-hidden="true" />
-              Sin recibos para el periodo
+              {payrollLabels.receipts.emptyTitle}
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-3">
             <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4">
               <Banknote className="size-5 text-muted-foreground" aria-hidden="true" />
-              <span className="text-sm text-muted-foreground">Genera una vista previa cuando el backend de cálculo esté disponible.</span>
+              <span className="text-sm text-muted-foreground">Genera una vista previa cuando el calculo este disponible.</span>
             </div>
             <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4">
               <BadgeDollarSign className="size-5 text-muted-foreground" aria-hidden="true" />
-              <span className="text-sm text-muted-foreground">Las comisiones se mostrarán desde los recibos existentes.</span>
+              <span className="text-sm text-muted-foreground">Las comisiones se mostraran desde los recibos existentes.</span>
             </div>
             <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-4">
               <AlertCircle className="size-5 text-muted-foreground" aria-hidden="true" />
