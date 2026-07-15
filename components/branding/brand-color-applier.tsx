@@ -28,7 +28,7 @@ export const DEFAULT_BRAND_COLORS: BrandColors = {
   radius: "0.625rem",
   contrast: "normal",
   font: "default",
-  logoUrl: "",
+  logoUrl: "/logo.png",
 };
 
 export const DEFAULT_DARK_BRAND_COLORS: BrandColors = {
@@ -38,7 +38,7 @@ export const DEFAULT_DARK_BRAND_COLORS: BrandColors = {
   radius: "0.625rem",
   contrast: "normal",
   font: "default",
-  logoUrl: "",
+  logoUrl: "/logo.png",
 };
 
 export function getDefaultBrandColors(isDark: boolean): BrandColors {
@@ -51,6 +51,9 @@ export function normalizeBrandColors(
 ): BrandColors {
   const defaults = getDefaultBrandColors(isDark);
   const normalized = { ...defaults, ...(colors ?? {}) };
+  if (!normalized.logoUrl) {
+    normalized.logoUrl = "/logo.png";
+  }
   // Fallbacks for older data structure
   if (!colors?.brandBg) {
     if ((colors as any)?.sidebarBg) {

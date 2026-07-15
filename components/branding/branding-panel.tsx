@@ -430,8 +430,8 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
               onClick={clearLogo}
               className="inline-flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <ImagePlus className="size-4" aria-hidden="true" />
-              {l === "es" ? "Usar iniciales" : l === "en" ? "Use initials" : "Initiales"}
+              <Trash2 className="size-4" aria-hidden="true" />
+              {l === "es" ? "Eliminar logo" : l === "en" ? "Remove logo" : "Supprimer"}
             </button>
           </div>
 

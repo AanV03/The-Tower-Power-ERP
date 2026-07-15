@@ -18,15 +18,20 @@ export const DEFAULT_BRAND_IDENTITY: BrandIdentity = {
   name: defaultBrand.name,
   subtitle: "Gimnasio ERP",
   logoText: defaultBrand.logoText,
+  logoDataUrl: "/logo.png",
 };
 
 export function normalizeBrandIdentity(
   identity: Partial<BrandIdentity> | null | undefined,
 ): BrandIdentity {
-  return {
+  const base = {
     ...DEFAULT_BRAND_IDENTITY,
     ...(identity ?? {}),
   };
+  if (!base.logoDataUrl) {
+    base.logoDataUrl = "/logo.png";
+  }
+  return base;
 }
 
 export function loadBrandIdentity(): BrandIdentity {
