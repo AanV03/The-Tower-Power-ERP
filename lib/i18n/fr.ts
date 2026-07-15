@@ -360,21 +360,17 @@ export const fr = {
     fontMono: "Monospace (Code)",
     fontElegant: "Elegant (Moderne)",
     fields: {
-      sidebarBg: {
-        label: "Sidebar",
-        description: "Arrière-plan de la navigation latérale.",
+      brandBg: {
+        label: "Arrière-plan du système",
+        description: "Arrière-plan de la navigation latérale (Sidebar) et de la barre supérieure (Navbar).",
       },
-      topbarBg: {
-        label: "Topbar",
-        description: "Arrière-plan de la barre supérieure.",
+      brandText: {
+        label: "Logos & Textes",
+        description: "Couleur principale pour les logos, les étiquettes de texte et les éléments de navigation.",
       },
-      primaryColor: {
-        label: "Couleur principale",
-        description: "Boutons, états actifs et graphiques principaux.",
-      },
-      accentColor: {
-        label: "Couleur secondaire",
-        description: "Logo du sidebar, alertes et reflets secondaires.",
+      brandAccent: {
+        label: "Survol & Contrastes",
+        description: "Boutons, survols, états actifs, bordures et reflets.",
       },
     },
   },

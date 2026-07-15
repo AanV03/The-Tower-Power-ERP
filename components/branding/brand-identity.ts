@@ -11,6 +11,7 @@ export type BrandIdentity = {
   subtitle: string;
   logoText: string;
   logoDataUrl?: string;
+  adminOnboardingCompleted?: boolean;
 };
 
 export const DEFAULT_BRAND_IDENTITY: BrandIdentity = {

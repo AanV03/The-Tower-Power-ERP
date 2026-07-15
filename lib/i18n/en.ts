@@ -362,21 +362,17 @@ export const en = {
     fontMono: "Monospace (Code)",
     fontElegant: "Elegant (Modern)",
     fields: {
-      sidebarBg: {
-        label: "Sidebar",
-        description: "Background of the side navigation panel.",
+      brandBg: {
+        label: "System Background",
+        description: "Background of the side navigation panel (Sidebar) and the top toolbar (Navbar).",
       },
-      topbarBg: {
-        label: "Topbar",
-        description: "Background of the top toolbar.",
+      brandText: {
+        label: "Logos & Texts",
+        description: "Primary color for logos, text labels, and navigation items.",
       },
-      primaryColor: {
-        label: "Primary Color",
-        description: "Buttons, active states and primary charts.",
-      },
-      accentColor: {
-        label: "Secondary Color",
-        description: "Sidebar logo, alerts and secondary highlights.",
+      brandAccent: {
+        label: "Hover & Contrast",
+        description: "Buttons, hover states, active indicators, borders, and highlights.",
       },
     },
   },
