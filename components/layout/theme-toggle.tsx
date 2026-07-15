@@ -7,19 +7,16 @@ import { cn } from "@/lib/utils";
 export function ThemeToggle({
   locale = "es",
   appearance = "dashboard",
-  transition = "default",
 }: {
   locale?: Locale;
   appearance?: "dashboard" | "landing";
-  transition?: "default" | "curtain";
 } = {}) {
   const dictionary = getDictionary(locale);
 
   return (
     <AnimatedThemeToggler
-      transition={transition}
-      variant="square"
-      duration={450}
+      variant={appearance === "landing" ? "circle" : "square"}
+      duration={appearance === "landing" ? 350 : 450}
       aria-label={dictionary.common.theme}
       title={dictionary.common.theme}
       className={cn(

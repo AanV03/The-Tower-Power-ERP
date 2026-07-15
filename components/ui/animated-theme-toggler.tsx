@@ -1,7 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useRef } from "react"
 import { Moon, Sun } from "lucide-react"
 import { flushSync } from "react-dom"
 import { useTheme } from "next-themes"
@@ -17,23 +16,11 @@ export type TransitionVariant =
   | "rectangle"
   | "star"
 
-type ThemeTransition = "default" | "curtain"
-type CurtainPhase = "idle" | "cover" | "reveal"
-
-const curtainPanels = Array.from({ length: 7 }, (_, index) => index)
-const curtainDuration = 420
-const curtainStagger = 45
-const curtainCoverDelay =
-  curtainDuration + (curtainPanels.length - 1) * curtainStagger + 90
-const curtainRevealDelay = 140
-const curtainResetDelay = 680
-
 interface AnimatedThemeTogglerProps extends React.ComponentPropsWithoutRef<"button"> {
   duration?: number
   variant?: TransitionVariant
   /** When true, the transition expands from the viewport center instead of the button center. */
   fromCenter?: boolean
-  transition?: ThemeTransition
 }
 
 function polygonCollapsed(cx: number, cy: number, vertexCount: number): string {
@@ -145,58 +132,25 @@ export const AnimatedThemeToggler = ({
   duration = 400,
   variant,
   fromCenter = false,
-  transition = "default",
-  disabled,
   ...props
 }: AnimatedThemeTogglerProps) => {
   const shape = variant ?? "circle"
   const buttonRef = useRef<HTMLButtonElement>(null)
   const { resolvedTheme, setTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
-  const [curtainPhase, setCurtainPhase] = useState<CurtainPhase>("idle")
-  const curtainTimersRef = useRef<number[]>([])
-
-  const clearCurtainTimers = useCallback(() => {
-    curtainTimersRef.current.forEach((timer) => window.clearTimeout(timer))
-    curtainTimersRef.current = []
-  }, [])
-
-  useEffect(() => clearCurtainTimers, [clearCurtainTimers])
 
   const applyTheme = useCallback(() => {
     setTheme(isDark ? "light" : "dark")
   }, [isDark, setTheme])
 
-  const runCurtainTransition = useCallback(() => {
-    if (curtainPhase !== "idle") return
+  const toggleTheme = useCallback(() => {
+    const button = buttonRef.current
+    if (!button) return
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       applyTheme()
       return
     }
-
-    clearCurtainTimers()
-    setCurtainPhase("cover")
-    curtainTimersRef.current = [
-      window.setTimeout(() => {
-        applyTheme()
-        setCurtainPhase("reveal")
-      }, curtainCoverDelay),
-      window.setTimeout(
-        () => setCurtainPhase("idle"),
-        curtainCoverDelay + curtainRevealDelay + curtainResetDelay
-      ),
-    ]
-  }, [applyTheme, clearCurtainTimers, curtainPhase])
-
-  const toggleTheme = useCallback(() => {
-    if (transition === "curtain") {
-      runCurtainTransition()
-      return
-    }
-
-    const button = buttonRef.current
-    if (!button) return
 
     const viewportWidth = window.visualViewport?.width ?? window.innerWidth
     const viewportHeight = window.visualViewport?.height ?? window.innerHeight
@@ -265,53 +219,28 @@ export const AnimatedThemeToggler = ({
           {
             duration,
             // Star: linear avoids easing overshoot that fights polygon interpolation at t→1; VT group duration is synced above.
-            easing: shape === "star" ? "linear" : "ease-in-out",
+            easing:
+              shape === "star"
+                ? "linear"
+                : "cubic-bezier(0.22, 1, 0.36, 1)",
             fill: "forwards",
             pseudoElement: "::view-transition-new(root)",
           }
         )
       })
     }
-  }, [applyTheme, duration, fromCenter, runCurtainTransition, shape, transition])
+  }, [applyTheme, duration, fromCenter, shape])
 
   return (
-    <>
-      <button
-        type="button"
-        ref={buttonRef}
-        onClick={toggleTheme}
-        disabled={disabled || curtainPhase !== "idle"}
-        className={cn(className)}
-        {...props}
-      >
-        {isDark ? <Sun /> : <Moon />}
-        <span className="sr-only">Toggle theme</span>
-      </button>
-
-      {curtainPhase !== "idle" ? (
-        <div
-          key={curtainPhase}
-          aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-[200] grid grid-cols-7"
-        >
-          {curtainPanels.map((panel) => (
-            <motion.div
-              key={panel}
-              className="bg-[var(--landing-transition-bg,#025453)]"
-              initial={{ scaleY: curtainPhase === "cover" ? 0 : 1 }}
-              animate={{ scaleY: curtainPhase === "cover" ? 1 : 0 }}
-              transition={{
-                duration: curtainDuration / 1000,
-                ease: [0.83, 0, 0.17, 1],
-                delay: (panel * curtainStagger) / 1000,
-              }}
-              style={{
-                transformOrigin: curtainPhase === "cover" ? "top" : "bottom",
-              }}
-            />
-          ))}
-        </div>
-      ) : null}
-    </>
+    <button
+      type="button"
+      ref={buttonRef}
+      onClick={toggleTheme}
+      className={cn(className)}
+      {...props}
+    >
+      {isDark ? <Sun /> : <Moon />}
+      <span className="sr-only">Toggle theme</span>
+    </button>
   )
 }
