@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { headerPrimaryActionClass } from "@/lib/utils";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 function padDatePart(value: number) {
   return String(value).padStart(2, "0");
@@ -32,12 +33,15 @@ function currentMonthEnd() {
 }
 
 export function PayrollActionBar({
+  locale,
   periods,
   activePeriodId,
 }: {
+  locale: Locale;
   periods: PayrollPeriodView[];
   activePeriodId?: string;
 }) {
+  const t = getDictionary(locale).payroll;
   const router = useRouter();
   const pathname = usePathname();
   const [loadingAction, setLoadingAction] = useState<"period" | "preview" | "export" | null>(null);
@@ -64,7 +68,7 @@ export function PayrollActionBar({
 
     if (!response.ok || !result.ok) {
       const issue = Array.isArray(result.issues) ? result.issues[0]?.message : undefined;
-      throw new Error(issue ?? result.message ?? "No se pudo completar la operacion.");
+      throw new Error(issue ?? result.message ?? t.toast.genericError);
     }
 
     return result.data;
@@ -80,7 +84,7 @@ export function PayrollActionBar({
 
   async function handleCreatePeriod() {
     if (!periodStart || !periodEnd) {
-      toast.error("Selecciona inicio y fin del periodo.");
+      toast.error(t.toast.selectDates);
       return;
     }
 
@@ -91,11 +95,11 @@ export function PayrollActionBar({
         endDate: periodEnd,
         status: "DRAFT",
       }) as { id?: string };
-      toast.success("Periodo de nomina creado.");
+      toast.success(t.toast.periodCreated);
       if (period.id) navigateToPeriod(period.id);
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No se pudo crear el periodo.");
+      toast.error(error instanceof Error ? error.message : t.toast.createFailed);
     } finally {
       setLoadingAction(null);
     }
@@ -108,11 +112,11 @@ export function PayrollActionBar({
     setLoadingAction("preview");
     try {
       await postJson(`/api/payroll/periods/${periodId}/preview`);
-      toast.success("Vista previa de nomina generada.");
+      toast.success(t.toast.previewCreated);
       navigateToPeriod(periodId);
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No se pudo generar la vista previa.");
+      toast.error(error instanceof Error ? error.message : t.toast.previewFailed);
     } finally {
       setLoadingAction(null);
     }
@@ -122,7 +126,7 @@ export function PayrollActionBar({
     setLoadingAction("export");
     try {
       const rows = [
-        ["Periodo", "Rango", "Estado", "Empleados", "Neto"],
+        [t.fields.period, t.noRange, t.fields.status, t.fields.employees, t.fields.net],
         ...periods.map((period) => [
           period.label,
           period.range,
@@ -138,7 +142,7 @@ export function PayrollActionBar({
       link.download = "nomina-periodos.csv";
       link.click();
       URL.revokeObjectURL(url);
-      toast.success("Exportacion preparada.");
+      toast.success(t.toast.exportReady);
     } finally {
       setLoadingAction(null);
     }
@@ -149,15 +153,15 @@ export function PayrollActionBar({
       <div className="flex flex-wrap gap-2">
         <Button type="button" onClick={handleCreatePeriod} disabled={loadingAction !== null} className={headerPrimaryActionClass}>
           <Plus className="size-4" aria-hidden="true" />
-          {loadingAction === "period" ? "Creando..." : "Crear periodo"}
+          {loadingAction === "period" ? t.actions.creating : t.actions.createPeriod}
         </Button>
         <Button type="button" variant="outline" onClick={handlePreview} disabled={loadingAction !== null || !activePeriod}>
           <FileText className="size-4" aria-hidden="true" />
-          {loadingAction === "preview" ? "Calculando..." : "Vista previa"}
+          {loadingAction === "preview" ? t.actions.calculating : t.actions.preview}
         </Button>
         <Button type="button" variant="outline" onClick={handleExport} disabled={loadingAction !== null || periods.length === 0}>
           <Download className="size-4" aria-hidden="true" />
-          Exportar
+          {t.actions.export}
         </Button>
       </div>
       <div className="grid w-full gap-2 sm:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_minmax(180px,1fr)]">
@@ -166,21 +170,21 @@ export function PayrollActionBar({
           value={periodStart}
           onChange={(event) => setPeriodStart(event.target.value)}
           disabled={loadingAction !== null}
-          aria-label="Inicio del periodo"
+          aria-label={t.fields.periodStart}
         />
         <Input
           type="date"
           value={periodEnd}
           onChange={(event) => setPeriodEnd(event.target.value)}
           disabled={loadingAction !== null}
-          aria-label="Fin del periodo"
+          aria-label={t.fields.periodEnd}
         />
         <NativeSelect
           className="w-full"
           value={selectedPeriodId || "none"}
           onChange={(event) => navigateToPeriod(event.target.value)}
           disabled={loadingAction !== null || periods.length === 0}
-          aria-label="Periodo activo"
+          aria-label={t.fields.activePeriod}
         >
           {periods.length > 0 ? (
             periods.map((period) => (
@@ -189,7 +193,7 @@ export function PayrollActionBar({
               </NativeSelectOption>
             ))
           ) : (
-            <NativeSelectOption value="none">Sin periodos</NativeSelectOption>
+            <NativeSelectOption value="none">{t.empty.noPeriods}</NativeSelectOption>
           )}
         </NativeSelect>
       </div>

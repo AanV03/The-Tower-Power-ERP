@@ -7,22 +7,25 @@ type LegalSection = {
   copy: string;
 };
 
-type LegalPageProps = {
+export type LegalDocument = {
   title: string;
   eyebrow: string;
   updatedAt: string;
+  metadataDescription: string;
   intro: string;
-  sections: LegalSection[];
-  locale?: Locale;
+  sections: readonly LegalSection[];
+};
+
+type LegalPageProps = {
+  document: LegalDocument;
+  lastUpdatedLabel: string;
+  locale: Locale;
 };
 
 export function LegalPage({
-  title,
-  eyebrow,
-  updatedAt,
-  intro,
-  sections,
-  locale = "es",
+  document,
+  lastUpdatedLabel,
+  locale,
 }: LegalPageProps) {
   return (
     <main className="landing-palette min-h-screen bg-[var(--landing-bg)] text-[var(--landing-text)]">
@@ -31,22 +34,22 @@ export function LegalPage({
       <section className="border-b border-[color:var(--landing-border)] bg-[var(--landing-hero-bg)]">
         <div className="mx-auto w-full max-w-5xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <p className="font-mono text-xs font-bold uppercase tracking-[0.24em] text-[var(--landing-accent-strong)]">
-            {eyebrow}
+            {document.eyebrow}
           </p>
           <h1 className="mt-4 text-[clamp(3rem,10vw,6.5rem)] font-black uppercase leading-none tracking-normal">
-            {title}
+            {document.title}
           </h1>
           <p className="mt-6 max-w-3xl text-base leading-7 text-[var(--landing-copy)] sm:text-lg">
-            {intro}
+            {document.intro}
           </p>
           <p className="mt-6 text-sm font-bold uppercase tracking-[0.16em] text-[var(--landing-muted)]">
-            Last updated: {updatedAt}
+            {lastUpdatedLabel}: {document.updatedAt}
           </p>
         </div>
       </section>
 
       <section className="mx-auto grid w-full max-w-5xl gap-4 px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        {sections.map((section) => (
+        {document.sections.map((section) => (
           <article
             key={section.title}
             className="border border-[color:var(--landing-border)] bg-[var(--landing-panel)] p-5 sm:p-6"

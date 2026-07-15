@@ -139,9 +139,18 @@ export const AnimatedThemeToggler = ({
   const { resolvedTheme, setTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
 
+  const applyTheme = useCallback(() => {
+    setTheme(isDark ? "light" : "dark")
+  }, [isDark, setTheme])
+
   const toggleTheme = useCallback(() => {
     const button = buttonRef.current
     if (!button) return
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      applyTheme()
+      return
+    }
 
     const viewportWidth = window.visualViewport?.width ?? window.innerWidth
     const viewportHeight = window.visualViewport?.height ?? window.innerHeight
@@ -161,10 +170,6 @@ export const AnimatedThemeToggler = ({
       Math.max(x, viewportWidth - x),
       Math.max(y, viewportHeight - y)
     )
-
-    const applyTheme = () => {
-      setTheme(isDark ? "light" : "dark")
-    }
 
     if (typeof document.startViewTransition !== "function") {
       applyTheme()
@@ -195,16 +200,16 @@ export const AnimatedThemeToggler = ({
       root.style.removeProperty("--magicui-theme-vt-clip-from")
     }
 
-    const transition = document.startViewTransition(() => {
+    const viewTransition = document.startViewTransition(() => {
       flushSync(applyTheme)
     })
-    if (typeof transition?.finished?.finally === "function") {
-      transition.finished.finally(cleanup)
+    if (typeof viewTransition?.finished?.finally === "function") {
+      viewTransition.finished.finally(cleanup)
     } else {
       cleanup()
     }
 
-    const ready = transition?.ready
+    const ready = viewTransition?.ready
     if (ready && typeof ready.then === "function") {
       ready.then(() => {
         document.documentElement.animate(
@@ -214,14 +219,17 @@ export const AnimatedThemeToggler = ({
           {
             duration,
             // Star: linear avoids easing overshoot that fights polygon interpolation at t→1; VT group duration is synced above.
-            easing: shape === "star" ? "linear" : "ease-in-out",
+            easing:
+              shape === "star"
+                ? "linear"
+                : "cubic-bezier(0.22, 1, 0.36, 1)",
             fill: "forwards",
             pseudoElement: "::view-transition-new(root)",
           }
         )
       })
     }
-  }, [shape, fromCenter, duration, isDark])
+  }, [applyTheme, duration, fromCenter, shape])
 
   return (
     <button

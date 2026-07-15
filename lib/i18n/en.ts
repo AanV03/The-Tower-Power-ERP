@@ -1,3 +1,5 @@
+import { dashboardModuleDictionaries } from "./dashboard-modules";
+
 export const en = {
   landing: {
     eyebrow: "Multi-branch ERP for gyms",
@@ -22,7 +24,10 @@ export const en = {
       salesSynced: "42 sales synced",
       occupancy: "91% occupancy",
       devicesOnline: "Devices online",
+      renewalsHour: "Renewals by hour",
       revenueHour: "Revenue by hour",
+      occupancyHour: "Occupancy by hour",
+      accessHour: "Check-ins by hour",
       alertTitle: "Low stock alert resolved",
       alertDesc: "Protein bars transferred from North branch.",
       synced: "Synced",
@@ -376,6 +381,7 @@ export const en = {
       },
     },
   },
+  ...dashboardModuleDictionaries.en,
   marketing: {
     funnel: {
       title: "Conversion Funnel",

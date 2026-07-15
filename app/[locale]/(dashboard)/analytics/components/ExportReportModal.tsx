@@ -1,200 +1,168 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, FileText, Download, CheckCircle, Loader2 } from "lucide-react";
-import { getDictionary, type Locale } from "@/lib/i18n";
+import { useState } from "react";
+import { CheckCircle, Download, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn, headerPrimaryActionClass } from "@/lib/utils";
-import { toast } from "sonner";
+import { updateExportDraft } from "./demo-controller";
+import type { AnalyticsLabels, AnalyticsUiStatus, ExportFormat, ExportReportDraft } from "./types";
 
-type ExportReportModalProps = {
-  locale: Locale;
-  isOpen: boolean;
-  onClose: () => void;
+const initialDraft: ExportReportDraft = {
+  format: "pdf",
+  includeCharts: true,
+  includeMetadata: false,
 };
 
-export function ExportReportModal({ locale, isOpen, onClose }: ExportReportModalProps) {
-  const dictionary = getDictionary(locale);
-  const [format, setFormat] = useState<"pdf" | "csv">("pdf");
-  const [includeCharts, setIncludeCharts] = useState(true);
-  const [includeMetadata, setIncludeMetadata] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
+export function ExportReportModal({
+  labels,
+  isOpen,
+  status,
+  onClose,
+  onSubmit,
+}: {
+  labels: AnalyticsLabels;
+  isOpen: boolean;
+  status: AnalyticsUiStatus;
+  onClose: () => void;
+  onSubmit: (draft: ExportReportDraft) => void;
+}) {
+  const [draft, setDraft] = useState<ExportReportDraft>(initialDraft);
   const [progress, setProgress] = useState(0);
+  const isExporting = status === "loading" || progress > 0;
 
-  // Handle ESC key for accessibility
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setProgress(10);
 
-  if (!isOpen) return null;
-
-  const handleExport = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsExporting(true);
-    setProgress(0);
-
-    // Simulate download generation progress
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setIsExporting(false);
-            onClose();
-            toast.success(dictionary.analytics.export.success, {
-              description: `${format.toUpperCase()} · ${
-                includeCharts ? "+Charts" : ""
-              } ${includeMetadata ? "+Metadata" : ""}`,
-              icon: <CheckCircle className="w-5 h-5 text-emerald-500" />,
-            });
-          }, 400);
+    const interval = window.setInterval(() => {
+      setProgress((current) => {
+        if (current >= 100) {
+          window.clearInterval(interval);
+          window.setTimeout(() => {
+            setProgress(0);
+            onSubmit(draft);
+          }, 250);
           return 100;
         }
-        return prev + 10;
+
+        return current + 15;
       });
-    }, 150);
+    }, 100);
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity duration-300"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="export-modal-title"
-    >
-      <div className="glass-panel w-full max-w-md bg-card/90 dark:bg-card/80 rounded-2xl shadow-xl border border-white/10 overflow-hidden relative p-6 space-y-6 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-orange-500/10 text-[var(--brand-orange)]">
-              <FileText className="w-5 h-5" aria-hidden="true" />
-            </div>
-            <h2 id="export-modal-title" className="text-lg font-bold text-foreground">
-              {dictionary.analytics.export.title}
-            </h2>
-          </div>
-          <button 
-            type="button" 
-            onClick={onClose}
-            className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2"
-            aria-label={dictionary.analytics.export.cancel}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <p className="text-sm text-muted-foreground">
-          {dictionary.analytics.export.description}
-        </p>
+    <Dialog open={isOpen} onOpenChange={(open) => (!open ? onClose() : undefined)}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="rounded-lg bg-primary/10 p-2 text-primary">
+              <FileText className="size-5" aria-hidden="true" />
+            </span>
+            {labels.export.title}
+          </DialogTitle>
+          <DialogDescription>{labels.export.description}</DialogDescription>
+        </DialogHeader>
 
         {isExporting ? (
-          /* Exporting Progress State */
-          <div className="py-8 flex flex-col items-center justify-center space-y-4 text-center">
-            <Loader2 className="w-8 h-8 text-[var(--brand-orange)] animate-spin" />
-            <div className="w-full bg-muted rounded-full h-2 overflow-hidden max-w-xs">
-              <div 
-                className="bg-[var(--brand-orange)] h-full transition-all duration-150" 
-                style={{ width: `${progress}%` }}
-              />
+          <div className="flex flex-col items-center justify-center space-y-4 py-8 text-center">
+            {progress >= 100 ? (
+              <CheckCircle className="size-8 text-emerald-500" aria-hidden="true" />
+            ) : (
+              <Loader2 className="size-8 animate-spin text-primary" aria-hidden="true" />
+            )}
+            <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+              <div className="h-full bg-primary transition-all duration-150" style={{ width: `${progress}%` }} />
             </div>
-            <span className="text-sm font-semibold text-foreground">
-              {progress}%
-            </span>
+            <span className="text-sm font-semibold text-foreground">{progress}%</span>
           </div>
         ) : (
-          /* Form Settings */
-          <form onSubmit={handleExport} className="space-y-5">
-            {/* Format Selector */}
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <span className="text-sm font-semibold text-foreground">
-                {dictionary.analytics.export.format}
-              </span>
+              <span className="text-sm font-semibold text-foreground">{labels.export.format}</span>
               <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setFormat("pdf")}
-                  className={cn(
-                    "p-3 rounded-lg border text-sm font-medium transition-all flex flex-col items-center gap-2",
-                    format === "pdf"
-                      ? "border-[var(--brand-orange)] bg-[var(--brand-orange)]/5 text-foreground"
-                      : "border-border hover:bg-muted/40 text-muted-foreground"
-                  )}
-                >
-                  <span className="font-bold">PDF</span>
-                  <span className="text-xs opacity-80">{dictionary.analytics.export.pdf}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormat("csv")}
-                  className={cn(
-                    "p-3 rounded-lg border text-sm font-medium transition-all flex flex-col items-center gap-2",
-                    format === "csv"
-                      ? "border-[var(--brand-orange)] bg-[var(--brand-orange)]/5 text-foreground"
-                      : "border-border hover:bg-muted/40 text-muted-foreground"
-                  )}
-                >
-                  <span className="font-bold">CSV</span>
-                  <span className="text-xs opacity-80">{dictionary.analytics.export.csv}</span>
-                </button>
+                {(["pdf", "csv"] as const).map((format) => (
+                  <FormatButton
+                    key={format}
+                    format={format}
+                    active={draft.format === format}
+                    label={format === "pdf" ? labels.export.pdf : labels.export.csv}
+                    onClick={() => setDraft(updateExportDraft(draft, "format", format))}
+                  />
+                ))}
               </div>
             </div>
 
-            {/* Checkbox Options */}
             <div className="space-y-3 pt-2">
-              <label className="flex items-center gap-3 cursor-pointer group">
+              <label className="flex cursor-pointer items-center gap-3">
                 <input
                   type="checkbox"
-                  checked={includeCharts}
-                  onChange={(e) => setIncludeCharts(e.target.checked)}
-                  disabled={format === "csv"}
-                  className="rounded border-border text-[var(--brand-orange)] focus:ring-[var(--brand-orange)] w-4 h-4 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  checked={draft.includeCharts}
+                  onChange={(event) => setDraft(updateExportDraft(draft, "includeCharts", event.target.checked))}
+                  disabled={draft.format === "csv"}
+                  className="size-4 cursor-pointer rounded border-border text-primary disabled:cursor-not-allowed disabled:opacity-50"
                 />
-                <span className={cn("text-sm text-foreground group-hover:text-foreground/80 transition-colors", format === "csv" && "opacity-50 cursor-not-allowed")}>
-                  {dictionary.analytics.export.includeCharts}
+                <span className={cn("text-sm text-foreground", draft.format === "csv" && "opacity-50")}>
+                  {labels.export.includeCharts}
                 </span>
               </label>
 
-              <label className="flex items-center gap-3 cursor-pointer group">
+              <label className="flex cursor-pointer items-center gap-3">
                 <input
                   type="checkbox"
-                  checked={includeMetadata}
-                  onChange={(e) => setIncludeMetadata(e.target.checked)}
-                  className="rounded border-border text-[var(--brand-orange)] focus:ring-[var(--brand-orange)] w-4 h-4 cursor-pointer"
+                  checked={draft.includeMetadata}
+                  onChange={(event) => setDraft(updateExportDraft(draft, "includeMetadata", event.target.checked))}
+                  className="size-4 cursor-pointer rounded border-border text-primary"
                 />
-                <span className="text-sm text-foreground group-hover:text-foreground/80 transition-colors">
-                  {dictionary.analytics.export.includeMetadata}
-                </span>
+                <span className="text-sm text-foreground">{labels.export.includeMetadata}</span>
               </label>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={onClose}
-                className="text-sm font-medium"
-              >
-                {dictionary.analytics.export.cancel}
+            <DialogFooter className="border-t border-border pt-4">
+              <Button type="button" variant="ghost" onClick={onClose}>
+                {labels.export.cancel}
               </Button>
-              <Button
-                type="submit"
-                className={cn(headerPrimaryActionClass, "flex items-center gap-2")}
-              >
-                <Download className="w-4 h-4" />
-                <span>{dictionary.analytics.export.submit}</span>
+              <Button type="submit" className={cn(headerPrimaryActionClass, "gap-2")}>
+                <Download className="size-4" aria-hidden="true" />
+                {labels.export.submit}
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function FormatButton({
+  format,
+  active,
+  label,
+  onClick,
+}: {
+  format: ExportFormat;
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex flex-col items-center gap-2 rounded-lg border p-3 text-sm font-medium transition-colors",
+        active ? "border-primary bg-primary/5 text-foreground" : "border-border text-muted-foreground hover:bg-muted/40",
+      )}
+    >
+      <span className="font-bold uppercase">{format}</span>
+      <span className="text-xs opacity-80">{label}</span>
+    </button>
   );
 }

@@ -8,12 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-const statusLabel: Record<PayrollStatusLabel, string> = {
-  DRAFT: "Borrador",
-  APPROVED: "Aprobado",
-  PAID: "Pagado",
-};
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 const statusVariant: Record<PayrollStatusLabel, "default" | "secondary" | "outline"> = {
   DRAFT: "secondary",
@@ -21,13 +16,14 @@ const statusVariant: Record<PayrollStatusLabel, "default" | "secondary" | "outli
   PAID: "default",
 };
 
-export function PayrollItemsTable({ receipts }: { receipts: PayrollReceiptView[] }) {
+export function PayrollItemsTable({ receipts, locale }: { receipts: PayrollReceiptView[]; locale: Locale }) {
+  const t = getDictionary(locale).payroll;
   return (
     <Card>
       <CardHeader className="border-b border-border">
         <CardTitle className="flex items-center gap-2 text-base">
           <ReceiptText className="size-4" aria-hidden="true" />
-          Recibos del periodo
+          {t.panels.periodReceipts}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
@@ -35,15 +31,15 @@ export function PayrollItemsTable({ receipts }: { receipts: PayrollReceiptView[]
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-6">Empleado</TableHead>
-                <TableHead>Puesto / sucursal</TableHead>
-                <TableHead className="text-right">Base</TableHead>
-                <TableHead className="text-right">Horas extra</TableHead>
-                <TableHead className="text-right">Comisión</TableHead>
-                <TableHead className="text-right">Deducciones</TableHead>
-                <TableHead className="text-right">Neto</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="pr-6 text-right">Acción</TableHead>
+                <TableHead className="pl-6">{t.fields.employee}</TableHead>
+                <TableHead>{t.fields.positionBranch}</TableHead>
+                <TableHead className="text-right">{t.fields.base}</TableHead>
+                <TableHead className="text-right">{t.fields.overtime}</TableHead>
+                <TableHead className="text-right">{t.fields.commission}</TableHead>
+                <TableHead className="text-right">{t.deductions}</TableHead>
+                <TableHead className="text-right">{t.fields.net}</TableHead>
+                <TableHead>{t.fields.status}</TableHead>
+                <TableHead className="pr-6 text-right">{t.fields.action}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -67,13 +63,13 @@ export function PayrollItemsTable({ receipts }: { receipts: PayrollReceiptView[]
                   <TableCell className="text-right">{receipt.deductionsLabel}</TableCell>
                   <TableCell className="text-right font-semibold text-foreground">{receipt.netLabel}</TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant[receipt.status]}>{statusLabel[receipt.status]}</Badge>
+                    <Badge variant={statusVariant[receipt.status]}>{t.status[receipt.status]}</Badge>
                   </TableCell>
                   <TableCell className="pr-6 text-right">
-                    <PayrollReceiptDialog receipt={receipt}>
+                    <PayrollReceiptDialog locale={locale} receipt={receipt}>
                       <Button type="button" variant="outline" size="sm">
                         <Eye className="size-4" aria-hidden="true" />
-                        Ver recibo
+                        {t.actions.viewReceipt}
                       </Button>
                     </PayrollReceiptDialog>
                   </TableCell>
@@ -93,28 +89,28 @@ export function PayrollItemsTable({ receipts }: { receipts: PayrollReceiptView[]
                     {receipt.position} · {receipt.branch}
                   </p>
                 </div>
-                <Badge variant={statusVariant[receipt.status]}>{statusLabel[receipt.status]}</Badge>
+                <Badge variant={statusVariant[receipt.status]}>{t.status[receipt.status]}</Badge>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p className="text-xs text-muted-foreground">Comisión</p>
+                  <p className="text-xs text-muted-foreground">{t.fields.commission}</p>
                   <p className="font-medium text-foreground">{receipt.commissionLabel}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Neto</p>
+                  <p className="text-xs text-muted-foreground">{t.fields.net}</p>
                   <p className="font-semibold text-foreground">{receipt.netLabel}</p>
                 </div>
               </div>
-              <PayrollReceiptDialog receipt={receipt}>
+              <PayrollReceiptDialog locale={locale} receipt={receipt}>
                 <Button type="button" variant="outline" size="sm" className="w-full">
                   <Eye className="size-4" aria-hidden="true" />
-                  Ver recibo
+                  {t.actions.viewReceipt}
                 </Button>
               </PayrollReceiptDialog>
             </div>
           ))}
           {receipts.length === 0 ? (
-            <div className="p-6 text-sm text-muted-foreground">Sin recibos generados para mostrar.</div>
+            <div className="p-6 text-sm text-muted-foreground">{t.empty.noReceiptsGenerated}</div>
           ) : null}
         </div>
       </CardContent>

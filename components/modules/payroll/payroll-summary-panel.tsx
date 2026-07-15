@@ -4,6 +4,7 @@ import type { PayrollSummaryView } from "@/components/modules/payroll/payroll-da
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 function SummaryLine({ label, value }: { label: string; value: string }) {
   return (
@@ -14,7 +15,8 @@ function SummaryLine({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function PayrollSummaryPanel({ summary }: { summary: PayrollSummaryView }) {
+export function PayrollSummaryPanel({ summary, locale }: { summary: PayrollSummaryView; locale: Locale }) {
+  const t = getDictionary(locale).payroll;
   const hasAlerts = summary.missingReceipts > 0 || summary.openAttendances > 0 || summary.draftPeriods > 0;
 
   return (
@@ -22,17 +24,17 @@ export function PayrollSummaryPanel({ summary }: { summary: PayrollSummaryView }
       <CardHeader className="border-b border-border">
         <CardTitle className="flex items-center gap-2 text-base">
           <Sigma className="size-4" aria-hidden="true" />
-          Resumen de cierre
+          {t.panels.closeSummary}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="space-y-3">
-          <SummaryLine label="Base" value={summary.totalBaseLabel} />
-          <SummaryLine label="Horas extra" value={summary.totalOvertimeLabel} />
-          <SummaryLine label="Comisiones" value={summary.totalCommissionsLabel} />
-          <SummaryLine label="Deducciones" value={summary.totalDeductionsLabel} />
+          <SummaryLine label={t.fields.base} value={summary.totalBaseLabel} />
+          <SummaryLine label={t.fields.overtime} value={summary.totalOvertimeLabel} />
+          <SummaryLine label={t.commissions} value={summary.totalCommissionsLabel} />
+          <SummaryLine label={t.deductions} value={summary.totalDeductionsLabel} />
           <div className="border-t border-border pt-3">
-            <SummaryLine label="Neto total" value={summary.totalNetLabel} />
+            <SummaryLine label={t.fields.net} value={summary.totalNetLabel} />
           </div>
         </div>
 
@@ -40,21 +42,21 @@ export function PayrollSummaryPanel({ summary }: { summary: PayrollSummaryView }
           <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/20 p-3">
             <span className="flex items-center gap-2 text-sm text-foreground">
               {hasAlerts ? <AlertTriangle className="size-4 text-destructive" aria-hidden="true" /> : <CheckCircle2 className="size-4 text-primary" aria-hidden="true" />}
-              Alertas
+              {t.alerts.title}
             </span>
-            <Badge variant={hasAlerts ? "destructive" : "secondary"}>{hasAlerts ? "Revisar" : "Listo"}</Badge>
+            <Badge variant={hasAlerts ? "destructive" : "secondary"}>{hasAlerts ? t.review : t.ready}</Badge>
           </div>
           <div className="grid gap-2 text-sm text-muted-foreground">
             <div className="flex justify-between gap-3">
-              <span>Empleados sin recibo</span>
+              <span>{t.alerts.missingReceipts}</span>
               <span>{summary.missingReceipts}</span>
             </div>
             <div className="flex justify-between gap-3">
-              <span>Asistencias abiertas</span>
+              <span>{t.alerts.openAttendances}</span>
               <span>{summary.openAttendances}</span>
             </div>
             <div className="flex justify-between gap-3">
-              <span>Periodos en borrador</span>
+              <span>{t.alerts.draftPeriods}</span>
               <span>{summary.draftPeriods}</span>
             </div>
           </div>
@@ -62,10 +64,10 @@ export function PayrollSummaryPanel({ summary }: { summary: PayrollSummaryView }
 
         <div className="grid gap-2">
           <Button type="button" disabled>
-            Aprobar periodo
+            {t.actions.approvePeriod}
           </Button>
           <Button type="button" variant="outline" disabled>
-            Enviar a pagos
+            {t.actions.sendPayments}
           </Button>
         </div>
       </CardContent>

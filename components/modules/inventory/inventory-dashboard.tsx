@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
-import type { Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 import { InventoryClient } from "./inventory-client";
 
 export async function InventoryDashboard({ locale }: { locale: Locale }) {
+  const dictionary = getDictionary(locale);
   const context = await requireApiContext({ moduleId: "inventory" });
   const branchId = context.branchId;
   const tenantId = context.tenantId;
@@ -58,7 +59,7 @@ export async function InventoryDashboard({ locale }: { locale: Locale }) {
     type: m.type,
     quantity: Number(m.quantity.toString()),
     unitCost: m.unitCost ? Number(m.unitCost.toString()) : null,
-    sourceType: m.sourceType ?? "Ajuste manual",
+    sourceType: m.sourceType ?? dictionary.inventory.manualAdjustment,
     sourceId: m.sourceId ?? "-",
     createdAt: m.createdAt.toISOString(),
   }));

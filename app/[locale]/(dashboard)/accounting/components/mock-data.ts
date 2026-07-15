@@ -1,15 +1,18 @@
 import type { AccountingDashboardData, AccountingDashboardState } from "./types";
+import type { Dictionary } from "@/lib/i18n";
 
-export const mockAccountingData: AccountingDashboardData = {
-  title: "Contabilidad",
-  subtitle: "Cuentas, polizas y control formal de cargos y abonos.",
-  periodLabel: "Periodo: Julio 2026",
-  branchLabel: "Sucursal: Consolidado",
+export function getMockAccountingData(dictionary: Dictionary): AccountingDashboardData {
+ const t = dictionary.accounting;
+ return {
+  title: t.title,
+  subtitle: t.subtitle,
+  periodLabel: t.periodLabel,
+  branchLabel: t.branchLabel,
   metrics: [
-    { id: "accounts", label: "Cuentas activas", value: "84", helper: "Catalogo operativo", tone: "default" },
-    { id: "drafts", label: "Polizas borrador", value: "6", helper: "Requieren revision", tone: "warning" },
-    { id: "posted", label: "Polizas registradas", value: "128", helper: "Mes actual", tone: "success" },
-    { id: "difference", label: "Diferencia por cuadrar", value: "$0.00", helper: "Debe vs haber", tone: "success" },
+    { id: "accounts", label: t.metrics.accounts[0], value: "84", helper: t.metrics.accounts[1], tone: "default" },
+    { id: "drafts", label: t.metrics.drafts[0], value: "6", helper: t.metrics.drafts[1], tone: "warning" },
+    { id: "posted", label: t.metrics.posted[0], value: "128", helper: t.metrics.posted[1], tone: "success" },
+    { id: "difference", label: t.metrics.difference[0], value: "$0.00", helper: t.metrics.difference[1], tone: "success" },
   ],
   accounts: [
     {
@@ -127,7 +130,8 @@ export const mockAccountingData: AccountingDashboardData = {
     ],
     totals: { debit: 15000, credit: 15000, difference: 0, isBalanced: true },
   },
-};
+ };
+}
 
 export const mockAccountingState: AccountingDashboardState = {
   page: "idle",

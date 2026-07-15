@@ -10,23 +10,19 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
-import { gsap } from "gsap";
-import { animate, motion } from "framer-motion";
+import { animate, motion, useReducedMotion } from "framer-motion";
 import { AuthBackground } from "@/components/backgrounds/auth-background";
 import { getDictionary, type Locale } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
-const heroStats = [
-  { label: "Active members", value: 3842, trend: "+12%" },
-  { label: "Monthly revenue", value: 84.6, prefix: "$", suffix: "k", decimals: 1, trend: "+18%" },
-  { label: "Check-ins today", value: 716, trend: "Live" },
-];
+type OperationId = "memberships" | "pos" | "dashboard" | "access";
 
-const operations = [
-  { icon: Users, label: "Memberships", value: "Renewals queued" },
-  { icon: CreditCard, label: "POS", value: "42 sales synced" },
-  { icon: CalendarClock, label: "Classes", value: "91% occupancy" },
-  { icon: ShieldCheck, label: "Access", value: "Devices online" },
-];
+const operationChartValues: Record<OperationId, number[]> = {
+  memberships: [44, 62, 55, 73, 66, 82, 70, 91, 78, 86, 68, 80],
+  pos: [38, 54, 46, 72, 58, 88, 66, 94, 81, 70, 92, 76],
+  dashboard: [52, 61, 74, 83, 89, 94, 90, 85, 78, 69, 58, 47],
+  access: [35, 48, 72, 88, 67, 93, 76, 84, 96, 71, 63, 50],
+};
 
 type AnimateNumberProps = {
   value: number;
@@ -94,6 +90,8 @@ export default function Hero({ locale = "es" }: { locale?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const dictionary = getDictionary(locale as Locale);
+  const [activeOperation, setActiveOperation] = useState<OperationId>("pos");
+  const shouldReduceMotion = useReducedMotion();
 
   const heroStats = [
     { label: dictionary.landing.heroStats?.activeMembers ?? "Active members", value: 3842, trend: dictionary.landing.heroStats?.trendPlus12 ?? "+12%" },
@@ -102,11 +100,42 @@ export default function Hero({ locale = "es" }: { locale?: string }) {
   ];
 
   const operations = [
-    { icon: Users, label: dictionary.modules.memberships, value: dictionary.landing.ops?.renewalsQueued ?? "Renewals queued" },
-    { icon: CreditCard, label: dictionary.modules.pos, value: dictionary.landing.ops?.salesSynced ?? "42 sales synced" },
-    { icon: CalendarClock, label: dictionary.common.dashboard, value: dictionary.landing.ops?.occupancy ?? "91% occupancy" },
-    { icon: ShieldCheck, label: dictionary.modules.access, value: dictionary.landing.ops?.devicesOnline ?? "Devices online" },
+    {
+      id: "memberships" as const,
+      icon: Users,
+      label: dictionary.modules.memberships,
+      value: dictionary.landing.ops?.renewalsQueued ?? "Renewals queued",
+      chartTitle: dictionary.landing.ops.renewalsHour,
+      chartValues: operationChartValues.memberships,
+    },
+    {
+      id: "pos" as const,
+      icon: CreditCard,
+      label: dictionary.modules.pos,
+      value: dictionary.landing.ops?.salesSynced ?? "42 sales synced",
+      chartTitle: dictionary.landing.ops.revenueHour,
+      chartValues: operationChartValues.pos,
+    },
+    {
+      id: "dashboard" as const,
+      icon: CalendarClock,
+      label: dictionary.common.dashboard,
+      value: dictionary.landing.ops?.occupancy ?? "91% occupancy",
+      chartTitle: dictionary.landing.ops.occupancyHour,
+      chartValues: operationChartValues.dashboard,
+    },
+    {
+      id: "access" as const,
+      icon: ShieldCheck,
+      label: dictionary.modules.access,
+      value: dictionary.landing.ops?.devicesOnline ?? "Devices online",
+      chartTitle: dictionary.landing.ops.accessHour,
+      chartValues: operationChartValues.access,
+    },
   ];
+
+  const selectedOperation =
+    operations.find(({ id }) => id === activeOperation) ?? operations[1];
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -232,41 +261,67 @@ export default function Hero({ locale = "es" }: { locale?: string }) {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              {operations.map(({ icon: Icon, label, value }) => (
-                <div key={label} className="border border-[color:var(--landing-border)] bg-white/[0.04] p-4">
+              {operations.map(({ id, icon: Icon, label, value }) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={activeOperation === id}
+                  onClick={() => setActiveOperation(id)}
+                  className={cn(
+                    "border p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent-strong)]",
+                    activeOperation === id
+                      ? "border-[color:var(--landing-accent-strong)] bg-[var(--landing-panel-hover)] shadow-[inset_0_0_0_1px_var(--landing-accent-strong)]"
+                      : "border-[color:var(--landing-border)] bg-white/[0.04] hover:border-[color:var(--landing-accent-strong)]/70",
+                  )}
+                >
                   <Icon className="mb-4 h-5 w-5 text-[var(--landing-accent-strong)]" aria-hidden="true" />
                   <p className="text-sm font-bold text-[var(--landing-text)]">{label}</p>
                   <p className="mt-1 text-sm text-[var(--landing-copy)]">{value}</p>
-                </div>
+                </button>
               ))}
             </div>
 
-            <div className="mt-5 border border-[color:var(--landing-border)] bg-[var(--landing-panel-muted)] p-4">
+            <div
+              role="region"
+              aria-labelledby="hero-operation-chart-title"
+              aria-live="polite"
+              className="mt-5 border border-[color:var(--landing-border)] bg-[var(--landing-panel-muted)] p-4"
+            >
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-bold text-[var(--landing-text)]">
                   <BarChart3 className="h-4 w-4 text-[var(--landing-accent-strong)]" aria-hidden="true" />
-                  {dictionary.landing.ops?.revenueHour ?? "Revenue by hour"}
+                  <motion.span
+                    id="hero-operation-chart-title"
+                    key={selectedOperation.id}
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    {selectedOperation.chartTitle}
+                  </motion.span>
                 </div>
                 <BadgeCheck className="h-5 w-5 text-[var(--landing-accent-strong)]" aria-hidden="true" />
               </div>
               <div className="flex h-28 items-end gap-2">
-                {[38, 54, 46, 72, 58, 88, 66, 94, 81, 70, 92, 76].map(
-                  (height, index) => (
-                    <motion.div
-                      key={index}
-                      className="origin-bottom flex-1 bg-[var(--landing-accent-strong)]"
-                      initial={{ scaleY: 0, opacity: 0.45 }}
-                      animate={{ scaleY: 1, opacity: 1 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 180,
-                        damping: 22,
-                        delay: index * 0.075,
-                      }}
-                      style={{ height: `${height}%` }}
-                    />
-                  )
-                )}
+                {selectedOperation.chartValues.map((height, index) => (
+                  <motion.div
+                    key={`${selectedOperation.id}-${index}`}
+                    aria-hidden="true"
+                    className="origin-bottom flex-1 bg-[var(--landing-accent-strong)]"
+                    initial={shouldReduceMotion ? false : { scaleY: 0, opacity: 0.45 }}
+                    animate={{ scaleY: 1, opacity: 1 }}
+                    transition={
+                      shouldReduceMotion
+                        ? { duration: 0 }
+                        : {
+                            type: "spring",
+                            stiffness: 180,
+                            damping: 22,
+                            delay: index * 0.045,
+                          }
+                    }
+                    style={{ height: `${height}%` }}
+                  />
+                ))}
               </div>
             </div>
 
