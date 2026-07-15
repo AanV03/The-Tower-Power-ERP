@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatMessage, getDictionary, type Locale } from "@/lib/i18n";
 
 export type PayrollItemRow = {
   id: string;
@@ -25,18 +26,19 @@ export type PayrollItemRow = {
   status: "DRAFT" | "APPROVED" | "PAID";
 };
 
-export function PayrollTable({ items }: { items: PayrollItemRow[] }) {
+export function PayrollTable({ items, locale }: { items: PayrollItemRow[]; locale: Locale }) {
+  const t = getDictionary(locale).payroll;
   return (
     <Card className="rounded-lg">
       <CardHeader className="gap-4 border-b pb-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle>Recibos del periodo</CardTitle>
-            <p className="text-sm text-muted-foreground">Base, variables, deducciones y neto por empleado.</p>
+            <CardTitle>{t.panels.periodReceipts}</CardTitle>
+            <p className="text-sm text-muted-foreground">{t.help.receiptTable}</p>
           </div>
           <div className="relative min-w-0 sm:w-72">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input className="pl-8" placeholder="Buscar empleado" aria-label="Buscar recibo por empleado" />
+            <Input className="pl-8" placeholder={t.searchEmployee} aria-label={t.searchReceipt} />
           </div>
         </div>
       </CardHeader>
@@ -44,8 +46,8 @@ export function PayrollTable({ items }: { items: PayrollItemRow[] }) {
         {items.length === 0 ? (
           <div className="px-6 py-12 text-center">
             <FileText className="mx-auto mb-3 size-8 text-muted-foreground" />
-            <p className="font-medium text-foreground">Sin recibos en el periodo</p>
-            <p className="mt-1 text-sm text-muted-foreground">Genera una vista previa para incluir empleados.</p>
+            <p className="font-medium text-foreground">{t.empty.noReceipts}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t.empty.receiptPreview}</p>
           </div>
         ) : (
           <>
@@ -53,13 +55,13 @@ export function PayrollTable({ items }: { items: PayrollItemRow[] }) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Empleado</TableHead>
-                    <TableHead className="text-right">Base</TableHead>
-                    <TableHead className="text-right">Horas extra</TableHead>
-                    <TableHead className="text-right">Comisiones</TableHead>
-                    <TableHead className="text-right">Deducciones</TableHead>
-                    <TableHead className="text-right">Neto</TableHead>
-                    <TableHead>Estado</TableHead>
+                    <TableHead>{t.fields.employee}</TableHead>
+                    <TableHead className="text-right">{t.fields.base}</TableHead>
+                    <TableHead className="text-right">{t.fields.overtime}</TableHead>
+                    <TableHead className="text-right">{t.commissions}</TableHead>
+                    <TableHead className="text-right">{t.deductions}</TableHead>
+                    <TableHead className="text-right">{t.fields.net}</TableHead>
+                    <TableHead>{t.fields.status}</TableHead>
                     <TableHead className="w-10" />
                   </TableRow>
                 </TableHeader>
@@ -79,11 +81,11 @@ export function PayrollTable({ items }: { items: PayrollItemRow[] }) {
                       <TableCell className="text-right font-medium">{item.net}</TableCell>
                       <TableCell>
                         <Badge variant={item.status === "PAID" ? "secondary" : item.status === "APPROVED" ? "outline" : "destructive"}>
-                          {item.status === "PAID" ? "Pagado" : item.status === "APPROVED" ? "Aprobado" : "Borrador"}
+                          {t.status[item.status]}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon-sm" aria-label={`Acciones de recibo de ${item.employee}`}>
+                        <Button variant="ghost" size="icon-sm" aria-label={formatMessage(t.receiptActions, { employee: item.employee })}>
                           <MoreHorizontal />
                         </Button>
                       </TableCell>
@@ -101,15 +103,15 @@ export function PayrollTable({ items }: { items: PayrollItemRow[] }) {
                       <p className="truncate text-xs text-muted-foreground">{item.position}</p>
                     </div>
                     <Badge variant={item.status === "PAID" ? "secondary" : item.status === "APPROVED" ? "outline" : "destructive"}>
-                      {item.status === "PAID" ? "Pagado" : item.status === "APPROVED" ? "Aprobado" : "Borrador"}
+                      {t.status[item.status]}
                     </Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div><p className="text-xs text-muted-foreground">Base</p><p>{item.base}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Horas extra</p><p>{item.overtime}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Comisiones</p><p>{item.commissions}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Deducciones</p><p>{item.deductions}</p></div>
-                    <div className="col-span-2"><p className="text-xs text-muted-foreground">Neto</p><p className="font-medium">{item.net}</p></div>
+                    <div><p className="text-xs text-muted-foreground">{t.fields.base}</p><p>{item.base}</p></div>
+                    <div><p className="text-xs text-muted-foreground">{t.fields.overtime}</p><p>{item.overtime}</p></div>
+                    <div><p className="text-xs text-muted-foreground">{t.commissions}</p><p>{item.commissions}</p></div>
+                    <div><p className="text-xs text-muted-foreground">{t.deductions}</p><p>{item.deductions}</p></div>
+                    <div className="col-span-2"><p className="text-xs text-muted-foreground">{t.fields.net}</p><p className="font-medium">{item.net}</p></div>
                   </div>
                 </div>
               ))}

@@ -9,11 +9,12 @@ import {
   filterAccountingDemoData,
 } from "./demo-controller";
 import type { AccountingDashboardProps } from "./types";
+import { getDictionary } from "@/lib/i18n";
 
 export function AccountingDemoController(props: AccountingDashboardProps) {
   const [demoState, dispatch] = useReducer(
     accountingDemoReducer,
-    createAccountingDemoState(props.data, props.state),
+    createAccountingDemoState(props.data, props.state, props.locale, getDictionary(props.locale).accounting.feedback),
   );
 
   const filteredData = useMemo(() => filterAccountingDemoData(demoState), [demoState]);

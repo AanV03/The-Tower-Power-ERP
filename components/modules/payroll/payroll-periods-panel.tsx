@@ -4,12 +4,7 @@ import type { PayrollPeriodView, PayrollStatusLabel } from "@/components/modules
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-
-const statusLabel: Record<PayrollStatusLabel, string> = {
-  DRAFT: "Borrador",
-  APPROVED: "Aprobado",
-  PAID: "Pagado",
-};
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 const statusVariant: Record<PayrollStatusLabel, "default" | "secondary" | "outline"> = {
   DRAFT: "secondary",
@@ -18,18 +13,21 @@ const statusVariant: Record<PayrollStatusLabel, "default" | "secondary" | "outli
 };
 
 export function PayrollPeriodsPanel({
+  locale,
   periods,
   activePeriodId,
 }: {
+  locale: Locale;
   periods: PayrollPeriodView[];
   activePeriodId?: string;
 }) {
+  const t = getDictionary(locale).payroll;
   return (
     <Card className="h-fit">
       <CardHeader className="border-b border-border">
         <CardTitle className="flex items-center gap-2 text-base">
           <CalendarRange className="size-4" aria-hidden="true" />
-          Periodos recientes
+          {t.panels.recentPeriods}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -47,15 +45,15 @@ export function PayrollPeriodsPanel({
                   <p className="truncate text-sm font-medium text-foreground">{period.label}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">{period.range}</p>
                 </div>
-                <Badge variant={statusVariant[period.status]}>{statusLabel[period.status]}</Badge>
+                <Badge variant={statusVariant[period.status]}>{t.status[period.status]}</Badge>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <p className="text-muted-foreground">Empleados</p>
+                  <p className="text-muted-foreground">{t.fields.employees}</p>
                   <p className="font-medium text-foreground">{period.employeeCount}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-muted-foreground">Neto</p>
+                  <p className="text-muted-foreground">{t.fields.net}</p>
                   <p className="font-medium text-foreground">{period.netTotalLabel}</p>
                 </div>
               </div>
@@ -63,7 +61,7 @@ export function PayrollPeriodsPanel({
           ))
         ) : (
           <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-            Sin periodos registrados.
+            {t.empty.noPeriodsRegistered}
           </div>
         )}
       </CardContent>

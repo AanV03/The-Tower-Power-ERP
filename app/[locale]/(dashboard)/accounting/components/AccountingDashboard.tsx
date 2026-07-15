@@ -49,7 +49,7 @@ export function AccountingDashboard(props: AccountingDashboardProps) {
         canRegister={canRegister}
       />
 
-      <AccountingKpiGrid metrics={data.metrics} status={state.page} />
+      <AccountingKpiGrid metrics={data.metrics} status={state.page} ariaLabel={labels.kpiLabel} />
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
         <JournalEntryEditor
@@ -70,6 +70,7 @@ export function AccountingDashboard(props: AccountingDashboardProps) {
             actions={actions}
             accountTypeLabels={props.accountTypeLabels}
             normalBalanceLabels={props.normalBalanceLabels}
+            accountStatusLabels={props.accountStatusLabels}
           />
           <JournalEntryList
             entries={data.recentEntries}

@@ -1,82 +1,39 @@
-import type {
-  AccountingLabels,
-  AccountType,
-  DisplayColumn,
-  JournalEntryStatus,
-  JournalEntryType,
-  NormalBalance,
-  SelectOption,
-  StatusVisualConfig,
-} from "./types";
+import type { Dictionary } from "@/lib/i18n";
+import type { AccountStatus, AccountType, DisplayColumn, JournalEntryStatus, JournalEntryType, NormalBalance, SelectOption, StatusVisualConfig } from "./types";
 
-export const accountingLabels: AccountingLabels = {
-  searchPlaceholder: "Buscar cuenta o poliza...",
-  registerEntry: "Registrar poliza",
-  refresh: "Actualizar",
-  export: "Exportar",
-  validate: "Validar cuadre",
-  editorTitle: "Editor de poliza",
-  editorDescription: "Captura cargos y abonos con validacion formal de cuadre.",
-  date: "Fecha",
-  type: "Tipo",
-  concept: "Concepto general",
-  reference: "Referencia",
-  debit: "Debe",
-  credit: "Haber",
-  difference: "Diferencia",
-  balanced: "Cuadrada",
-  unbalanced: "Descuadrada",
-  addLine: "Agregar partida",
-  saveDraft: "Guardar borrador",
-  accountsTitle: "Catalogo de cuentas",
-  accountsDescription: "Cuentas disponibles para integrar la poliza.",
-  entriesTitle: "Polizas recientes",
-  entriesDescription: "Actividad contable del periodo actual.",
-  emptyAccountsTitle: "Sin cuentas configuradas",
-  emptyAccountsDescription: "Configura el catalogo contable antes de registrar polizas.",
-  emptyEntriesTitle: "Sin polizas recientes",
-  emptyEntriesDescription: "Crea la primera poliza para iniciar el control contable.",
-  errorTitle: "No se pudo cargar contabilidad",
-  retry: "Reintentar",
-};
-
-export const accountTypeLabels: Record<AccountType, string> = {
-  asset: "Activo",
-  liability: "Pasivo",
-  equity: "Capital",
-  income: "Ingreso",
-  expense: "Gasto",
-};
-
-export const normalBalanceLabels: Record<NormalBalance, string> = {
-  debit: "Deudora",
-  credit: "Acreedora",
-};
-
-export const journalEntryTypeOptions: SelectOption<JournalEntryType>[] = [
-  { value: "income", label: "Ingreso" },
-  { value: "expense", label: "Egreso" },
-  { value: "daily", label: "Diario" },
-  { value: "adjustment", label: "Ajuste" },
-];
-
-export const journalEntryStatusConfig: Record<JournalEntryStatus, StatusVisualConfig> = {
-  draft: { label: "Borrador", className: "border-border text-muted-foreground" },
-  balanced: { label: "Cuadrada", className: "bg-emerald-500/15 text-emerald-600" },
-  posted: { label: "Registrada", className: "bg-primary/15 text-primary" },
-  void: { label: "Cancelada", className: "bg-destructive/15 text-destructive" },
-};
-
-export const journalLineColumns: DisplayColumn[] = [
-  { id: "account", label: "Cuenta" },
-  { id: "description", label: "Descripcion" },
-  { id: "debit", label: "Debe", align: "right" },
-  { id: "credit", label: "Haber", align: "right" },
-];
-
-export const accountPanelColumns: DisplayColumn[] = [
-  { id: "code", label: "Codigo" },
-  { id: "name", label: "Cuenta" },
-  { id: "normalBalance", label: "Naturaleza" },
-  { id: "status", label: "Estado" },
-];
+export function getAccountingConfig(dictionary: Dictionary) {
+  const t = dictionary.accounting;
+  return {
+    accountingLabels: {
+      searchPlaceholder: t.searchPlaceholder, registerEntry: t.registerEntry, refresh: t.refresh,
+      export: t.export, validate: t.validate, editorTitle: t.editorTitle,
+      editorDescription: t.editorDescription, date: t.date, type: t.type, concept: t.concept,
+      reference: t.reference, debit: t.debit, credit: t.credit, difference: t.difference,
+      balanced: t.balanced, unbalanced: t.unbalanced, addLine: t.addLine, removeLine: t.removeLine,
+      account: t.columns.account, description: t.columns.description, saveDraft: t.saveDraft,
+      accountsTitle: t.accountsTitle, accountsDescription: t.accountsDescription,
+      entriesTitle: t.entriesTitle, entriesDescription: t.entriesDescription,
+      emptyAccountsTitle: t.emptyAccountsTitle, emptyAccountsDescription: t.emptyAccountsDescription,
+      emptyEntriesTitle: t.emptyEntriesTitle, emptyEntriesDescription: t.emptyEntriesDescription,
+      errorTitle: t.errorTitle, retry: t.retry, kpiLabel: t.kpiLabel,
+    },
+    accountTypeLabels: t.accountTypes as Record<AccountType, string>,
+    normalBalanceLabels: t.normalBalances as Record<NormalBalance, string>,
+    accountStatusLabels: t.accountStatuses as Record<AccountStatus, string>,
+    journalEntryTypeOptions: Object.entries(t.entryTypes).map(([value, label]) => ({ value, label })) as SelectOption<JournalEntryType>[],
+    journalEntryStatusConfig: {
+      draft: { label: t.entryStatuses.draft, className: "border-border text-muted-foreground" },
+      balanced: { label: t.entryStatuses.balanced, className: "bg-emerald-500/15 text-emerald-600" },
+      posted: { label: t.entryStatuses.posted, className: "bg-primary/15 text-primary" },
+      void: { label: t.entryStatuses.void, className: "bg-destructive/15 text-destructive" },
+    } as Record<JournalEntryStatus, StatusVisualConfig>,
+    journalLineColumns: [
+      { id: "account", label: t.columns.account }, { id: "description", label: t.columns.description },
+      { id: "debit", label: t.debit, align: "right" }, { id: "credit", label: t.credit, align: "right" },
+    ] as DisplayColumn[],
+    accountPanelColumns: [
+      { id: "code", label: t.columns.code }, { id: "name", label: t.columns.account },
+      { id: "normalBalance", label: t.columns.normalBalance }, { id: "status", label: t.columns.status },
+    ] as DisplayColumn[],
+  };
+}
