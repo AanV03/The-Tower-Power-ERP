@@ -64,13 +64,15 @@ export function resetBrandIdentity() {
 }
 
 export function useBrandIdentity(serverIdentity?: BrandIdentity | null) {
-  const [identity, setIdentity] = useState<BrandIdentity>(serverIdentity || DEFAULT_BRAND_IDENTITY);
+  const [identity, setIdentity] = useState<BrandIdentity>(normalizeBrandIdentity(serverIdentity));
 
   useEffect(() => {
     // Only load from local storage if there's no server identity provided,
     // or if we want to sync. But server is source of truth.
     if (!serverIdentity) {
       setIdentity(loadBrandIdentity());
+    } else {
+      setIdentity(normalizeBrandIdentity(serverIdentity));
     }
 
     const onUpdate = (event: Event) => {
@@ -87,7 +89,7 @@ export function useBrandIdentity(serverIdentity?: BrandIdentity | null) {
       document.removeEventListener("brand:identity:update", onUpdate);
       document.removeEventListener("brand:identity:reset", onReset);
     };
-  }, []);
+  }, [serverIdentity]);
 
   return identity;
 }
