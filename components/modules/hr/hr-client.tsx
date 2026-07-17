@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { Plus, Search, UsersRound, Clock, FileText, CalendarClock, Edit, AlertTriangle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, Search, UsersRound, Clock, FileText, CalendarClock, Edit, AlertTriangle, Mail } from "lucide-react";
+import { toast } from "sonner";
 import type { Locale } from "@/lib/i18n";
 import { headerPrimaryActionClass } from "@/lib/utils";
 
@@ -12,6 +14,20 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MetricCard } from "@/components/shared/metric-card";
 import { BranchScopeSelector } from "@/components/shared/branch-scope-selector";
+import {
+  StandardDialogContent,
+  StandardDialogDescription,
+  StandardDialogFooter,
+  StandardDialogHeader,
+  StandardDialogTitle,
+} from "@/components/shared/standard-dialog";
+import { Dialog } from "@/components/ui/dialog";
+import { Select, SelectItem } from "@/components/ui/select";
+import {
+  StandardSelectContent,
+  StandardSelectTrigger,
+  StandardSelectValue,
+} from "@/components/shared/standard-select";
 
 import { EmployeeTable, type HrEmployeeRow } from "@/components/modules/hr/employee-table";
 import { AttendancePanel, type HrAttendanceRow } from "@/components/modules/hr/attendance-panel";
@@ -162,9 +178,81 @@ export function HrClient({
 }) {
   const t = hrLabels[locale] ?? hrLabels.es;
 
+  const router = useRouter();
+
   // Search & Navigation States
   const [activeTab, setActiveTab] = useState("employees");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Invitation Modal States
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [tenantRoles, setTenantRoles] = useState<Array<{ id: string; name: string; description: string | null }>>([]);
+  const [inviteFirstName, setInviteFirstName] = useState("");
+  const [inviteLastName, setInviteLastName] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [selectedRoleId, setSelectedRoleId] = useState<string>("");
+  const [isSendingInvite, setIsSendingInvite] = useState(false);
+
+  async function handleOpenInvite(employee?: HrEmployeeRow) {
+    if (employee) {
+      const nameParts = employee.name.split(" ");
+      setInviteFirstName(nameParts[0] || "");
+      setInviteLastName(nameParts.slice(1).join(" ") || "");
+      setInviteEmail(employee.email === "Sin correo" ? "" : employee.email);
+    } else {
+      setInviteFirstName("");
+      setInviteLastName("");
+      setInviteEmail("");
+    }
+    setSelectedRoleId("");
+    setIsInviteOpen(true);
+    try {
+      const response = await fetch("/api/hr/employees/roles");
+      const result = await response.json();
+      if (response.ok && result.ok) {
+        setTenantRoles(result.data || []);
+        if (result.data && result.data.length > 0) {
+          setSelectedRoleId(result.data[0].id);
+        }
+      } else {
+        toast.error("No se pudieron cargar los roles del sistema.");
+      }
+    } catch {
+      toast.error("Error de conexión al cargar roles.");
+    }
+  }
+
+  async function handleConfirmInvite() {
+    if (!inviteFirstName.trim() || !inviteLastName.trim() || !inviteEmail.trim() || !selectedRoleId) {
+      toast.error("Por favor completa todos los campos requeridos.");
+      return;
+    }
+    setIsSendingInvite(true);
+    const toastId = toast.loading("Enviando invitación...");
+    try {
+      const response = await fetch("/api/hr/employees/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: inviteFirstName.trim(),
+          lastName: inviteLastName.trim(),
+          email: inviteEmail.trim(),
+          roleId: selectedRoleId,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) {
+        throw new Error(result.message || "Error al enviar la invitación.");
+      }
+      toast.success("Invitación enviada exitosamente.", { id: toastId });
+      setIsInviteOpen(false);
+      router.refresh();
+    } catch (error: any) {
+      toast.error(error.message || "No se pudo enviar la invitación.", { id: toastId });
+    } finally {
+      setIsSendingInvite(false);
+    }
+  }
 
   // Mobile Pagination states
   const [employeePage, setEmployeePage] = useState(1);
@@ -238,7 +326,6 @@ export function HrClient({
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <BranchScopeSelector locale={locale} />
           <div className="flex gap-2">
             <EmployeeFormDialog
               positionOptions={positionOptions}
@@ -249,16 +336,10 @@ export function HrClient({
                 </Button>
               }
             />
-            <TimeClockDialog
-              employees={timeClockEmployees}
-              trigger={
-                <Button size="sm" variant="outline">
-                  <Clock className="size-4" />
-                  {t.registerAttendance}
-                </Button>
-              }
-            />
-            <HrExportButton employees={initialEmployees} attendance={initialAttendances} contracts={initialContracts} />
+            <Button size="sm" className={headerPrimaryActionClass} onClick={() => handleOpenInvite()}>
+              <Mail className="mr-1.5 size-4" />
+              Invitar colaborador
+            </Button>
           </div>
         </div>
       </div>
@@ -317,7 +398,7 @@ export function HrClient({
                 <div className="flex flex-col gap-4">
                   {/* Desktop View Table */}
                   <div className="hidden md:block">
-                    <EmployeeTable employees={filteredEmployees} positionOptions={positionOptions} />
+                    <EmployeeTable employees={filteredEmployees} positionOptions={positionOptions} onInvite={handleOpenInvite} />
                   </div>
 
                   {/* Mobile View: Grid of cards */}
@@ -561,6 +642,92 @@ export function HrClient({
         <CalendarClock className="size-4 shrink-0" />
         <span>Acciones de captura y exportación preparadas para integrarse con endpoints operativos.</span>
       </div>
+
+      <Dialog
+        open={isInviteOpen}
+        onOpenChange={(open) => {
+          if (!open) setIsInviteOpen(false);
+        }}
+      >
+        <StandardDialogContent>
+          <StandardDialogHeader>
+            <StandardDialogTitle>Invitar Colaborador</StandardDialogTitle>
+            <StandardDialogDescription>
+              Envía una invitación por correo electrónico a un nuevo miembro del personal.
+            </StandardDialogDescription>
+          </StandardDialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-2 text-sm font-medium" htmlFor="invite-first-name">
+                Nombre *
+                <Input
+                  id="invite-first-name"
+                  placeholder="Nombre"
+                  value={inviteFirstName}
+                  onChange={(e) => setInviteFirstName(e.target.value)}
+                  disabled={isSendingInvite}
+                  required
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-medium" htmlFor="invite-last-name">
+                Apellidos *
+                <Input
+                  id="invite-last-name"
+                  placeholder="Apellidos"
+                  value={inviteLastName}
+                  onChange={(e) => setInviteLastName(e.target.value)}
+                  disabled={isSendingInvite}
+                  required
+                />
+              </label>
+            </div>
+
+            <label className="grid gap-2 text-sm font-medium" htmlFor="invite-email">
+              Correo electrónico *
+              <Input
+                id="invite-email"
+                type="email"
+                placeholder="empleado@towerpower.mx"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                disabled={isSendingInvite}
+                required
+              />
+            </label>
+
+            <label className="grid gap-2 text-sm font-medium" htmlFor="invite-role-select">
+              Rol del Sistema *
+              {tenantRoles.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Cargando roles disponibles...</p>
+              ) : (
+              <select
+                id="invite-role-select"
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
+                value={selectedRoleId}
+                onChange={(e) => setSelectedRoleId(e.target.value)}
+                disabled={isSendingInvite}
+              >
+                {tenantRoles.map((role) => (
+                  <option key={role.id} value={role.id} className="bg-popover text-popover-foreground">
+                    {role.name}
+                  </option>
+                ))}
+              </select>
+              )}
+            </label>
+          </div>
+
+          <StandardDialogFooter>
+            <Button variant="outline" onClick={() => setIsInviteOpen(false)} disabled={isSendingInvite}>
+              Cancelar
+          </Button>
+            <Button onClick={handleConfirmInvite} disabled={isSendingInvite || !selectedRoleId || !inviteFirstName.trim() || !inviteEmail.trim()}>
+              {isSendingInvite ? "Enviando..." : "Enviar Invitación"}
+            </Button>
+          </StandardDialogFooter>
+        </StandardDialogContent>
+      </Dialog>
     </section>
   );
 }

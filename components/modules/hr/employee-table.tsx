@@ -1,9 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Edit, MoreHorizontal, Phone, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Edit, Mail, MoreHorizontal, Phone, Search } from "lucide-react";
+import { toast } from "sonner";
 
 import { EmployeeFormDialog } from "@/components/modules/hr/employee-form-dialog";
+import {
+  StandardDialogContent,
+  StandardDialogDescription,
+  StandardDialogFooter,
+  StandardDialogHeader,
+  StandardDialogTitle,
+} from "@/components/shared/standard-dialog";
+import { Dialog } from "@/components/ui/dialog";
 import {
   StandardSelectContent,
   StandardSelectTrigger,
@@ -34,13 +44,14 @@ export type HrEmployeeRow = {
   position: string;
   branch: string;
   contract: string;
-  status: "ACTIVE" | "INACTIVE";
+  status: "ACTIVE" | "INACTIVE" | "INVITED";
   lastAttendance: string;
 };
 
 const statusLabel = {
   ACTIVE: "Activo",
   INACTIVE: "Inactivo",
+  INVITED: "Pendiente",
 };
 
 export const employeeTableColumns = [
@@ -57,18 +68,21 @@ export type EmployeeTableColumn = (typeof employeeTableColumns)[number];
 type StatusFilter = "ALL" | HrEmployeeRow["status"];
 
 function isStatusFilter(value: string): value is StatusFilter {
-  return value === "ALL" || value === "ACTIVE" || value === "INACTIVE";
+  return value === "ALL" || value === "ACTIVE" || value === "INACTIVE" || value === "INVITED";
 }
 
 export function EmployeeTable({
   employees,
   positionOptions = [],
   columns = employeeTableColumns,
+  onInvite,
 }: {
   employees: HrEmployeeRow[];
   positionOptions?: string[];
   columns?: readonly EmployeeTableColumn[];
+  onInvite?: (employee?: HrEmployeeRow) => void;
 }) {
+  const router = useRouter();
   const [editingEmployee, setEditingEmployee] = useState<HrEmployeeRow | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
@@ -88,9 +102,11 @@ export function EmployeeTable({
     });
   }, [employees, searchQuery, statusFilter]);
 
-  function handleEmployeeAction(action: string | null, employee: HrEmployeeRow) {
+  async function handleEmployeeAction(action: string | null, employee: HrEmployeeRow) {
     if (action === "edit") {
       setEditingEmployee(employee);
+    } else if (action === "invite") {
+      onInvite?.(employee);
     }
   }
 
@@ -117,8 +133,14 @@ export function EmployeeTable({
       case "contract":
         return employee.contract;
       case "status":
+        const badgeStyles =
+          employee.status === "ACTIVE"
+            ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30"
+            : employee.status === "INACTIVE"
+            ? "bg-red-500/10 text-red-700 border-red-500/20 dark:text-red-300 dark:border-red-500/30"
+            : "bg-zinc-500/10 text-zinc-700 border-zinc-500/20 dark:text-zinc-300 dark:border-zinc-500/30";
         return (
-          <Badge variant={employee.status === "ACTIVE" ? "secondary" : "outline"}>
+          <Badge className={badgeStyles} variant="outline">
             {statusLabel[employee.status]}
           </Badge>
         );
@@ -163,6 +185,7 @@ export function EmployeeTable({
                   <SelectItem value="ALL">Todos</SelectItem>
                   <SelectItem value="ACTIVE">Activos</SelectItem>
                   <SelectItem value="INACTIVE">Inactivos</SelectItem>
+                  <SelectItem value="INVITED">Pendientes</SelectItem>
                 </StandardSelectContent>
               </Select>
             </div>
@@ -213,6 +236,10 @@ export function EmployeeTable({
                               <Edit />
                               Editar
                             </SelectItem>
+                            <SelectItem value="invite" disabled={employee.email === "Sin correo"}>
+                              <Mail />
+                              Invitar
+                            </SelectItem>
                           </StandardSelectContent>
                         </Select>
                       </TableCell>
@@ -251,7 +278,16 @@ export function EmployeeTable({
                       <p>{employee.lastAttendance}</p>
                     </div>
                   </div>
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={employee.email === "Sin correo"}
+                      onClick={() => handleEmployeeAction("invite", employee)}
+                    >
+                      <Mail className="size-4" />
+                      Invitar
+                    </Button>
                     <EmployeeFormDialog
                       employee={employee}
                       mode="edit"
@@ -280,6 +316,7 @@ export function EmployeeTable({
         if (!open) setEditingEmployee(null);
       }}
     />
+
     </>
   );
 }

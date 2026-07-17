@@ -155,48 +155,49 @@ export function EmployeeFormDialog({
           <div className="grid gap-4 sm:grid-cols-3">
             <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-position`}>
               Puesto
-              <Select
+              <select
                 id={`${formId}-position`}
                 name="positionName"
-                defaultValue={currentPosition || undefined}
+                defaultValue={currentPosition || ""}
                 disabled={isSubmitting || selectablePositions.length === 0}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
               >
-                <StandardSelectTrigger id={`${formId}-position`}>
-                  <StandardSelectValue placeholder={selectablePositions.length > 0 ? "Selecciona puesto" : "Sin puestos disponibles"} />
-                </StandardSelectTrigger>
-                <StandardSelectContent>
-                  {selectablePositions.map((position) => (
-                    <SelectItem key={position} value={position}>
-                      {position}
-                    </SelectItem>
-                  ))}
-                </StandardSelectContent>
-              </Select>
+                {selectablePositions.length === 0 && (
+                  <option value="">Sin puestos disponibles</option>
+                )}
+                {selectablePositions.map((position) => (
+                  <option key={position} value={position} className="bg-popover text-popover-foreground">
+                    {position}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-contract-type`}>
               Contrato
-              <Select id={`${formId}-contract-type`} name="contractType" defaultValue={employee?.contract === "Sin contrato" ? "FULL_TIME" : employee?.contract.replaceAll(" ", "_")} disabled={isSubmitting}>
-                <StandardSelectTrigger id={`${formId}-contract-type`}>
-                  <StandardSelectValue placeholder="Tipo" />
-                </StandardSelectTrigger>
-                <StandardSelectContent>
-                  <SelectItem value="FULL_TIME">Tiempo completo</SelectItem>
-                  <SelectItem value="PART_TIME">Medio tiempo</SelectItem>
-                  <SelectItem value="CONTRACTOR">Contratista</SelectItem>
-                </StandardSelectContent>
-              </Select>
+              <select
+                id={`${formId}-contract-type`}
+                name="contractType"
+                defaultValue={employee?.contract === "Sin contrato" ? "FULL_TIME" : employee?.contract.replaceAll(" ", "_")}
+                disabled={isSubmitting}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
+              >
+                <option value="FULL_TIME" className="bg-popover text-popover-foreground">Tiempo completo</option>
+                <option value="PART_TIME" className="bg-popover text-popover-foreground">Medio tiempo</option>
+                <option value="CONTRACTOR" className="bg-popover text-popover-foreground">Contratista</option>
+              </select>
             </label>
             <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-status`}>
               Estado
-              <Select id={`${formId}-status`} name="status" defaultValue={employee?.status ?? "ACTIVE"} disabled={isSubmitting}>
-                <StandardSelectTrigger id={`${formId}-status`}>
-                  <StandardSelectValue placeholder="Estado" />
-                </StandardSelectTrigger>
-                <StandardSelectContent>
-                  <SelectItem value="ACTIVE">Activo</SelectItem>
-                  <SelectItem value="INACTIVE">Inactivo</SelectItem>
-                </StandardSelectContent>
-              </Select>
+              <select
+                id={`${formId}-status`}
+                name="status"
+                defaultValue={employee?.status ?? "ACTIVE"}
+                disabled={isSubmitting}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
+              >
+                <option value="ACTIVE" className="bg-popover text-popover-foreground">Activo</option>
+                <option value="INACTIVE" className="bg-popover text-popover-foreground">Inactivo</option>
+              </select>
             </label>
           </div>
 

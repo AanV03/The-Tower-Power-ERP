@@ -61,6 +61,7 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
         position: true,
         contracts: { orderBy: { startDate: "desc" }, take: 1 },
         timeClocks: { orderBy: { clockIn: "desc" }, take: 1 },
+        user: true,
       },
       orderBy: { createdAt: "desc" },
       take: 12,
@@ -92,7 +93,7 @@ export async function HrDashboard({ locale }: { locale: Locale }) {
       position: employee.position?.name ?? "Sin puesto",
       branch: employee.branch.name,
       contract: contract ? contract.type.replaceAll("_", " ") : "Sin contrato",
-      status: employee.status,
+      status: employee.user?.status === "INVITED" ? "INVITED" : employee.status,
       lastAttendance: formatDateTime(employee.timeClocks[0]?.clockIn, locale, timeZone),
     };
   });

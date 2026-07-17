@@ -17,12 +17,14 @@ const PUBLIC_PAGES = new Set([
   "/register",
   "/password-recovery",
   "/email-validation",
+  "/invite/accept",
 ]);
 const PUBLIC_AUTH_API_PREFIXES = [
   "/api/auth/login",
   "/api/auth/register",
   "/api/auth/logout",
   "/api/auth/password-recovery",
+  "/api/auth/invite/accept",
   "/api/auth/2fa/generate",
   "/api/auth/2fa/verify",
   "/api/auth/callback",
