@@ -145,6 +145,7 @@ export type AccountingActionHandlers = {
   onSelectAccount?: (accountId: string) => void;
   onSelectEntry?: (entryId: string) => void;
   onDeleteEntry?: (entryId: string) => void;
+  onCreateAccount?: () => void;
 };
 
 export type AccountingDashboardProps = {

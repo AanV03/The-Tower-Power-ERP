@@ -186,6 +186,7 @@ async function upsertPayrollItem(
       employeeId: input.employeeId,
       name: input.displayName,
       source: input.source,
+      sourceLabel: input.source === "SPECIALIST" ? "Especialista / comision" : "Empleado",
       base: input.baseAmount.toString(),
       overtime: input.overtimeAmount.toString(),
       commission: input.commissionAmount.toString(),
@@ -202,7 +203,7 @@ export async function POST(
   { params }: { params: Promise<{ periodId: string }> },
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "payroll" });
+    const context = await requireApiContext({ moduleId: "payroll", permission: "payroll.preview" });
     const { periodId } = await params;
 
     const result = await prisma.$transaction(async (tx) => {

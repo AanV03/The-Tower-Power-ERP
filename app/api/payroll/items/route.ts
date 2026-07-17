@@ -18,7 +18,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "payroll" });
+    const context = await requireApiContext({ moduleId: "payroll", permission: "payroll.read" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = {
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "payroll" });
+    const context = await requireApiContext({ moduleId: "payroll", permission: "payroll.receipt.write" });
     const data = CreatePayrollItemSchema.parse(await request.json());
     const baseAmount = new Prisma.Decimal(data.baseAmount).toDecimalPlaces(2);
     const overtimeAmount = new Prisma.Decimal(data.overtimeAmount).toDecimalPlaces(2);

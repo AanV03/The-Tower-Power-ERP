@@ -1,14 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Download, FileText, Plus } from "lucide-react";
+import { CheckCircle2, Download, FileText, Plus, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import type { PayrollPeriodView } from "@/components/modules/payroll/payroll-dashboard";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { headerPrimaryActionClass } from "@/lib/utils";
 
 function padDatePart(value: number) {
@@ -34,24 +42,23 @@ function currentMonthEnd() {
 export function PayrollActionBar({
   periods,
   activePeriodId,
+  canApprove,
 }: {
   periods: PayrollPeriodView[];
   activePeriodId?: string;
+  canApprove: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [loadingAction, setLoadingAction] = useState<"period" | "preview" | "export" | null>(null);
-  const [periodStart, setPeriodStart] = useState(() => currentMonthStart());
-  const [periodEnd, setPeriodEnd] = useState(() => currentMonthEnd());
+  const [loadingAction, setLoadingAction] = useState<"period" | "preview" | "approve" | "pay" | "export" | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const activePeriod = useMemo(
     () => periods.find((period) => period.id === activePeriodId) ?? periods.find((period) => period.status === "DRAFT") ?? periods[0],
     [activePeriodId, periods],
   );
-  const [selectedPeriodId, setSelectedPeriodId] = useState(activePeriod?.id ?? "");
-
-  useEffect(() => {
-    setSelectedPeriodId(activePeriod?.id ?? "");
-  }, [activePeriod?.id]);
+  const [periodStart, setPeriodStart] = useState(() => currentMonthStart());
+  const [periodEnd, setPeriodEnd] = useState(() => currentMonthEnd());
+  const actionPeriod = activePeriod;
 
   async function postJson(url: string, payload?: Record<string, unknown>) {
     const response = await fetch(url, {
@@ -71,7 +78,6 @@ export function PayrollActionBar({
   }
 
   function navigateToPeriod(periodId: string) {
-    setSelectedPeriodId(periodId);
     if (periodId) {
       const href = `${pathname}?payrollPeriodId=${encodeURIComponent(periodId)}` as Parameters<typeof router.replace>[0];
       router.replace(href, { scroll: false });
@@ -93,6 +99,7 @@ export function PayrollActionBar({
       }) as { id?: string };
       toast.success("Periodo de nomina creado.");
       if (period.id) navigateToPeriod(period.id);
+      setCreateDialogOpen(false);
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo crear el periodo.");
@@ -102,7 +109,7 @@ export function PayrollActionBar({
   }
 
   async function handlePreview() {
-    const periodId = selectedPeriodId || activePeriod?.id;
+    const periodId = actionPeriod?.id;
     if (!periodId) return;
 
     setLoadingAction("preview");
@@ -113,6 +120,40 @@ export function PayrollActionBar({
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo generar la vista previa.");
+    } finally {
+      setLoadingAction(null);
+    }
+  }
+
+  async function handleApprove() {
+    const periodId = actionPeriod?.id;
+    if (!periodId) return;
+
+    setLoadingAction("approve");
+    try {
+      await postJson(`/api/payroll/periods/${periodId}/approve`);
+      toast.success("Periodo de nomina aprobado.");
+      navigateToPeriod(periodId);
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo aprobar el periodo.");
+    } finally {
+      setLoadingAction(null);
+    }
+  }
+
+  async function handlePay() {
+    const periodId = actionPeriod?.id;
+    if (!periodId) return;
+
+    setLoadingAction("pay");
+    try {
+      await postJson(`/api/payroll/periods/${periodId}/pay`);
+      toast.success("Periodo marcado como pagado.");
+      navigateToPeriod(periodId);
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo marcar como pagado.");
     } finally {
       setLoadingAction(null);
     }
@@ -147,51 +188,85 @@ export function PayrollActionBar({
   return (
     <div className="flex w-full flex-col gap-3 lg:max-w-3xl lg:items-end">
       <div className="flex flex-wrap gap-2">
-        <Button type="button" onClick={handleCreatePeriod} disabled={loadingAction !== null} className={headerPrimaryActionClass}>
-          <Plus className="size-4" aria-hidden="true" />
-          {loadingAction === "period" ? "Creando..." : "Crear periodo"}
-        </Button>
-        <Button type="button" variant="outline" onClick={handlePreview} disabled={loadingAction !== null || !activePeriod}>
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogTrigger
+            render={
+              <Button type="button" disabled={loadingAction !== null} className={headerPrimaryActionClass}>
+                <Plus className="size-4" aria-hidden="true" />
+                Crear periodo
+              </Button>
+            }
+          />
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader className="pr-8">
+              <DialogTitle>Crear periodo</DialogTitle>
+              <DialogDescription>
+                Define el rango del corte de nomina. El periodo quedara en borrador para generar la vista previa.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1.5" htmlFor="payroll-period-start">
+                <span className="text-xs font-semibold uppercase text-muted-foreground">Inicio</span>
+                <Input
+                  id="payroll-period-start"
+                  type="date"
+                  value={periodStart}
+                  onChange={(event) => setPeriodStart(event.target.value)}
+                  disabled={loadingAction !== null}
+                  aria-label="Inicio del periodo"
+                />
+              </label>
+              <label className="space-y-1.5" htmlFor="payroll-period-end">
+                <span className="text-xs font-semibold uppercase text-muted-foreground">Fin</span>
+                <Input
+                  id="payroll-period-end"
+                  type="date"
+                  value={periodEnd}
+                  onChange={(event) => setPeriodEnd(event.target.value)}
+                  disabled={loadingAction !== null}
+                  aria-label="Fin del periodo"
+                />
+              </label>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                onClick={handleCreatePeriod}
+                disabled={loadingAction !== null}
+                className={headerPrimaryActionClass}
+              >
+                <Plus className="size-4" aria-hidden="true" />
+                {loadingAction === "period" ? "Creando..." : "Crear periodo"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        <Button type="button" variant="outline" onClick={handlePreview} disabled={loadingAction !== null || !actionPeriod}>
           <FileText className="size-4" aria-hidden="true" />
           {loadingAction === "preview" ? "Calculando..." : "Vista previa"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleApprove}
+          disabled={loadingAction !== null || !actionPeriod || actionPeriod.status !== "DRAFT" || !canApprove}
+        >
+          <CheckCircle2 className="size-4" aria-hidden="true" />
+          {loadingAction === "approve" ? "Aprobando..." : "Aprobar periodo"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handlePay}
+          disabled={loadingAction !== null || !actionPeriod || actionPeriod.status !== "APPROVED"}
+        >
+          <Send className="size-4" aria-hidden="true" />
+          {loadingAction === "pay" ? "Marcando..." : "Marcar pagado"}
         </Button>
         <Button type="button" variant="outline" onClick={handleExport} disabled={loadingAction !== null || periods.length === 0}>
           <Download className="size-4" aria-hidden="true" />
           Exportar
         </Button>
-      </div>
-      <div className="grid w-full gap-2 sm:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_minmax(180px,1fr)]">
-        <Input
-          type="date"
-          value={periodStart}
-          onChange={(event) => setPeriodStart(event.target.value)}
-          disabled={loadingAction !== null}
-          aria-label="Inicio del periodo"
-        />
-        <Input
-          type="date"
-          value={periodEnd}
-          onChange={(event) => setPeriodEnd(event.target.value)}
-          disabled={loadingAction !== null}
-          aria-label="Fin del periodo"
-        />
-        <NativeSelect
-          className="w-full"
-          value={selectedPeriodId || "none"}
-          onChange={(event) => navigateToPeriod(event.target.value)}
-          disabled={loadingAction !== null || periods.length === 0}
-          aria-label="Periodo activo"
-        >
-          {periods.length > 0 ? (
-            periods.map((period) => (
-              <NativeSelectOption key={period.id} value={period.id}>
-                {period.range}
-              </NativeSelectOption>
-            ))
-          ) : (
-            <NativeSelectOption value="none">Sin periodos</NativeSelectOption>
-          )}
-        </NativeSelect>
       </div>
     </div>
   );
