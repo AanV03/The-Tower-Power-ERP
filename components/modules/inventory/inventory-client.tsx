@@ -40,7 +40,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { MetricCard } from "@/components/shared/metric-card";
 import { MovementFormDialog } from "./movement-form-dialog";
-import type { Locale } from "@/lib/i18n";
+import { formatMessage, getDictionary, type Locale } from "@/lib/i18n";
 import { BranchScopeSelector } from "@/components/shared/branch-scope-selector";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -90,172 +90,6 @@ type SerializedBranch = {
   name: string;
 };
 
-const inventoryLabels = {
-  es: {
-    title: "Inventario y Existencias",
-    subtitle: "Administra el stock físico de productos, registra movimientos (kardex) y gestiona los almacenes de tus sucursales.",
-    totalStock: "Total Existencias",
-    totalStockDesc: "Productos en mano",
-    warehouses: "Almacenes",
-    warehousesDesc: "Bodegas registradas",
-    criticalAlerts: "Stock Crítico",
-    criticalAlertsDesc: "En o por debajo de reorden",
-    
-    // Tabs
-    stockTab: "Existencias",
-    movementsTab: "Movimientos",
-    warehousesTab: "Almacenes",
-    chartsTab: "Gráficos y Analítica",
-
-    // View modes
-    listView: "Lista",
-    kanbanView: "Tablero Kanban",
-
-    // Kanban Columns
-    stockNormal: "Stock Suficiente",
-    stockLow: "Stock Bajo (Reorden)",
-    stockEmpty: "Sin Existencias",
-    
-    // Table/Forms Headers
-    product: "Producto",
-    sku: "SKU",
-    warehouse: "Almacén",
-    branch: "Sucursal",
-    quantity: "Cantidad",
-    reorderPoint: "Punto de Reorden",
-    lastUpdated: "Última Actualización",
-    status: "Estado",
-    action: "Acciones",
-    cost: "Costo Unitario",
-    date: "Fecha",
-    type: "Tipo",
-    source: "Origen",
-    sourceId: "Referencia",
-    createdAt: "Fecha Registro",
-
-    // Movement types labels
-    PURCHASE: "Compra",
-    SALE: "Venta",
-    TRANSFER_IN: "Traspaso Recibido (+)",
-    TRANSFER_OUT: "Traspaso Enviado (-)",
-    ADJUSTMENT: "Ajuste",
-    SHRINKAGE: "Merma / Pérdida",
-
-    // Placeholders/Empty states
-    searchPlaceholder: "Buscar por producto, SKU o almacén...",
-    filterWarehouse: "Filtrar por Almacén",
-    filterProduct: "Filtrar por Producto",
-    filterType: "Filtrar por Tipo",
-    all: "Todos",
-    emptyStock: "No hay productos en stock que coincidan con los filtros.",
-    emptyMovements: "No se registran movimientos de inventario.",
-    emptyWarehouses: "No hay almacenes registrados.",
-    
-    // Buttons
-    prev: "Anterior",
-    next: "Siguiente",
-  },
-  en: {
-    title: "Inventory & Stock",
-    subtitle: "Manage physical product stock, record movements (kardex), and configure your branch warehouses.",
-    totalStock: "Total Stock",
-    totalStockDesc: "Products on hand",
-    warehouses: "Warehouses",
-    warehousesDesc: "Registered warehouses",
-    criticalAlerts: "Critical Stock",
-    criticalAlertsDesc: "At or below reorder",
-    stockTab: "Stock",
-    movementsTab: "Movements",
-    warehousesTab: "Warehouses",
-    chartsTab: "Analytics & Charts",
-    listView: "List",
-    kanbanView: "Kanban Board",
-    stockNormal: "Sufficient Stock",
-    stockLow: "Low Stock (Reorder)",
-    stockEmpty: "Out of Stock",
-    product: "Product",
-    sku: "SKU",
-    warehouse: "Warehouse",
-    branch: "Branch",
-    quantity: "Quantity",
-    reorderPoint: "Reorder Point",
-    lastUpdated: "Last Updated",
-    status: "Status",
-    action: "Actions",
-    cost: "Unit Cost",
-    date: "Date",
-    type: "Type",
-    source: "Source",
-    sourceId: "Reference",
-    createdAt: "Created At",
-    PURCHASE: "Purchase",
-    SALE: "Sale",
-    TRANSFER_IN: "Transfer In (+)",
-    TRANSFER_OUT: "Transfer Out (-)",
-    ADJUSTMENT: "Adjustment",
-    SHRINKAGE: "Shrinkage",
-    searchPlaceholder: "Search by product, SKU, or warehouse...",
-    filterWarehouse: "Filter by Warehouse",
-    filterProduct: "Filter by Product",
-    filterType: "Filter by Type",
-    all: "All",
-    emptyStock: "No stock items match the filters.",
-    emptyMovements: "No inventory movements recorded.",
-    emptyWarehouses: "No warehouses registered.",
-    prev: "Previous",
-    next: "Next",
-  },
-  fr: {
-    title: "Inventaire et Stocks",
-    subtitle: "Gérez le stock de produits physiques, enregistrez les mouvements et configurez vos entrepôts.",
-    totalStock: "Stock Total",
-    totalStockDesc: "Produits en main",
-    warehouses: "Entrepôts",
-    warehousesDesc: "Entrepôts enregistrés",
-    criticalAlerts: "Stock Critique",
-    criticalAlertsDesc: "Au niveau ou sous le réappro",
-    stockTab: "Stocks",
-    movementsTab: "Mouvements",
-    warehousesTab: "Entrepôts",
-    chartsTab: "Analyses & Graphiques",
-    listView: "Liste",
-    kanbanView: "Tableau Kanban",
-    stockNormal: "Stock Suffisant",
-    stockLow: "Stock Bas (Réappro)",
-    stockEmpty: "Rupture de Stock",
-    product: "Produit",
-    sku: "SKU",
-    warehouse: "Entrepôt",
-    branch: "Succursale",
-    quantity: "Quantité",
-    reorderPoint: "Seuil d'Alerte",
-    lastUpdated: "Dernière MÀJ",
-    status: "Statut",
-    action: "Actions",
-    cost: "Coût Unitaire",
-    date: "Date",
-    type: "Type",
-    source: "Origine",
-    sourceId: "Référence",
-    createdAt: "Créé Le",
-    PURCHASE: "Achat",
-    SALE: "Vente",
-    TRANSFER_IN: "Transfert Reçu (+)",
-    TRANSFER_OUT: "Transfert Envoyé (-)",
-    ADJUSTMENT: "Ajustement",
-    SHRINKAGE: "Perte / Déchet",
-    searchPlaceholder: "Rechercher par produit, SKU ou entrepôt...",
-    filterWarehouse: "Filtrer par Entrepôt",
-    filterProduct: "Filtrer par Produit",
-    filterType: "Filtrer par Type",
-    all: "Tous",
-    emptyStock: "Aucun article de stock ne correspond aux filtres.",
-    emptyMovements: "Aucun mouvement de stock enregistré.",
-    emptyWarehouses: "Aucun entrepôt enregistré.",
-    prev: "Précédent",
-    next: "Suivant",
-  },
-};
 
 export function InventoryClient({
   locale,
@@ -276,7 +110,26 @@ export function InventoryClient({
     criticalAlerts: number;
   };
 }) {
-  const t = inventoryLabels[locale] ?? inventoryLabels.es;
+  const dictionary = getDictionary(locale);
+  const inventory = dictionary.inventory;
+  const t = {
+    title: inventory.title, subtitle: inventory.subtitle, totalStock: inventory.totalStock,
+    totalStockDesc: inventory.totalStockDesc, warehouses: inventory.warehouses,
+    warehousesDesc: inventory.warehousesDesc, criticalAlerts: inventory.criticalAlerts,
+    criticalAlertsDesc: inventory.criticalAlertsDesc, stockTab: inventory.tabs.stock,
+    movementsTab: inventory.tabs.movements, warehousesTab: inventory.tabs.warehouses,
+    chartsTab: inventory.tabs.charts, listView: inventory.views.list, kanbanView: inventory.views.kanban,
+    stockNormal: inventory.stock.normal, stockLow: inventory.stock.low, stockEmpty: inventory.stock.empty,
+    ...inventory.fields, action: inventory.fields.actions,
+    PURCHASE: inventory.movementTypes.PURCHASE, SALE: inventory.movementTypes.SALE,
+    TRANSFER_IN: inventory.movementTypes.TRANSFER_IN, TRANSFER_OUT: inventory.movementTypes.TRANSFER_OUT,
+    ADJUSTMENT: inventory.movementTypes.ADJUSTMENT, SHRINKAGE: inventory.movementTypes.SHRINKAGE,
+    searchPlaceholder: inventory.filters.search, filterWarehouse: inventory.filters.warehouse,
+    filterProduct: inventory.filters.product, filterType: inventory.filters.type, all: inventory.filters.all,
+    emptyStock: inventory.empty.stock, emptyMovements: inventory.empty.movements,
+    emptyWarehouses: inventory.empty.warehouses, prev: inventory.pagination.previous,
+    next: inventory.pagination.next, sourceId: inventory.fields.reference,
+  };
   const router = useRouter();
 
   // Local state for stock items (to support optimistic updates on Kanban drag-and-drop)
@@ -320,7 +173,7 @@ export function InventoryClient({
       prev.map((i) => (i.id === itemId ? { ...i, quantityOnHand: targetQuantity } : i))
     );
 
-    const toastId = toast.loading("Actualizando existencias...");
+    const toastId = toast.loading(inventory.toast.updating);
 
     try {
       const res = await fetch("/api/warehouse/movements", {
@@ -338,14 +191,14 @@ export function InventoryClient({
 
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.message || "Error al registrar movimiento");
+        throw new Error(errData.message || inventory.toast.movementFailed);
       }
 
-      toast.success("Existencias actualizadas correctamente", { id: toastId });
+      toast.success(inventory.toast.updateSuccess, { id: toastId });
       router.refresh();
     } catch (err: any) {
       setItems(previousItems);
-      toast.error(err.message || "Error al actualizar existencias", { id: toastId });
+      toast.error(err.message || inventory.toast.updateFailed, { id: toastId });
     }
   };
 
@@ -441,7 +294,7 @@ export function InventoryClient({
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border mt-4">
         {/* Selector de registros por página */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground w-full sm:w-auto">
-          <span>Registros por página:</span>
+          <span>{inventory.pagination.rowsPerPage}</span>
           <NativeSelect
             value={pageSize}
             onChange={(e) => {
@@ -470,7 +323,7 @@ export function InventoryClient({
             {t.prev}
           </Button>
           <span className="text-xs text-muted-foreground font-medium">
-            Pág. {currentPage} de {totalPages || 1}
+            {formatMessage(inventory.pagination.pageOf, { page: currentPage, total: totalPages || 1 })}
           </span>
           <Button
             size="sm"
@@ -529,14 +382,14 @@ export function InventoryClient({
       SHRINKAGE: "#8b5cf6",
     };
     return Object.entries(map).map(([type, value]) => ({
-      name: t[type as keyof typeof t] || type,
+      name: inventory.movementTypes[type as keyof typeof inventory.movementTypes] || type,
       value,
       color: colors[type] || "#6b7280",
     }));
-  }, [filteredMovements, t]);
+  }, [filteredMovements, inventory]);
 
   const formatDateTime = (isoString: string) => {
-    return new Intl.DateTimeFormat(locale === "es" ? "es-MX" : "en-US", {
+    return new Intl.DateTimeFormat({ es: "es-MX", en: "en-US", fr: "fr-FR" }[locale], {
       day: "2-digit",
       month: "short",
       hour: "2-digit",
@@ -559,7 +412,7 @@ export function InventoryClient({
             <BranchScopeSelector locale={locale} />
           </div>
           <div className="shrink-0">
-            <MovementFormDialog products={products} warehouses={initialWarehouses} />
+            <MovementFormDialog locale={locale} products={products} warehouses={initialWarehouses} />
           </div>
         </div>
       </div>
@@ -763,6 +616,7 @@ export function InventoryClient({
                             <div className="flex justify-between items-center pt-1">
                               <span className="font-bold text-red-500">0 / {item.reorderPoint}</span>
                               <MovementFormDialog
+                                locale={locale}
                                 products={products}
                                 warehouses={initialWarehouses}
                                 defaultProductId={item.productId}
@@ -815,6 +669,7 @@ export function InventoryClient({
                             <div className="flex justify-between items-center pt-1">
                               <span className="font-bold text-amber-500">{item.quantityOnHand} / {item.reorderPoint}</span>
                               <MovementFormDialog
+                                locale={locale}
                                 products={products}
                                 warehouses={initialWarehouses}
                                 defaultProductId={item.productId}
@@ -867,6 +722,7 @@ export function InventoryClient({
                             <div className="flex justify-between items-center pt-1">
                               <span className="font-bold text-emerald-600">{item.quantityOnHand} / {item.reorderPoint}</span>
                               <MovementFormDialog
+                                locale={locale}
                                 products={products}
                                 warehouses={initialWarehouses}
                                 defaultProductId={item.productId}
@@ -916,7 +772,7 @@ export function InventoryClient({
                             <TableCell>
                               {item.quantityOnHand === 0 ? (
                                 <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-400">
-                                  Sin Stock
+                                  {inventory.stock.noStock}
                                 </Badge>
                               ) : item.quantityOnHand <= item.reorderPoint ? (
                                 <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400">
@@ -930,6 +786,7 @@ export function InventoryClient({
                             </TableCell>
                             <TableCell className="text-right">
                               <MovementFormDialog
+                                locale={locale}
                                 products={products}
                                 warehouses={initialWarehouses}
                                 defaultProductId={item.productId}
@@ -958,7 +815,7 @@ export function InventoryClient({
                           </div>
                           {item.quantityOnHand === 0 ? (
                             <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                              Sin Stock
+                              {inventory.stock.noStock}
                             </Badge>
                           ) : item.quantityOnHand <= item.reorderPoint ? (
                             <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
@@ -991,8 +848,9 @@ export function InventoryClient({
                           </div>
                         </div>
                         <div className="flex justify-between items-center pt-1">
-                          <span className="text-[10px] text-muted-foreground">MÁJ: {formatDateTime(item.updatedAt)}</span>
+                          <span className="text-[10px] text-muted-foreground">{inventory.fields.lastUpdated}: {formatDateTime(item.updatedAt)}</span>
                           <MovementFormDialog
+                            locale={locale}
                             products={products}
                             warehouses={initialWarehouses}
                             defaultProductId={item.productId}
@@ -1143,11 +1001,11 @@ export function InventoryClient({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
                   {/* Gráfico 1: Existencias por Almacén */}
                   <div className="border p-4 rounded-xl shadow-xs space-y-3 bg-muted/10">
-                    <h3 className="font-semibold text-sm text-foreground">Distribución de Existencias por Almacén</h3>
+                    <h3 className="font-semibold text-sm text-foreground">{inventory.charts.stockByWarehouse}</h3>
                     <div className="h-80 w-full">
                       {warehouseChartData.length === 0 ? (
                         <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-                          Sin datos de existencias
+                          {inventory.empty.chartStock}
                         </div>
                       ) : (
                         <ResponsiveContainer width="100%" height="100%">
@@ -1171,11 +1029,11 @@ export function InventoryClient({
 
                   {/* Gráfico 2: Flujo de Movimientos */}
                   <div className="border p-4 rounded-xl shadow-xs space-y-3 bg-muted/10">
-                    <h3 className="font-semibold text-sm text-foreground">Kardex por Tipo de Movimiento</h3>
+                    <h3 className="font-semibold text-sm text-foreground">{inventory.charts.movementsByType}</h3>
                     <div className="h-80 w-full">
                       {movementChartData.length === 0 ? (
                         <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-                          Sin datos de movimientos
+                          {inventory.empty.chartMovements}
                         </div>
                       ) : (
                         <ResponsiveContainer width="100%" height="100%">
@@ -1209,7 +1067,7 @@ export function InventoryClient({
                 </div>
               ) : (
                 <div className="h-80 flex items-center justify-center text-muted-foreground">
-                  Cargando analítica...
+                  {inventory.charts.loading}
                 </div>
               )}
             </TabsContent>

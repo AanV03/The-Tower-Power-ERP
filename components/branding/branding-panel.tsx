@@ -10,6 +10,7 @@ import {
   BRAND_STORAGE_KEY,
   DEFAULT_BRAND_COLORS,
   normalizeBrandColors,
+  getDefaultBrandColors,
   type BrandColors,
 } from "@/components/branding/brand-color-applier";
 import {
@@ -33,15 +34,14 @@ function loadSaved(): BrandColors {
 }
 
 function toColorInputValue(value: string) {
-  return /^#[0-9a-fA-F]{6}$/.test(value) ? value.toLowerCase() : "#023047";
+  return /^#[0-9a-fA-F]{6}$/.test(value) ? value.toLowerCase() : "#f8fafc";
 }
 
 function hasCompletePalette(colors: BrandColors) {
   return (
-    !!colors.sidebarBg &&
-    !!colors.topbarBg &&
-    !!colors.primaryColor &&
-    !!colors.accentColor
+    !!colors.brandBg &&
+    !!colors.brandText &&
+    !!colors.brandAccent
   );
 }
 
@@ -151,19 +151,16 @@ function ColorCard({
 // ─── i18n ─────────────────────────────────────────────────────────────────────
 
 const COLOR_FIELDS: {
-  key: "sidebarBg" | "topbarBg" | "primaryColor" | "accentColor";
+  key: "brandBg" | "brandText" | "brandAccent";
 }[] = [
   {
-    key: "sidebarBg",
+    key: "brandBg",
   },
   {
-    key: "topbarBg",
+    key: "brandText",
   },
   {
-    key: "primaryColor",
-  },
-  {
-    key: "accentColor",
+    key: "brandAccent",
   },
 ];
 
@@ -185,10 +182,54 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
   const [savedFlash, setSavedFlash] = useState(false);
 
   useEffect(() => {
+    const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
     const saved = loadSaved();
-    setColors(saved);
-    applyBrandColors(saved);
+    try {
+      const raw = localStorage.getItem(BRAND_STORAGE_KEY);
+      if (!raw) {
+        const defaults = getDefaultBrandColors(isDark);
+        setColors(defaults);
+        applyBrandColors(defaults);
+      } else {
+        setColors(saved);
+        applyBrandColors(saved);
+      }
+    } catch {
+      setColors(saved);
+      applyBrandColors(saved);
+    }
     setIdentity(loadBrandIdentity());
+  }, []);
+
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === "class") {
+          const isDark = document.documentElement.classList.contains("dark");
+          setColors((prev) => {
+            const lightDefaults = getDefaultBrandColors(false);
+            const darkDefaults = getDefaultBrandColors(true);
+            
+            const isPrevLightDefault = 
+              prev.brandBg === lightDefaults.brandBg &&
+              prev.brandText === lightDefaults.brandText &&
+              prev.brandAccent === lightDefaults.brandAccent;
+              
+            const isPrevDarkDefault = 
+              prev.brandBg === darkDefaults.brandBg &&
+              prev.brandText === darkDefaults.brandText &&
+              prev.brandAccent === darkDefaults.brandAccent;
+              
+            if (isPrevLightDefault || isPrevDarkDefault) {
+              return getDefaultBrandColors(isDark);
+            }
+            return prev;
+          });
+        }
+      }
+    });
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
   }, []);
 
   // Live preview: apply brand colors to :root whenever the user changes any value
@@ -204,13 +245,7 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
     });
   }, []);
 
-  const handleContrastChange = (contrast: "normal" | "medium" | "high") => {
-    setColors((prev) => {
-      const next = { ...prev, contrast };
-      document.dispatchEvent(new CustomEvent("brand:update", { detail: next }));
-      return next;
-    });
-  };
+
 
   const handleIdentityChange = useCallback((key: keyof BrandIdentity, value: string) => {
     setIdentity((prev) => {
@@ -270,14 +305,20 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
   };
 
   const handleReset = async () => {
-    const defaults = { ...DEFAULT_BRAND_COLORS };
+    const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+    const defaults = { ...getDefaultBrandColors(isDark) };
     setColors(defaults);
     try {
       localStorage.removeItem(BRAND_STORAGE_KEY);
     } catch { /* ignore */ }
     resetBrandColors();
     resetBrandIdentity();
-    setIdentity(DEFAULT_BRAND_IDENTITY);
+    
+    const nextIdentity: BrandIdentity = {
+      ...DEFAULT_BRAND_IDENTITY,
+      adminOnboardingCompleted: identity.adminOnboardingCompleted,
+    };
+    setIdentity(nextIdentity);
     setLogoError("");
     if (logoInputRef.current) logoInputRef.current.value = "";
     document.dispatchEvent(new CustomEvent("brand:reset"));
@@ -286,7 +327,7 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
     try {
       await Promise.all([
         persistColors(defaults),
-        persistBrandIdentity(DEFAULT_BRAND_IDENTITY)
+        persistBrandIdentity(nextIdentity)
       ]);
       router.refresh();
     } catch { /* ignore */ }
@@ -304,7 +345,7 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
         <div className="flex items-center gap-3">
           {/* Swatches animados */}
           <div className="flex gap-1.5">
-            {[colors.sidebarBg, colors.topbarBg, colors.primaryColor, colors.accentColor].map((c, i) => (
+            {[colors.brandBg, colors.brandText, colors.brandAccent].map((c, i) => (
               <span
                 key={i}
                 className="block w-5 h-5 rounded-full border border-gray-300 shadow-sm transition-all duration-500 dark:border-white/20"
@@ -389,8 +430,8 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
               onClick={clearLogo}
               className="inline-flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <ImagePlus className="size-4" aria-hidden="true" />
-              {l === "es" ? "Usar iniciales" : l === "en" ? "Use initials" : "Initiales"}
+              <Trash2 className="size-4" aria-hidden="true" />
+              {l === "es" ? "Eliminar logo" : l === "en" ? "Remove logo" : "Supprimer"}
             </button>
           </div>
 
@@ -438,8 +479,8 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
         </div>
       </div>
 
-      {/* ── Grid 2×2 en desktop, 1 col en mobile ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6">
+      {/* ── Grid responsivo de 3 columnas para los colores de branding ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
         {COLOR_FIELDS.map((f) => (
           <ColorCard
             key={f.key}
@@ -457,36 +498,7 @@ export function BrandingPanel({ locale }: BrandingPanelProps) {
 
 
 
-      {/* ── Contraste ── */}
-      <div className="border-t border-border bg-muted/20 px-6 py-5 grid grid-cols-1 gap-6">
-        <div className="space-y-3">
-          <label className="text-sm font-semibold leading-none text-card-foreground block">
-            {t.contrastLabel}
-          </label>
-          <div className="flex gap-2">
-            {[
-              { id: "normal", label: t.contrastNormal },
-              { id: "medium", label: t.contrastMedium },
-              { id: "high", label: t.contrastHigh },
-            ].map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => handleContrastChange(opt.id as any)}
-                className={`flex-1 px-4 py-2.5 rounded-lg border text-xs font-semibold transition-all ${
-                  colors.contrast === opt.id
-                    ? "border-[var(--sidebar-accent-active)] bg-[var(--sidebar-accent-active)]/5 text-foreground"
-                    : "border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
 
-
-      </div>
 
       {/* ── Footer ── */}
       <div className="flex items-center justify-between gap-3 border-t border-border bg-muted/40 px-6 py-4">

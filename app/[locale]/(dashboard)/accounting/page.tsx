@@ -1,15 +1,9 @@
 import { AccountingDemoController } from "./components/AccountingDemoController";
-import {
-  accountingLabels,
-  accountTypeLabels,
-  journalEntryStatusConfig,
-  journalEntryTypeOptions,
-  normalBalanceLabels,
-} from "./components/config";
-import { mockAccountingData, mockAccountingState } from "./components/mock-data";
+import { getAccountingConfig } from "./components/config";
+import { getMockAccountingData, mockAccountingState } from "./components/mock-data";
 import { requireApiContext } from "@/lib/api/context";
 import { prisma } from "@/lib/db/prisma";
-import type { Locale } from "@/lib/i18n";
+import { getDictionary, type Locale } from "@/lib/i18n";
 import type {
   AccountType,
   AccountingDashboardData,
@@ -148,18 +142,21 @@ export default async function AccountingPage({
 }) {
   const { locale } = await params;
   const resolvedLocale = locale as Locale;
+  const dictionary = getDictionary(resolvedLocale);
+  const config = getAccountingConfig(dictionary);
   const accountingData = await loadAccountingData(resolvedLocale);
 
   return (
     <AccountingDemoController
-      locale={resolvedLocale}
-      data={accountingData ?? mockAccountingData}
+      locale={locale as Locale}
+      data={accountingData ?? getMockAccountingData(dictionary)}
       state={accountingData ? { page: "idle", accounts: "idle", entries: "idle", editor: "idle" } : mockAccountingState}
-      labels={accountingLabels}
-      accountTypeLabels={accountTypeLabels}
-      normalBalanceLabels={normalBalanceLabels}
-      journalEntryTypeOptions={journalEntryTypeOptions}
-      journalEntryStatusConfig={journalEntryStatusConfig}
+      labels={config.accountingLabels}
+      accountTypeLabels={config.accountTypeLabels}
+      normalBalanceLabels={config.normalBalanceLabels}
+      accountStatusLabels={config.accountStatusLabels}
+      journalEntryTypeOptions={config.journalEntryTypeOptions}
+      journalEntryStatusConfig={config.journalEntryStatusConfig}
     />
   );
 }

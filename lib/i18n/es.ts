@@ -1,3 +1,5 @@
+import { dashboardModuleDictionaries } from "./dashboard-modules";
+
 export const es = {
   landing: {
     eyebrow: "ERP multi-sucursal para gimnasios",
@@ -22,7 +24,10 @@ export const es = {
       salesSynced: "42 ventas sincronizadas",
       occupancy: "91% de ocupación",
       devicesOnline: "Dispositivos activos",
+      renewalsHour: "Renovaciones por hora",
       revenueHour: "Ingresos por hora",
+      occupancyHour: "Ocupación por hora",
+      accessHour: "Accesos por hora",
       alertTitle: "Alerta de stock resuelta",
       alertDesc: "Barras de proteína transferidas desde sucursal Norte.",
       synced: "Sincronizado",
@@ -360,24 +365,21 @@ export const es = {
     fontMono: "Monospace (Código)",
     fontElegant: "Elegant (Moderna)",
     fields: {
-      sidebarBg: {
-        label: "Sidebar",
-        description: "Fondo del panel de navegación lateral.",
+      brandBg: {
+        label: "Fondo del Sistema",
+        description: "Fondo del panel lateral (Sidebar) y de la barra superior (Navbar).",
       },
-      topbarBg: {
-        label: "Topbar",
-        description: "Fondo de la barra de herramientas superior.",
+      brandText: {
+        label: "Logos y Textos",
+        description: "Color principal para logos, textos y elementos de navegación.",
       },
-      primaryColor: {
-        label: "Color Principal",
-        description: "Botones, estado activo y gráficas principales.",
-      },
-      accentColor: {
-        label: "Color Secundario",
-        description: "Logo del sidebar, alertas y resaltados secundarios.",
+      brandAccent: {
+        label: "Hover y Contrastes",
+        description: "Botones, hovers, estados activos, bordes y elementos destacados.",
       },
     },
   },
+  ...dashboardModuleDictionaries.es,
   marketing: {
     funnel: {
       title: "Embudo de Conversión",

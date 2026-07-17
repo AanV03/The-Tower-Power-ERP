@@ -63,7 +63,7 @@ export function AccountingDashboard(props: AccountingDashboardProps) {
         canPrimaryAction={primaryAction.enabled}
       />
 
-      <AccountingKpiGrid metrics={data.metrics} status={state.page} />
+      <AccountingKpiGrid metrics={data.metrics} status={state.page} ariaLabel={labels.kpiLabel} />
 
       <Tabs
         value={activeTab}
@@ -96,6 +96,7 @@ export function AccountingDashboard(props: AccountingDashboardProps) {
               actions={actions}
               accountTypeLabels={props.accountTypeLabels}
               normalBalanceLabels={props.normalBalanceLabels}
+              accountStatusLabels={props.accountStatusLabels}
             />
             <JournalEntryLinesEditor
               entry={data.draftEntry}

@@ -9,13 +9,27 @@ import type {
   JournalEntryType,
   NormalBalance,
 } from "./types";
+import type { Dictionary, Locale } from "@/lib/i18n";
 
 type EditableEntryField = "date" | "type" | "concept" | "reference";
+
+const defaultFeedback: Dictionary["accounting"]["feedback"] = {
+  draftSaved: "Borrador actualizado localmente.",
+  refreshed: "Datos de demostración actualizados.",
+  exported: "Exportación simulada lista.",
+  deleted: "Póliza eliminada localmente.",
+  mustBalance: "La póliza debe cuadrar antes de registrarse.",
+  registered: "Póliza registrada localmente.",
+  untitled: "Póliza sin concepto",
+  noDate: "Sin fecha",
+};
 
 export type AccountingDemoState = {
   data: AccountingDashboardData;
   uiState: AccountingDashboardState;
   searchQuery: string;
+  locale: Locale;
+  feedback: Dictionary["accounting"]["feedback"];
 };
 
 export type AccountingDemoAction =
@@ -178,12 +192,12 @@ function metricToneForDifference(difference: number) {
   return difference > 0 ? "danger" : "success";
 }
 
-function formatCurrency(value: number, currency: string) {
-  return new Intl.NumberFormat("es-MX", { style: "currency", currency }).format(value);
+function formatCurrency(value: number, currency: string, locale: Locale) {
+  return new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
 }
 
-function formatDateLabel(date: string) {
-  if (!date) return "Sin fecha";
+function formatDateLabel(date: string, noDate: string) {
+  if (!date) return noDate;
 
   return date;
 }
@@ -234,14 +248,14 @@ function createLocalAccount(accounts: AccountingAccount[]): AccountingAccount {
   };
 }
 
-function syncDifferenceMetric(data: AccountingDashboardData): AccountingDashboardData {
+function syncDifferenceMetric(data: AccountingDashboardData, locale: Locale): AccountingDashboardData {
   return {
     ...data,
     metrics: data.metrics.map((metric) =>
       metric.id === "difference"
         ? {
             ...metric,
-            value: formatCurrency(data.draftEntry.totals.difference, data.draftEntry.currency),
+            value: formatCurrency(data.draftEntry.totals.difference, data.draftEntry.currency, locale),
             tone: metricToneForDifference(data.draftEntry.totals.difference),
           }
         : metric,
@@ -249,11 +263,18 @@ function syncDifferenceMetric(data: AccountingDashboardData): AccountingDashboar
   };
 }
 
-export function createAccountingDemoState(data: AccountingDashboardData, uiState: AccountingDashboardState) {
+export function createAccountingDemoState(
+  data: AccountingDashboardData,
+  uiState: AccountingDashboardState,
+  locale: Locale = "es",
+  feedback: Dictionary["accounting"]["feedback"] = defaultFeedback,
+) {
   return {
     data,
     uiState,
     searchQuery: "",
+    locale,
+    feedback,
   };
 }
 
@@ -268,7 +289,7 @@ export function accountingDemoReducer(
         data: syncDifferenceMetric({
           ...state.data,
           draftEntry: updateJournalEntryField(state.data.draftEntry, action.field, action.value),
-        }),
+        }, state.locale),
       };
     case "line-field":
       return {
@@ -281,7 +302,7 @@ export function accountingDemoReducer(
             action.field,
             action.value,
           ),
-        }),
+        }, state.locale),
       };
     case "add-line":
       return {
@@ -297,7 +318,7 @@ export function accountingDemoReducer(
         data: syncDifferenceMetric({
           ...state.data,
           draftEntry: removeJournalLine(state.data.draftEntry, action.lineId),
-        }),
+        }, state.locale),
       };
     case "select-account": {
       const account = state.data.accounts.find((item) => item.id === action.accountId);
@@ -333,7 +354,7 @@ export function accountingDemoReducer(
           ...state.data,
           recentEntries: state.data.recentEntries.filter((entry) => entry.id !== action.entryId),
         },
-        uiState: { ...state.uiState, page: "success", message: "Poliza eliminada localmente." },
+        uiState: { ...state.uiState, page: "success", message: state.feedback.deleted },
       };
     case "search":
       return { ...state, searchQuery: action.value };
@@ -343,7 +364,7 @@ export function accountingDemoReducer(
           ...state,
           uiState: {
             ...state.uiState,
-            message: "La poliza debe cuadrar antes de registrarse.",
+            message: state.feedback.mustBalance,
           },
         };
       }
@@ -356,38 +377,39 @@ export function accountingDemoReducer(
             {
               id: `je-${Date.now()}`,
               entryNumber: state.data.draftEntry.entryNumber,
-              dateLabel: formatDateLabel(state.data.draftEntry.date),
-              concept: state.data.draftEntry.concept || "Poliza sin concepto",
+              dateLabel: formatDateLabel(state.data.draftEntry.date, state.feedback.noDate),
+              concept: state.data.draftEntry.concept || state.feedback.untitled,
               type: state.data.draftEntry.type,
               amount: formatCurrency(
                 Math.max(state.data.draftEntry.totals.debit, state.data.draftEntry.totals.credit),
                 state.data.draftEntry.currency,
+                state.locale,
               ),
               status: "posted",
             },
             ...state.data.recentEntries,
           ],
           draftEntry: createBlankDraft(state.data.draftEntry),
-        }),
+        }, state.locale),
         uiState: {
           ...state.uiState,
           page: "success",
-          message: "Poliza registrada localmente.",
+          message: state.feedback.registered,
         },
       };
     case "save-draft":
       return {
         ...state,
-        uiState: { ...state.uiState, page: "success", message: "Borrador actualizado localmente." },
+        uiState: { ...state.uiState, page: "success", message: state.feedback.draftSaved },
       };
     case "refresh":
-      return { ...state, uiState: { ...state.uiState, page: "success", message: "Datos demo actualizados." } };
+      return { ...state, uiState: { ...state.uiState, page: "success", message: state.feedback.refreshed } };
     case "retry":
       return { ...state, uiState: { ...state.uiState, page: "idle", message: undefined } };
     case "export":
       return {
         ...state,
-        uiState: { ...state.uiState, page: "success", message: "Exportacion simulada lista." },
+        uiState: { ...state.uiState, page: "success", message: state.feedback.exported },
       };
     default:
       return state;

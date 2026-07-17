@@ -1,3 +1,5 @@
+import { dashboardModuleDictionaries } from "./dashboard-modules";
+
 export const fr = {
   landing: {
     eyebrow: "ERP multi-succursale pour salles de sport",
@@ -22,7 +24,10 @@ export const fr = {
       salesSynced: "42 ventes synchronisées",
       occupancy: "91% d'occupation",
       devicesOnline: "Appareils en ligne",
+      renewalsHour: "Renouvellements par heure",
       revenueHour: "Revenu par heure",
+      occupancyHour: "Occupation par heure",
+      accessHour: "Accès par heure",
       alertTitle: "Alerte de stock résolue",
       alertDesc: "Barres de protéines transférées de la succursale Nord.",
       synced: "Synchronisé",
@@ -360,24 +365,21 @@ export const fr = {
     fontMono: "Monospace (Code)",
     fontElegant: "Elegant (Moderne)",
     fields: {
-      sidebarBg: {
-        label: "Sidebar",
-        description: "Arrière-plan de la navigation latérale.",
+      brandBg: {
+        label: "Arrière-plan du système",
+        description: "Arrière-plan de la navigation latérale (Sidebar) et de la barre supérieure (Navbar).",
       },
-      topbarBg: {
-        label: "Topbar",
-        description: "Arrière-plan de la barre supérieure.",
+      brandText: {
+        label: "Logos & Textes",
+        description: "Couleur principale pour les logos, les étiquettes de texte et les éléments de navigation.",
       },
-      primaryColor: {
-        label: "Couleur principale",
-        description: "Boutons, états actifs et graphiques principaux.",
-      },
-      accentColor: {
-        label: "Couleur secondaire",
-        description: "Logo du sidebar, alertes et reflets secondaires.",
+      brandAccent: {
+        label: "Survol & Contrastes",
+        description: "Boutons, survols, états actifs, bordures et reflets.",
       },
     },
   },
+  ...dashboardModuleDictionaries.fr,
   marketing: {
     funnel: {
       title: "Entonnoir de Conversion",

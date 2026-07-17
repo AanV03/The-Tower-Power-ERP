@@ -57,10 +57,10 @@
 
 @layer base {
   :root {
-    --landing-transition-bg: #025453;
-    --brand-orange: #fb8500;
+    --landing-transition-bg: #264653;
+    --brand-orange: #2a9d8f;
     --brand-yellow: #edc531;
-    --brand-ink: #0f172a;
+    --brand-ink: #132440;
     --brand-navy: #0a1128;
     --brand-red: #e11d48;
     --brand-green: #10b981;
@@ -80,45 +80,45 @@
     --glass-light-mask-strong: rgba(10, 17, 40, 0.04);
     --glass-light-menu-mask: rgba(10, 17, 40, 0.01);
     --glass-shadow: 0 10px 30px -10px rgba(10, 17, 40, 0.08), 0 1px 3px rgba(10, 17, 40, 0.02);
-    --topbar-foreground: #111827;
-    --topbar-foreground-secondary: rgba(30, 41, 59, 0.68);
-    --topbar-border-color: rgba(15, 23, 42, 0.1);
-    --shell-topbar-foreground: #111827;
-    --shell-topbar-foreground-secondary: rgba(30, 41, 59, 0.68);
-    --shell-topbar-border-color: rgba(15, 23, 42, 0.1);
-    --shell-sidebar-foreground: #111827;
-    --shell-sidebar-foreground-secondary: rgba(30, 41, 59, 0.68);
-    --shell-sidebar-foreground-tertiary: rgba(30, 41, 59, 0.48);
-    --shell-sidebar-border-color: rgba(15, 23, 42, 0.1);
-    --sidebar-text-primary: #111827;
-    --sidebar-text-secondary: rgba(30, 41, 59, 0.68);
-    --sidebar-text-tertiary: rgba(30, 41, 59, 0.48);
-    --sidebar-border-color: rgba(15, 23, 42, 0.1);
-    --text-muted: #64748b;
+    --topbar-foreground: #ffffff;
+    --topbar-foreground-secondary: rgba(255, 255, 255, 0.7);
+    --topbar-border-color: rgba(255, 255, 255, 0.1);
+    --shell-topbar-foreground: #ffffff;
+    --shell-topbar-foreground-secondary: rgba(255, 255, 255, 0.7);
+    --shell-topbar-border-color: rgba(255, 255, 255, 0.1);
+    --shell-sidebar-foreground: #ffffff;
+    --shell-sidebar-foreground-secondary: rgba(255, 255, 255, 0.7);
+    --shell-sidebar-foreground-tertiary: rgba(255, 255, 255, 0.48);
+    --shell-sidebar-border-color: rgba(255, 255, 255, 0.1);
+    --sidebar-text-primary: #ffffff;
+    --sidebar-text-secondary: rgba(255, 255, 255, 0.7);
+    --sidebar-text-tertiary: rgba(255, 255, 255, 0.48);
+    --sidebar-border-color: rgba(255, 255, 255, 0.1);
+    --text-muted: #5f7088;
     --text-muted-secondary: #94a3b8;
 
     /* Branding overridable tokens — editable from Admin panel */
-    --sidebar-bg: rgba(248, 250, 252, 0.86);
-    --topbar-bg: rgba(255, 255, 255, 0.84);
-    --sidebar-accent-active: #fb8500;
-    --sidebar-accent-hover: rgba(15, 23, 42, 0.06);
+    --sidebar-bg: #264653;
+    --topbar-bg: #264653;
+    --sidebar-accent-active: #2a9d8f;
+    --sidebar-accent-hover: #2a9d8f;
 
     --background: #eef3f6;
     --foreground: #132440;
     --surface: rgba(248, 250, 252, 0.78);
     --surface-elevated: rgba(255, 255, 255, 0.9);
     --card: rgba(255, 255, 255, 0.9);
-    --card-foreground: #0f172a;
+    --card-foreground: #132440;
     --popover: rgba(255, 255, 255, 0.85);
-    --popover-foreground: #0f172a;
-    --primary: #fb8500;
+    --popover-foreground: #132440;
+    --primary: 173 58% 39%;
     --primary-foreground: #ffffff;
     --secondary: #e2e8f0;
-    --secondary-foreground: #0f172a;
+    --secondary-foreground: #132440;
     --muted: #f1f5f9;
-    --muted-foreground: #64748b;
+    --muted-foreground: #5f7088;
     --accent: #f1f5f9;
-    --accent-foreground: #0f172a;
+    --accent-foreground: #132440;
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
     --success: #0f766e;
@@ -127,7 +127,7 @@
     --warning-foreground: #ffffff;
     --border: rgba(19, 36, 64, 0.12);
     --input: rgba(19, 36, 64, 0.14);
-    --ring: rgba(251, 133, 0, 0.4);
+    --ring: 173 58% 39%;
     --radius: 0.75rem;
 
     --auth-background: #e8f7f5;
@@ -169,9 +169,9 @@
   }
 
   .dark {
-    --brand-orange: #fb8500;
+    --brand-orange: #2a9d8f;
     --brand-yellow: #edc531;
-    --brand-ink: #f8fafc;
+    --brand-ink: #ffffff;
     --brand-navy: #0a1128;
     --brand-red: #ef4444;
     --brand-green: #10b981;
@@ -191,45 +191,45 @@
     --glass-light-mask-strong: transparent;
     --glass-light-menu-mask: transparent;
     --glass-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
-    --topbar-foreground: rgba(248, 250, 252, 0.9);
-    --topbar-foreground-secondary: rgba(248, 250, 252, 0.65);
+    --topbar-foreground: #ffffff;
+    --topbar-foreground-secondary: rgba(255, 255, 255, 0.7);
     --topbar-border-color: rgba(255, 255, 255, 0.08);
-    --shell-topbar-foreground: rgba(248, 250, 252, 0.9);
-    --shell-topbar-foreground-secondary: rgba(248, 250, 252, 0.65);
+    --shell-topbar-foreground: #ffffff;
+    --shell-topbar-foreground-secondary: rgba(255, 255, 255, 0.7);
     --shell-topbar-border-color: rgba(255, 255, 255, 0.08);
-    --shell-sidebar-foreground: rgba(248, 250, 252, 0.9);
-    --shell-sidebar-foreground-secondary: rgba(248, 250, 252, 0.65);
-    --shell-sidebar-foreground-tertiary: rgba(248, 250, 252, 0.45);
+    --shell-sidebar-foreground: #ffffff;
+    --shell-sidebar-foreground-secondary: rgba(255, 255, 255, 0.7);
+    --shell-sidebar-foreground-tertiary: rgba(255, 255, 255, 0.45);
     --shell-sidebar-border-color: rgba(255, 255, 255, 0.08);
-    --sidebar-text-primary: rgba(248, 250, 252, 0.9);
-    --sidebar-text-secondary: rgba(248, 250, 252, 0.65);
-    --sidebar-text-tertiary: rgba(248, 250, 252, 0.45);
+    --sidebar-text-primary: #ffffff;
+    --sidebar-text-secondary: rgba(255, 255, 255, 0.7);
+    --sidebar-text-tertiary: rgba(255, 255, 255, 0.45);
     --sidebar-border-color: rgba(255, 255, 255, 0.08);
     --text-muted: #94a3b8;
     --text-muted-secondary: #64748b;
 
     /* Branding overridable tokens — dark mode */
-    --sidebar-bg: #070a13;
-    --topbar-bg: rgba(11, 15, 25, 0.6);
-    --sidebar-accent-active: #fb8500;
-    --sidebar-accent-hover: rgba(255, 255, 255, 0.06);
+    --sidebar-bg: #264653;
+    --topbar-bg: #264653;
+    --sidebar-accent-active: #2a9d8f;
+    --sidebar-accent-hover: #2a9d8f;
 
     --background: #0b0f19;
-    --foreground: #f8fafc;
+    --foreground: #ffffff;
     --surface: rgba(15, 23, 42, 0.5);
     --surface-elevated: rgba(22, 28, 45, 0.72);
     --card: rgba(22, 28, 45, 0.6);
-    --card-foreground: #f8fafc;
+    --card-foreground: #ffffff;
     --popover: rgba(22, 28, 45, 0.85);
-    --popover-foreground: #f8fafc;
-    --primary: #fb8500;
-    --primary-foreground: #ffffff;
+    --popover-foreground: #ffffff;
+    --primary: 172 66% 50%;
+    --primary-foreground: #042f2e;
     --secondary: #1e293b;
-    --secondary-foreground: #f8fafc;
+    --secondary-foreground: #ffffff;
     --muted: #1e293b;
     --muted-foreground: #94a3b8;
     --accent: #1e293b;
-    --accent-foreground: #f8fafc;
+    --accent-foreground: #ffffff;
     --destructive: #f43f5e;
     --destructive-foreground: #ffffff;
     --success: #10b981;
@@ -238,7 +238,7 @@
     --warning-foreground: #0b0f19;
     --border: rgba(255, 255, 255, 0.08);
     --input: rgba(255, 255, 255, 0.08);
-    --ring: rgba(251, 133, 0, 0.5);
+    --ring: 172 66% 50%;
 
     --auth-background: #0b0f19;
     --auth-background-wash: rgba(11, 15, 25, 0.18);
@@ -857,5 +857,21 @@
 html:has(.landing-palette),
 body:has(.landing-palette) {
   overscroll-behavior-y: none;
+}
+
+html[data-magicui-theme-vt="active"]::view-transition-group(root) {
+  animation-duration: var(--magicui-theme-toggle-vt-duration);
+  animation-timing-function: linear;
+}
+
+html[data-magicui-theme-vt="active"]::view-transition-old(root),
+html[data-magicui-theme-vt="active"]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html[data-magicui-theme-vt="active"]::view-transition-new(root) {
+  clip-path: var(--magicui-theme-vt-clip-from);
+  will-change: clip-path;
 }
 

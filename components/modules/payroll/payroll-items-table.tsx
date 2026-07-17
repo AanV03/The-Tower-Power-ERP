@@ -19,12 +19,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { Locale } from "@/lib/i18n";
 
 export function PayrollItemsTable({
+  locale,
   receipts,
   periods,
   activePeriodId,
 }: {
+  locale: Locale;
   receipts: PayrollReceiptView[];
   periods: PayrollPeriodView[];
   activePeriodId?: string;
@@ -134,7 +137,7 @@ export function PayrollItemsTable({
                         <Badge variant={payrollStatusVariant[receipt.status]}>{payrollLabels.status[receipt.status]}</Badge>
                       </TableCell>
                       <TableCell className="pr-6 text-right">
-                        <PayrollReceiptDialog receipt={receipt}>
+                        <PayrollReceiptDialog locale={locale} receipt={receipt}>
                           <Button type="button" variant="outline" size="sm">
                             <Eye className="size-4" aria-hidden="true" />
                             {payrollLabels.actions.viewReceipt}
@@ -163,7 +166,7 @@ export function PayrollItemsTable({
                     <Amount label={payrollLabels.receipts.commission} value={receipt.commissionLabel} />
                     <Amount label={payrollLabels.receipts.net} value={receipt.netLabel} align="right" strong />
                   </div>
-                  <PayrollReceiptDialog receipt={receipt}>
+                  <PayrollReceiptDialog locale={locale} receipt={receipt}>
                     <Button type="button" variant="outline" size="sm" className="w-full">
                       <Eye className="size-4" aria-hidden="true" />
                       {payrollLabels.actions.viewReceipt}

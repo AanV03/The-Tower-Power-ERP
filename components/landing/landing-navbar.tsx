@@ -9,6 +9,7 @@ import { ArrowRight, Dumbbell } from "lucide-react";
 import { LandingMegaMenu } from "@/components/landing/mega-menu";
 import { useLandingRouteTransition } from "@/components/landing/landing-route-transition";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { localizedHome, localizedPath } from "@/lib/localized-routing";
 
@@ -170,6 +171,7 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
         </div>
 
         <div className="flex items-center justify-end gap-3 px-4 sm:px-6 lg:px-8">
+          <ThemeToggle locale={locale} appearance="landing" />
           <LocaleSwitcher locale={locale} inHeader={true} />
           <LandingMegaMenu locale={locale} mode="mobile" />
           <Link

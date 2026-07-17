@@ -14,12 +14,6 @@ const accountStatusClass: Record<AccountStatus, string> = {
   locked: "bg-[var(--brand-yellow)] text-[var(--brand-ink)]",
 };
 
-const accountStatusLabel: Record<AccountStatus, string> = {
-  active: "Activa",
-  inactive: "Inactiva",
-  locked: "Bloqueada",
-};
-
 export function AccountsPanel({
   accounts,
   status,
@@ -27,6 +21,7 @@ export function AccountsPanel({
   actions,
   accountTypeLabels,
   normalBalanceLabels,
+  accountStatusLabels,
 }: AccountsPanelProps) {
   const resolvedStatus = accounts.length === 0 && status === "idle" ? "empty" : status;
   const showStateBlock = resolvedStatus !== "idle";
@@ -77,7 +72,7 @@ export function AccountsPanel({
                   {account.status === "locked" ? (
                     <Lock className="size-3" aria-hidden="true" />
                   ) : null}
-                  {accountStatusLabel[account.status]}
+                  {accountStatusLabels[account.status]}
                 </Badge>
               </div>
             </button>

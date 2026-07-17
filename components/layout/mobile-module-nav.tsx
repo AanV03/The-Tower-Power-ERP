@@ -23,7 +23,7 @@ function MobileDrawer({
 }) {
   const dictionary = getDictionary(locale);
 
-  const [logoUrl, setLogoUrl] = useState<string>("");
+  const [logoUrl, setLogoUrl] = useState<string>("/logo.png");
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -35,20 +35,24 @@ function MobileDrawer({
   useEffect(() => {
     const onBrandUpdate = (e: Event) => {
       if (e instanceof CustomEvent && e.detail) {
-        setLogoUrl(e.detail.logoUrl || "");
+        setLogoUrl(e.detail.logoUrl || "/logo.png");
       }
     };
 
-    const onBrandReset = () => setLogoUrl("");
+    const onBrandReset = () => setLogoUrl("/logo.png");
 
     // Load initial logo
     try {
       const raw = localStorage.getItem("tower-power-brand-colors");
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed.logoUrl) setLogoUrl(parsed.logoUrl);
+        setLogoUrl(parsed.logoUrl || "/logo.png");
+      } else {
+        setLogoUrl("/logo.png");
       }
-    } catch { /* ignore */ }
+    } catch {
+      setLogoUrl("/logo.png");
+    }
 
     document.addEventListener("brand:update", onBrandUpdate);
     document.addEventListener("brand:reset", onBrandReset);

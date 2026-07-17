@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { headerPrimaryActionClass } from "@/lib/utils";
+import { getDictionary, type Locale } from "@/lib/i18n";
 
 type ProductOption = {
   id: string;
@@ -31,27 +32,23 @@ type WarehouseOption = {
   branchName: string;
 };
 
-const MOVEMENT_TYPES = [
-  { value: "PURCHASE", label: "Compra (Entrada)" },
-  { value: "TRANSFER_IN", label: "Traspaso Recibido (Entrada)" },
-  { value: "ADJUSTMENT", label: "Ajuste de Stock (Entrada)" },
-  { value: "TRANSFER_OUT", label: "Traspaso Enviado (Salida)" },
-  { value: "SHRINKAGE", label: "Merma / Pérdida (Salida)" },
-];
-
 export function MovementFormDialog({
+  locale,
   products,
   warehouses,
   defaultProductId = "",
   defaultWarehouseId = "",
   trigger,
 }: {
+  locale: Locale;
   products: ProductOption[];
   warehouses: WarehouseOption[];
   defaultProductId?: string;
   defaultWarehouseId?: string;
   trigger?: React.ReactElement;
 }) {
+  const t = getDictionary(locale).inventory;
+  const movementTypes = Object.entries(t.movementTypeOptions).map(([value, label]) => ({ value, label }));
   const router = useRouter();
   const formId = useId();
   const [open, setOpen] = useState(false);
@@ -75,16 +72,16 @@ export function MovementFormDialog({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!productId) {
-      toast.error("Por favor, selecciona un producto");
+      toast.error(t.toast.selectProduct);
       return;
     }
     if (!warehouseId) {
-      toast.error("Por favor, selecciona un almacén");
+      toast.error(t.toast.selectWarehouse);
       return;
     }
     const qtyVal = parseFloat(quantity);
     if (isNaN(qtyVal) || qtyVal <= 0) {
-      toast.error("La cantidad debe ser un número positivo");
+      toast.error(t.toast.positiveQuantity);
       return;
     }
 
@@ -99,16 +96,16 @@ export function MovementFormDialog({
           type,
           quantity: qtyVal,
           unitCost: unitCost ? parseFloat(unitCost) : undefined,
-          sourceType: "Ajuste manual",
+          sourceType: t.manualAdjustment,
         }),
       });
 
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.message || "Error al registrar el movimiento");
+        throw new Error(result.message || t.toast.movementFailed);
       }
 
-      toast.success("Movimiento registrado y stock actualizado con éxito");
+      toast.success(t.toast.movementSuccess);
       setOpen(false);
       setProductId("");
       setWarehouseId("");
@@ -116,7 +113,7 @@ export function MovementFormDialog({
       setUnitCost("");
       router.refresh();
     } catch (err: any) {
-      toast.error(err.message || "Ocurrió un error inesperado");
+      toast.error(err.message || t.toast.unexpected);
     } finally {
       setLoading(false);
     }
@@ -129,22 +126,22 @@ export function MovementFormDialog({
           trigger ?? (
             <Button size="sm" className={headerPrimaryActionClass}>
               <ArrowRightLeft className="size-4" />
-              Nuevo Movimiento
+              {t.actions.newMovement}
             </Button>
           )
         }
       />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Registrar Movimiento</DialogTitle>
+          <DialogTitle>{t.movementDialog.title}</DialogTitle>
           <DialogDescription>
-            Registra una entrada, salida o ajuste físico de stock. Esto impactará las existencias en tiempo real.
+            {t.movementDialog.description}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="grid gap-4">
           <label className="grid gap-1.5 text-sm font-medium text-foreground" htmlFor={`${formId}-product`}>
-            <span>Producto</span>
+            <span>{t.fields.product}</span>
             <NativeSelect
               id={`${formId}-product`}
               value={productId}
@@ -152,7 +149,7 @@ export function MovementFormDialog({
               className="w-full"
               required
             >
-              <NativeSelectOption value="">Seleccionar producto...</NativeSelectOption>
+              <NativeSelectOption value="">{t.movementDialog.selectProduct}</NativeSelectOption>
               {products.map((prod) => (
                 <NativeSelectOption key={prod.id} value={prod.id}>
                   [{prod.sku}] {prod.name}
@@ -162,7 +159,7 @@ export function MovementFormDialog({
           </label>
 
           <label className="grid gap-1.5 text-sm font-medium text-foreground" htmlFor={`${formId}-warehouse`}>
-            <span>Almacén</span>
+            <span>{t.fields.warehouse}</span>
             <NativeSelect
               id={`${formId}-warehouse`}
               value={warehouseId}
@@ -170,7 +167,7 @@ export function MovementFormDialog({
               className="w-full"
               required
             >
-              <NativeSelectOption value="">Seleccionar almacén...</NativeSelectOption>
+              <NativeSelectOption value="">{t.movementDialog.selectWarehouse}</NativeSelectOption>
               {warehouses.map((wh) => (
                 <NativeSelectOption key={wh.id} value={wh.id}>
                   {wh.name} ({wh.branchName})
@@ -180,7 +177,7 @@ export function MovementFormDialog({
           </label>
 
           <label className="grid gap-1.5 text-sm font-medium text-foreground" htmlFor={`${formId}-type`}>
-            <span>Tipo de Movimiento</span>
+            <span>{t.movementDialog.type}</span>
             <NativeSelect
               id={`${formId}-type`}
               value={type}
@@ -188,7 +185,7 @@ export function MovementFormDialog({
               className="w-full"
               required
             >
-              {MOVEMENT_TYPES.map((mType) => (
+              {movementTypes.map((mType) => (
                 <NativeSelectOption key={mType.value} value={mType.value}>
                   {mType.label}
                 </NativeSelectOption>
@@ -198,7 +195,7 @@ export function MovementFormDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <label className="grid gap-1.5 text-sm font-medium text-foreground" htmlFor={`${formId}-quantity`}>
-              <span>Cantidad</span>
+              <span>{t.fields.quantity}</span>
               <Input
                 id={`${formId}-quantity`}
                 type="number"
@@ -206,13 +203,13 @@ export function MovementFormDialog({
                 min="0.01"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                placeholder="Ej. 10"
+                placeholder={t.movementDialog.quantityPlaceholder}
                 required
               />
             </label>
 
             <label className="grid gap-1.5 text-sm font-medium text-foreground" htmlFor={`${formId}-cost`}>
-              <span>Costo Unitario (Opcional)</span>
+              <span>{t.movementDialog.unitCost}</span>
               <Input
                 id={`${formId}-cost`}
                 type="number"
@@ -220,7 +217,7 @@ export function MovementFormDialog({
                 min="0"
                 value={unitCost}
                 onChange={(e) => setUnitCost(e.target.value)}
-                placeholder="Ej. 150.00"
+                placeholder={t.movementDialog.costPlaceholder}
               />
             </label>
           </div>
@@ -232,10 +229,10 @@ export function MovementFormDialog({
               onClick={() => setOpen(false)}
               disabled={loading}
             >
-              Cancelar
+              {t.actions.cancel}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Registrando..." : "Registrar"}
+              {loading ? t.actions.registering : t.actions.register}
             </Button>
           </DialogFooter>
         </form>

@@ -15,3 +15,5 @@ tsconfig.tsbuildinfo
 .lighthouseci/
 tmp/
 tsconfig.tsbuildinfo
+# Sentry Config File
+.env.sentry-build-plugin

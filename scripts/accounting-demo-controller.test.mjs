@@ -139,7 +139,7 @@ test("deletes a recent journal entry", () => {
   const updated = accountingDemoReducer(state, { type: "delete-entry", entryId: "je-1" });
 
   assert.equal(updated.data.recentEntries.length, 0);
-  assert.equal(updated.uiState.message, "Poliza eliminada localmente.");
+  assert.equal(updated.uiState.message, "Póliza eliminada localmente.");
 });
 
 test("selects a recent journal entry into the editor", () => {
@@ -215,6 +215,6 @@ test("refresh and export produce visible demo feedback", () => {
   const refreshed = accountingDemoReducer(state, { type: "refresh" });
   const exported = accountingDemoReducer(state, { type: "export" });
 
-  assert.equal(refreshed.uiState.message, "Datos demo actualizados.");
-  assert.equal(exported.uiState.message, "Exportacion simulada lista.");
+  assert.equal(refreshed.uiState.message, "Datos de demostración actualizados.");
+  assert.equal(exported.uiState.message, "Exportación simulada lista.");
 });

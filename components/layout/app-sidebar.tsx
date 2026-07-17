@@ -86,7 +86,7 @@ export function AppSidebar({ locale, serverIdentity }: { locale: Locale, serverI
       <aside
         className={cn(
           "glass-panel glass-sidebar hidden h-full shrink-0 overflow-hidden border-y-0 border-l-0 text-[var(--shell-sidebar-foreground)] shadow-2xl shadow-black/15 transition-[width] duration-300 ease-out lg:flex lg:flex-col tower-power-sidebar",
-          collapsed ? "w-[5.25rem]" : "w-72",
+          collapsed ? "w-[5.25rem]" : "w-60",
         )}
         aria-label={dictionary.common.primaryNavigation}
       >

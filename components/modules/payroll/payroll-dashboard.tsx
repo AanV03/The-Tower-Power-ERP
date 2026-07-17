@@ -65,6 +65,7 @@ function payrollSourceLabel(email: string | null) {
 }
 
 export async function PayrollDashboard({
+  locale,
   selectedPeriodId,
 }: {
   locale: Locale;
@@ -306,6 +307,7 @@ export async function PayrollDashboard({
           <div className="space-y-4">
             <div className="space-y-4">
               <PayrollItemsTable
+                locale={locale}
                 receipts={receiptViews}
                 periods={periodViews}
                 activePeriodId={activePeriod?.id}
