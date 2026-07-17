@@ -5,6 +5,8 @@ export type PayrollPeriodView = {
   id: string;
   label: string;
   range: string;
+  startDateValue: string;
+  endDateValue: string;
   status: PayrollStatusLabel;
   employeeCount: number;
   netTotal: number;
@@ -15,6 +17,7 @@ export type PayrollReceiptView = {
   id: string;
   employeeName: string;
   employeeEmail: string;
+  sourceLabel?: string;
   position: string;
   branch: string;
   periodLabel: string;
@@ -66,6 +69,10 @@ export type PayrollReadiness = {
 export type PayrollLabels = {
   title: string;
   subtitle: string;
+  tabs: {
+    receipts: string;
+    close: string;
+  };
   actions: {
     createPeriod: string;
     preview: string;

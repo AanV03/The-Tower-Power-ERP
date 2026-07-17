@@ -5,6 +5,7 @@ import {
   createPayrollExportRows,
   filterPayrollReceipts,
   getPayrollReadiness,
+  validPayrollTransition,
 } from "../components/modules/payroll/demo-controller.ts";
 
 const receipts = [
@@ -102,4 +103,17 @@ test("createPayrollExportRows produces stable csv-ready rows", () => {
   ]);
   assert.equal(rows[1][0], "Ana Lopez");
   assert.equal(rows[2][7], "$7,800.00");
+});
+
+test("validPayrollTransition enforces period workflow order", () => {
+  assert.deepEqual(validPayrollTransition("DRAFT", "APPROVED"), { ok: true });
+  assert.deepEqual(validPayrollTransition("APPROVED", "PAID"), { ok: true });
+  assert.deepEqual(validPayrollTransition("DRAFT", "PAID"), {
+    ok: false,
+    code: "PAYROLL_PERIOD_NOT_APPROVED",
+  });
+  assert.deepEqual(validPayrollTransition("PAID", "DRAFT"), {
+    ok: false,
+    code: "PAYROLL_PERIOD_LOCKED",
+  });
 });

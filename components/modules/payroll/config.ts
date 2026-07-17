@@ -1,8 +1,12 @@
 import type { PayrollLabels, PayrollStatusLabel } from "./types";
 
 export const payrollLabels: PayrollLabels = {
-  title: "Nomina y comisiones",
-  subtitle: "Recibos, comisiones, deducciones y cierre operativo del periodo.",
+  title: "Nomina",
+  subtitle: "Periodos, recibos, deducciones, comisiones y cierre de pago.",
+  tabs: {
+    receipts: "Nomina por empleado",
+    close: "Historial de periodos",
+  },
   actions: {
     createPeriod: "Crear periodo",
     preview: "Vista previa",
@@ -20,15 +24,15 @@ export const payrollLabels: PayrollLabels = {
   },
   metrics: {
     draftPeriods: "Periodos borrador",
-    includedEmployees: "Empleados incluidos",
-    pendingNet: "Neto pendiente",
+    includedEmployees: "Personas en nomina",
+    pendingNet: "Total a pagar",
     commissions: "Comisiones",
     deductions: "Deducciones",
-    incidents: "Incidencias",
+    incidents: "Pendientes",
   },
   periods: {
     title: "Periodos recientes",
-    description: "Ciclos de nomina disponibles para revisar y cerrar.",
+    description: "Elige el periodo que quieres revisar.",
     employees: "Empleados",
     net: "Neto",
     emptyTitle: "Sin periodos creados",
@@ -36,7 +40,7 @@ export const payrollLabels: PayrollLabels = {
   },
   receipts: {
     title: "Recibos del periodo",
-    description: "Base, variables, deducciones y neto por empleado.",
+    description: "Lista simple de pagos calculados para este periodo.",
     employee: "Empleado",
     positionBranch: "Puesto / sucursal",
     base: "Base",
@@ -47,16 +51,16 @@ export const payrollLabels: PayrollLabels = {
     status: "Estado",
     action: "Accion",
     emptyTitle: "Sin recibos en el periodo",
-    emptyDescription: "Genera una vista previa para incluir empleados.",
+    emptyDescription: "Usa Vista previa para calcular los recibos antes de cerrar.",
   },
   summary: {
-    title: "Resumen de cierre",
+    title: "Totales del periodo",
     base: "Base",
     overtime: "Horas extra",
     commissions: "Comisiones",
     deductions: "Deducciones",
     netTotal: "Neto total",
-    alerts: "Alertas",
+    alerts: "Antes de cerrar",
     ready: "Listo",
     review: "Revisar",
     missingReceipts: "Empleados sin recibo",

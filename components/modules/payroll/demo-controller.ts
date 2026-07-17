@@ -2,6 +2,7 @@ import type {
   PayrollReadinessInput,
   PayrollReceiptFilters,
   PayrollReceiptView,
+  PayrollStatusLabel,
 } from "./types";
 
 export function filterPayrollReceipts(receipts: PayrollReceiptView[], filters: PayrollReceiptFilters) {
@@ -46,4 +47,18 @@ export function createPayrollExportRows(receipts: PayrollReceiptView[]) {
       receipt.netLabel,
     ]),
   ];
+}
+
+export function validPayrollTransition(from: PayrollStatusLabel, to: PayrollStatusLabel) {
+  if (from === to) return { ok: true } as const;
+  if (from === "DRAFT" && to === "APPROVED") return { ok: true } as const;
+  if (from === "APPROVED" && to === "PAID") return { ok: true } as const;
+  if (from === "DRAFT" && to === "PAID") {
+    return { ok: false, code: "PAYROLL_PERIOD_NOT_APPROVED" } as const;
+  }
+  if (from === "PAID") {
+    return { ok: false, code: "PAYROLL_PERIOD_LOCKED" } as const;
+  }
+
+  return { ok: false, code: "INVALID_PAYROLL_TRANSITION" } as const;
 }

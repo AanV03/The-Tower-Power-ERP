@@ -1,12 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Eye, ReceiptText, Search } from "lucide-react";
 
 import { payrollLabels, payrollStatusOptions, payrollStatusVariant } from "@/components/modules/payroll/config";
 import { filterPayrollReceipts } from "@/components/modules/payroll/demo-controller";
 import { PayrollReceiptDialog } from "@/components/modules/payroll/payroll-receipt-dialog";
-import type { PayrollReceiptFilters, PayrollReceiptView, PayrollStatusLabel } from "@/components/modules/payroll/types";
+import type {
+  PayrollPeriodView,
+  PayrollReceiptFilters,
+  PayrollReceiptView,
+  PayrollStatusLabel,
+} from "@/components/modules/payroll/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,23 +20,30 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-function createBranchOptions(receipts: PayrollReceiptView[]) {
-  const branches = Array.from(new Set(receipts.map((receipt) => receipt.branch))).filter(Boolean);
-
-  return [
-    { value: "", label: payrollLabels.filters.allBranches },
-    ...branches.map((branch) => ({ value: branch, label: branch })),
-  ];
-}
-
-export function PayrollItemsTable({ receipts }: { receipts: PayrollReceiptView[] }) {
+export function PayrollItemsTable({
+  receipts,
+  periods,
+  activePeriodId,
+}: {
+  receipts: PayrollReceiptView[];
+  periods: PayrollPeriodView[];
+  activePeriodId?: string;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [filters, setFilters] = useState<PayrollReceiptFilters>({
     query: "",
     branch: "",
     status: "all",
   });
   const visibleReceipts = useMemo(() => filterPayrollReceipts(receipts, filters), [filters, receipts]);
-  const branchOptions = useMemo(() => createBranchOptions(receipts), [receipts]);
+
+  function handlePeriodChange(periodId: string) {
+    if (!periodId) return;
+
+    const href = `${pathname}?payrollPeriodId=${encodeURIComponent(periodId)}` as Parameters<typeof router.replace>[0];
+    router.replace(href, { scroll: false });
+  }
 
   return (
     <Card>
@@ -43,7 +56,7 @@ export function PayrollItemsTable({ receipts }: { receipts: PayrollReceiptView[]
             </CardTitle>
             <p className="mt-1 text-xs text-muted-foreground">{payrollLabels.receipts.description}</p>
           </div>
-          <div className="grid gap-2 sm:grid-cols-[minmax(180px,1fr)_150px_150px] lg:min-w-[560px]">
+          <div className="grid gap-2 sm:grid-cols-[minmax(180px,1fr)_minmax(150px,0.7fr)_150px] lg:min-w-[580px]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -54,15 +67,20 @@ export function PayrollItemsTable({ receipts }: { receipts: PayrollReceiptView[]
               />
             </div>
             <NativeSelect
-              value={filters.branch}
-              onChange={(event) => setFilters({ ...filters, branch: event.target.value })}
-              aria-label={payrollLabels.filters.branch}
+              value={activePeriodId ?? ""}
+              onChange={(event) => handlePeriodChange(event.target.value)}
+              disabled={periods.length === 0}
+              aria-label="Periodo de nomina"
             >
-              {branchOptions.map((option) => (
-                <NativeSelectOption key={option.value} value={option.value}>
-                  {option.label}
-                </NativeSelectOption>
-              ))}
+              {periods.length > 0 ? (
+                periods.map((period) => (
+                  <NativeSelectOption key={period.id} value={period.id}>
+                    {period.range}
+                  </NativeSelectOption>
+                ))
+              ) : (
+                <NativeSelectOption value="">Sin periodos</NativeSelectOption>
+              )}
             </NativeSelect>
             <NativeSelect
               value={filters.status}
@@ -88,11 +106,7 @@ export function PayrollItemsTable({ receipts }: { receipts: PayrollReceiptView[]
                 <TableHeader>
                   <TableRow>
                     <TableHead className="pl-6">{payrollLabels.receipts.employee}</TableHead>
-                    <TableHead>{payrollLabels.receipts.positionBranch}</TableHead>
-                    <TableHead className="text-right">{payrollLabels.receipts.base}</TableHead>
-                    <TableHead className="text-right">{payrollLabels.receipts.overtime}</TableHead>
-                    <TableHead className="text-right">{payrollLabels.receipts.commission}</TableHead>
-                    <TableHead className="text-right">{payrollLabels.receipts.deductions}</TableHead>
+                    <TableHead>{payrollLabels.filters.branch}</TableHead>
                     <TableHead className="text-right">{payrollLabels.receipts.net}</TableHead>
                     <TableHead>{payrollLabels.receipts.status}</TableHead>
                     <TableHead className="pr-6 text-right">{payrollLabels.receipts.action}</TableHead>
@@ -104,19 +118,17 @@ export function PayrollItemsTable({ receipts }: { receipts: PayrollReceiptView[]
                       <TableCell className="pl-6">
                         <div>
                           <p className="font-medium text-foreground">{receipt.employeeName}</p>
-                          <p className="text-xs text-muted-foreground">{receipt.employeeEmail}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {receipt.sourceLabel ?? "Empleado"} / {receipt.employeeEmail}
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="text-sm text-foreground">{receipt.position}</p>
-                          <p className="text-xs text-muted-foreground">{receipt.branch}</p>
+                          <p className="text-sm text-foreground">{receipt.branch}</p>
+                          <p className="text-xs text-muted-foreground">{receipt.position}</p>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-medium">{receipt.baseLabel}</TableCell>
-                      <TableCell className="text-right">{receipt.overtimeLabel}</TableCell>
-                      <TableCell className="text-right">{receipt.commissionLabel}</TableCell>
-                      <TableCell className="text-right">{receipt.deductionsLabel}</TableCell>
                       <TableCell className="text-right font-semibold text-foreground">{receipt.netLabel}</TableCell>
                       <TableCell>
                         <Badge variant={payrollStatusVariant[receipt.status]}>{payrollLabels.status[receipt.status]}</Badge>
@@ -142,14 +154,12 @@ export function PayrollItemsTable({ receipts }: { receipts: PayrollReceiptView[]
                     <div className="min-w-0">
                       <p className="truncate font-medium text-foreground">{receipt.employeeName}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {receipt.position} / {receipt.branch}
+                        {receipt.sourceLabel ?? "Empleado"} / {receipt.position} / {receipt.branch}
                       </p>
                     </div>
                     <Badge variant={payrollStatusVariant[receipt.status]}>{payrollLabels.status[receipt.status]}</Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <Amount label={payrollLabels.receipts.base} value={receipt.baseLabel} />
-                    <Amount label={payrollLabels.receipts.overtime} value={receipt.overtimeLabel} align="right" />
                     <Amount label={payrollLabels.receipts.commission} value={receipt.commissionLabel} />
                     <Amount label={payrollLabels.receipts.net} value={receipt.netLabel} align="right" strong />
                   </div>

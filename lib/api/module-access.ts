@@ -34,3 +34,38 @@ export function resolveModuleAccess(moduleId: string): ModuleAccess | null {
 
   return null;
 }
+
+const ROUTE_PERMISSIONS: Array<{
+  method: string;
+  pattern: RegExp;
+  permission: string;
+}> = [
+  { method: "GET", pattern: /^\/api\/hr\/employees(?:\/[^/]+)?$/, permission: "hr.read" },
+  { method: "POST", pattern: /^\/api\/hr\/employees$/, permission: "hr.employee.write" },
+  { method: "PATCH", pattern: /^\/api\/hr\/employees\/[^/]+$/, permission: "hr.employee.write" },
+  { method: "GET", pattern: /^\/api\/hr\/time-clock$/, permission: "hr.read" },
+  { method: "POST", pattern: /^\/api\/hr\/time-clock$/, permission: "hr.attendance.write" },
+  { method: "POST", pattern: /^\/api\/hr\/attendance$/, permission: "hr.attendance.write" },
+  { method: "GET", pattern: /^\/api\/payroll\/periods$/, permission: "payroll.read" },
+  { method: "POST", pattern: /^\/api\/payroll\/periods$/, permission: "payroll.period.write" },
+  { method: "GET", pattern: /^\/api\/payroll\/items$/, permission: "payroll.read" },
+  { method: "POST", pattern: /^\/api\/payroll\/items$/, permission: "payroll.receipt.write" },
+  { method: "POST", pattern: /^\/api\/payroll\/periods\/[^/]+\/preview$/, permission: "payroll.preview" },
+  { method: "POST", pattern: /^\/api\/payroll\/periods\/[^/]+\/approve$/, permission: "payroll.approve" },
+  { method: "POST", pattern: /^\/api\/payroll\/periods\/[^/]+\/pay$/, permission: "payroll.pay" },
+  { method: "GET", pattern: /^\/api\/accounting\/accounts$/, permission: "accounting.read" },
+  { method: "POST", pattern: /^\/api\/accounting\/accounts$/, permission: "accounting.account.write" },
+  { method: "GET", pattern: /^\/api\/accounting\/journal-entries$/, permission: "accounting.read" },
+  { method: "POST", pattern: /^\/api\/accounting\/journal-entries$/, permission: "accounting.journal.write" },
+  { method: "POST", pattern: /^\/api\/accounting\/journal-entries\/[^/]+\/void$/, permission: "accounting.void" },
+];
+
+export function resolveRoutePermission(method: string, pathname: string) {
+  const normalizedMethod = method.toUpperCase();
+  const normalizedPath = pathname.replace(/\/+$/, "") || "/";
+  return (
+    ROUTE_PERMISSIONS.find(
+      (route) => route.method === normalizedMethod && route.pattern.test(normalizedPath),
+    )?.permission ?? null
+  );
+}
