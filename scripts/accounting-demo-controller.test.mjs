@@ -70,11 +70,22 @@ test("adds a blank line and keeps existing totals", () => {
   assert.deepEqual(updated.totals, balancedEntry.totals);
 });
 
-test("does not remove a line when only two journal lines remain", () => {
+test("clears a journal line when the draft only has two required lines", () => {
   const updated = removeJournalLine(balancedEntry, "line-1");
 
   assert.equal(updated.lines.length, 2);
-  assert.notEqual(updated, balancedEntry);
+  assert.equal(updated.lines[0].accountId, "");
+  assert.equal(updated.lines[0].accountCode, "");
+  assert.equal(updated.lines[0].accountName, "");
+  assert.equal(updated.lines[0].description, "");
+  assert.equal(updated.lines[0].debit, 0);
+  assert.equal(updated.lines[0].credit, 0);
+  assert.deepEqual(updated.totals, {
+    debit: 0,
+    credit: 15000,
+    difference: 15000,
+    isBalanced: false,
+  });
 });
 
 test("registers a balanced entry into recent entries and resets the draft", () => {
@@ -128,7 +139,62 @@ test("deletes a recent journal entry", () => {
   const updated = accountingDemoReducer(state, { type: "delete-entry", entryId: "je-1" });
 
   assert.equal(updated.data.recentEntries.length, 0);
-  assert.equal(updated.uiState.message, "Poliza eliminada localmente.");
+  assert.equal(updated.uiState.message, "Póliza eliminada localmente.");
+});
+
+test("selects a recent journal entry into the editor", () => {
+  const state = createAccountingDemoState(
+    {
+      title: "Contabilidad",
+      subtitle: "",
+      periodLabel: "",
+      branchLabel: "",
+      metrics: [],
+      accounts: [],
+      recentEntries: [
+        {
+          id: "je-77",
+          entryNumber: "POL-00077",
+          dateLabel: "2026-07-15",
+          concept: "Pago de nomina",
+          type: "expense",
+          amount: "$10,000.00",
+          status: "posted",
+        },
+      ],
+      draftEntry: balancedEntry,
+    },
+    { page: "idle", accounts: "idle", entries: "idle", editor: "idle" },
+  );
+
+  const updated = accountingDemoReducer(state, { type: "select-entry", entryId: "je-77" });
+
+  assert.equal(updated.data.draftEntry.id, "je-77");
+  assert.equal(updated.data.draftEntry.entryNumber, "POL-00077");
+  assert.equal(updated.data.draftEntry.concept, "Pago de nomina");
+  assert.equal(updated.data.draftEntry.type, "expense");
+});
+
+test("creates a local chart account from the accounts tab action", () => {
+  const state = createAccountingDemoState(
+    {
+      title: "Contabilidad",
+      subtitle: "",
+      periodLabel: "",
+      branchLabel: "",
+      metrics: [],
+      accounts: [],
+      recentEntries: [],
+      draftEntry: balancedEntry,
+    },
+    { page: "idle", accounts: "idle", entries: "idle", editor: "idle" },
+  );
+
+  const updated = accountingDemoReducer(state, { type: "create-account" });
+
+  assert.equal(updated.data.accounts.length, 1);
+  assert.equal(updated.data.accounts[0].code, "1001");
+  assert.equal(updated.uiState.message, "Cuenta agregada localmente.");
 });
 
 test("refresh and export produce visible demo feedback", () => {
@@ -149,6 +215,6 @@ test("refresh and export produce visible demo feedback", () => {
   const refreshed = accountingDemoReducer(state, { type: "refresh" });
   const exported = accountingDemoReducer(state, { type: "export" });
 
-  assert.equal(refreshed.uiState.message, "Datos demo actualizados.");
-  assert.equal(exported.uiState.message, "Exportacion simulada lista.");
+  assert.equal(refreshed.uiState.message, "Datos de demostración actualizados.");
+  assert.equal(exported.uiState.message, "Exportación simulada lista.");
 });

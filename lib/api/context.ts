@@ -6,7 +6,7 @@ import type { TenantContext } from "@/lib/auth/rbac";
 import { ApiError } from "@/lib/api/response";
 import { resolveModuleAccess } from "@/lib/api/module-access";
 
-const DEMO_MODE_GUARD_BYPASS = true;
+const DEMO_MODE_GUARD_BYPASS = process.env.GERPY_DEMO_RBAC_BYPASS === "true";
 const DEMO_MODE_BYPASSED_ERRORS = new Set([
   "MODULE_DISABLED",
   "PERMISSION_DENIED",

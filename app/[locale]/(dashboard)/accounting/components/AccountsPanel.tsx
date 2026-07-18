@@ -28,11 +28,13 @@ export function AccountsPanel({
 
   return (
     <Card className="border-border/70 bg-card/80 shadow-xs ring-1 ring-foreground/5">
-      <CardHeader className="space-y-1 pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <WalletCards className="size-4 text-primary" aria-hidden="true" />
-          {labels.accountsTitle}
-        </CardTitle>
+      <CardHeader className="space-y-2 pb-3">
+        <div>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <WalletCards className="size-4 text-primary" aria-hidden="true" />
+            {labels.accountsTitle}
+          </CardTitle>
+        </div>
         <CardDescription>{labels.accountsDescription}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">

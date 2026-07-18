@@ -162,11 +162,11 @@ export const navigationItems: NavItem[] = [
     id: "hr",
     href: "/hr",
     icon: UsersRound,
-    labels: { es: "RH y nómina", en: "HR and payroll", fr: "RH et paie" },
+    labels: { es: "Recursos Humanos", en: "Human Resources", fr: "Ressources humaines" },
     description: {
-      es: "Expedientes, asistencias y comisiones.",
-      en: "Records, attendance, and commissions.",
-      fr: "Dossiers, présences et commissions.",
+      es: "Expedientes, contratos y asistencia del personal.",
+      en: "Employee records, contracts, and staff attendance.",
+      fr: "Dossiers employes, contrats et presence du personnel.",
     },
   },
   {
@@ -175,9 +175,9 @@ export const navigationItems: NavItem[] = [
     icon: ReceiptText,
     labels: { es: "Nomina", en: "Payroll", fr: "Paie" },
     description: {
-      es: "Periodos, contratos, asistencias y pagos netos.",
-      en: "Periods, contracts, attendance, and net payouts.",
-      fr: "Periodes, contrats, presences et paiements nets.",
+      es: "Periodos, recibos, deducciones, comisiones y pagos.",
+      en: "Periods, receipts, deductions, commissions, and payments.",
+      fr: "Periodes, recus, deductions, commissions et paiements.",
     },
   },
   {

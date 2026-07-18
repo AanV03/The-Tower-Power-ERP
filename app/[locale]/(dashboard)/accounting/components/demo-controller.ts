@@ -13,6 +13,17 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 
 type EditableEntryField = "date" | "type" | "concept" | "reference";
 
+const defaultFeedback: Dictionary["accounting"]["feedback"] = {
+  draftSaved: "Borrador actualizado localmente.",
+  refreshed: "Datos de demostración actualizados.",
+  exported: "Exportación simulada lista.",
+  deleted: "Póliza eliminada localmente.",
+  mustBalance: "La póliza debe cuadrar antes de registrarse.",
+  registered: "Póliza registrada localmente.",
+  untitled: "Póliza sin concepto",
+  noDate: "Sin fecha",
+};
+
 export type AccountingDemoState = {
   data: AccountingDashboardData;
   uiState: AccountingDashboardState;
@@ -27,6 +38,7 @@ export type AccountingDemoAction =
   | { type: "add-line" }
   | { type: "remove-line"; lineId: string }
   | { type: "select-account"; accountId: string }
+  | { type: "create-account" }
   | { type: "select-entry"; entryId: string }
   | { type: "delete-entry"; entryId: string }
   | { type: "search"; value: string }
@@ -111,7 +123,22 @@ export function addJournalLine(entry: JournalEntryDraft): JournalEntryDraft {
 
 export function removeJournalLine(entry: JournalEntryDraft, lineId: string): JournalEntryDraft {
   if (entry.lines.length <= 2) {
-    return { ...entry, lines: [...entry.lines] };
+    return recalculateEntry({
+      ...entry,
+      lines: entry.lines.map((line) =>
+        line.id === lineId
+          ? {
+              ...line,
+              accountId: "",
+              accountCode: "",
+              accountName: "",
+              description: "",
+              debit: 0,
+              credit: 0,
+            }
+          : line,
+      ),
+    });
   }
 
   return recalculateEntry({
@@ -207,6 +234,20 @@ function createBlankDraft(entry: JournalEntryDraft): JournalEntryDraft {
   };
 }
 
+function createLocalAccount(accounts: AccountingAccount[]): AccountingAccount {
+  const nextNumber = accounts.length + 1;
+
+  return {
+    id: `acc-local-${nextNumber}`,
+    code: String(1000 + nextNumber),
+    name: `Cuenta nueva ${nextNumber}`,
+    type: "asset",
+    normalBalance: "debit",
+    status: "active",
+    branchScope: "Tenant",
+  };
+}
+
 function syncDifferenceMetric(data: AccountingDashboardData, locale: Locale): AccountingDashboardData {
   return {
     ...data,
@@ -222,7 +263,12 @@ function syncDifferenceMetric(data: AccountingDashboardData, locale: Locale): Ac
   };
 }
 
-export function createAccountingDemoState(data: AccountingDashboardData, uiState: AccountingDashboardState, locale: Locale, feedback: Dictionary["accounting"]["feedback"]) {
+export function createAccountingDemoState(
+  data: AccountingDashboardData,
+  uiState: AccountingDashboardState,
+  locale: Locale = "es",
+  feedback: Dictionary["accounting"]["feedback"] = defaultFeedback,
+) {
   return {
     data,
     uiState,
@@ -285,6 +331,18 @@ export function accountingDemoReducer(
           ...state.data,
           draftEntry: selectAccount(state.data.draftEntry, account),
         },
+      };
+    }
+    case "create-account": {
+      const account = createLocalAccount(state.data.accounts);
+
+      return {
+        ...state,
+        data: {
+          ...state.data,
+          accounts: [account, ...state.data.accounts],
+        },
+        uiState: { ...state.uiState, page: "success", message: "Cuenta agregada localmente." },
       };
     }
     case "select-entry":

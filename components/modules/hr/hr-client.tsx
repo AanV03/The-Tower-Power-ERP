@@ -22,8 +22,8 @@ import { TimeClockDialog, type TimeClockEmployeeOption } from "@/components/modu
 
 const hrLabels = {
   es: {
-    title: "RH y asistencia",
-    subtitle: "Plantilla, contratos y asistencia diaria con una vista operativa para sucursales.",
+    title: "Recursos Humanos",
+    subtitle: "Expedientes, contratos y asistencia diaria con vista operativa por sucursal.",
     employeesTab: "Empleados",
     attendanceTab: "Asistencia",
     contractsTab: "Contratos",
@@ -33,7 +33,7 @@ const hrLabels = {
     exportHr: "Exportar RH",
     activeStaff: "Personal activo",
     presentToday: "Presentes hoy",
-    incidents: "Incidencias",
+    incidents: "Contratos visibles",
     openAttendances: "Asistencias abiertas",
     employee: "Empleado",
     position: "Puesto",
@@ -57,8 +57,8 @@ const hrLabels = {
     branch: "Sucursal",
   },
   en: {
-    title: "HR & Attendance",
-    subtitle: "Staff directory, contracts, and daily attendance with an operational branch view.",
+    title: "Human Resources",
+    subtitle: "Employee records, contracts, and daily attendance with an operational branch view.",
     employeesTab: "Employees",
     attendanceTab: "Attendance",
     contractsTab: "Contracts",
@@ -68,7 +68,7 @@ const hrLabels = {
     exportHr: "Export HR",
     activeStaff: "Active Staff",
     presentToday: "Present Today",
-    incidents: "Incidents",
+    incidents: "Visible Contracts",
     openAttendances: "Open Attendances",
     employee: "Employee",
     position: "Position",
@@ -267,7 +267,7 @@ export function HrClient({
       <div className="erp-page-grid">
         <MetricCard label={t.activeStaff} value={String(metrics.activeEmployees)} change="Actual" locale={locale} />
         <MetricCard label={t.presentToday} value={String(metrics.attendanceToday)} change="Hoy" tone="success" locale={locale} />
-        <MetricCard label={t.incidents} value={String(metrics.openAttendance)} change="Abiertas" tone={metrics.openAttendance > 0 ? "warning" : "success"} locale={locale} />
+        <MetricCard label={t.incidents} value={String(initialContracts.length)} change="Expedientes" locale={locale} />
         <MetricCard label={t.openAttendances} value={String(metrics.openAttendance)} change="Clock" tone={metrics.openAttendance > 0 ? "warning" : "default"} locale={locale} />
       </div>
 
@@ -559,7 +559,7 @@ export function HrClient({
 
       <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
         <CalendarClock className="size-4 shrink-0" />
-        <span>Acciones de captura y exportación preparadas para integrarse con endpoints operativos.</span>
+        <span>Expedientes, contratos y asistencia se mantienen como insumos operativos para otros modulos.</span>
       </div>
     </section>
   );

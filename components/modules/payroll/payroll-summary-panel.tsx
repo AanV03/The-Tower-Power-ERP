@@ -1,73 +1,93 @@
-import { AlertTriangle, CheckCircle2, Sigma } from "lucide-react";
+import { AlertTriangle, CalendarRange, CheckCircle2 } from "lucide-react";
 
-import type { PayrollSummaryView } from "@/components/modules/payroll/payroll-dashboard";
+import { payrollLabels } from "@/components/modules/payroll/config";
+import type {
+  PayrollPeriodView,
+  PayrollReadiness,
+  PayrollSummaryView,
+} from "@/components/modules/payroll/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getDictionary, type Locale } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
-function SummaryLine({ label, value }: { label: string; value: string }) {
+function DetailRow({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex items-center justify-between gap-4 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium text-foreground">{value}</span>
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/20 px-3 py-2.5 text-sm">
+      <span className="min-w-0 text-muted-foreground">{label}</span>
+      <span className="shrink-0 font-semibold tabular-nums text-foreground">{value}</span>
     </div>
   );
 }
 
-export function PayrollSummaryPanel({ summary, locale }: { summary: PayrollSummaryView; locale: Locale }) {
-  const t = getDictionary(locale).payroll;
-  const hasAlerts = summary.missingReceipts > 0 || summary.openAttendances > 0 || summary.draftPeriods > 0;
+export function PayrollPeriodDetailPanel({
+  period,
+  summary,
+  readiness,
+  className,
+}: {
+  period?: PayrollPeriodView;
+  summary: PayrollSummaryView;
+  readiness: PayrollReadiness;
+  className?: string;
+}) {
+  const hasAlerts = readiness.incidentCount > 0;
 
   return (
-    <Card className="h-fit">
-      <CardHeader className="border-b border-border">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Sigma className="size-4" aria-hidden="true" />
-          {t.panels.closeSummary}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        <div className="space-y-3">
-          <SummaryLine label={t.fields.base} value={summary.totalBaseLabel} />
-          <SummaryLine label={t.fields.overtime} value={summary.totalOvertimeLabel} />
-          <SummaryLine label={t.commissions} value={summary.totalCommissionsLabel} />
-          <SummaryLine label={t.deductions} value={summary.totalDeductionsLabel} />
-          <div className="border-t border-border pt-3">
-            <SummaryLine label={t.fields.net} value={summary.totalNetLabel} />
+    <Card className={cn("overflow-hidden", className)}>
+      <CardHeader className="border-b border-border p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CalendarRange className="size-4 shrink-0" aria-hidden="true" />
+              Detalle del periodo
+            </CardTitle>
+            <p className="mt-1 truncate text-xs text-muted-foreground">
+              {period?.range ?? summary.activePeriodLabel}
+            </p>
           </div>
+          {period ? (
+            <Badge className="shrink-0" variant={period.status === "DRAFT" ? "secondary" : "outline"}>
+              {payrollLabels.status[period.status]}
+            </Badge>
+          ) : null}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4 p-4">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+          <DetailRow label={payrollLabels.periods.employees} value={period?.employeeCount ?? 0} />
+          <DetailRow label={payrollLabels.summary.base} value={summary.totalBaseLabel} />
+          <DetailRow label={payrollLabels.summary.commissions} value={summary.totalCommissionsLabel} />
+          <DetailRow label={payrollLabels.summary.deductions} value={summary.totalDeductionsLabel} />
+          <DetailRow label={payrollLabels.summary.netTotal} value={summary.totalNetLabel} />
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/20 p-3">
-            <span className="flex items-center gap-2 text-sm text-foreground">
-              {hasAlerts ? <AlertTriangle className="size-4 text-destructive" aria-hidden="true" /> : <CheckCircle2 className="size-4 text-primary" aria-hidden="true" />}
-              {t.alerts.title}
+        <div className="rounded-lg border border-border bg-background">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2.5">
+            <div className="flex min-w-0 items-center gap-2">
+              {hasAlerts ? (
+                <AlertTriangle className="size-4 shrink-0 text-destructive" aria-hidden="true" />
+              ) : (
+                <CheckCircle2 className="size-4 shrink-0 text-primary" aria-hidden="true" />
+              )}
+              <span className="text-sm font-semibold text-foreground">{payrollLabels.summary.alerts}</span>
+            </div>
+            <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
+              {readiness.incidentCount}
             </span>
-            <Badge variant={hasAlerts ? "destructive" : "secondary"}>{hasAlerts ? t.review : t.ready}</Badge>
           </div>
-          <div className="grid gap-2 text-sm text-muted-foreground">
-            <div className="flex justify-between gap-3">
-              <span>{t.alerts.missingReceipts}</span>
-              <span>{summary.missingReceipts}</span>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span>{t.alerts.openAttendances}</span>
-              <span>{summary.openAttendances}</span>
-            </div>
-            <div className="flex justify-between gap-3">
-              <span>{t.alerts.draftPeriods}</span>
-              <span>{summary.draftPeriods}</span>
-            </div>
+          <div className="grid gap-2 p-3">
+            <DetailRow label={payrollLabels.summary.missingReceipts} value={summary.missingReceipts} />
+            <DetailRow label={payrollLabels.summary.openAttendances} value={summary.openAttendances} />
           </div>
         </div>
 
         <div className="grid gap-2">
-          <Button type="button" disabled>
-            {t.actions.approvePeriod}
+          <Button type="button" className="w-full" disabled={!readiness.canApprove}>
+            {payrollLabels.actions.approve}
           </Button>
-          <Button type="button" variant="outline" disabled>
-            {t.actions.sendPayments}
+          <Button type="button" className="w-full" variant="outline" disabled>
+            {payrollLabels.actions.pay}
           </Button>
         </div>
       </CardContent>
