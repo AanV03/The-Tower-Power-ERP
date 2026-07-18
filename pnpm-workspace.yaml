@@ -1,6 +1,6 @@
 allowBuilds:
   '@prisma/engines': false
-  '@sentry/cli': set this to true or false
+  '@sentry/cli': true
   msw: false
   prisma: false
   puppeteer: false
