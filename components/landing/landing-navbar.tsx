@@ -2,68 +2,25 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Dumbbell } from "lucide-react";
 import { LandingMegaMenu } from "@/components/landing/mega-menu";
+import { MobilePublicMenu } from "@/components/landing/mobile-public-menu";
 import { useLandingRouteTransition } from "@/components/landing/landing-route-transition";
 import { LocaleSwitcher } from "@/components/layout/locale-switcher";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { localizedHome, localizedPath } from "@/lib/localized-routing";
 
-const curtainPanels = Array.from({ length: 7 }, (_, index) => index);
-const curtainDuration = 420;
-const curtainStagger = 45;
-const curtainCoverDelay = curtainDuration + (curtainPanels.length - 1) * curtainStagger + 90;
-
 export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
   const { startRouteTransition } = useLandingRouteTransition();
   const dictionary = getDictionary(locale);
   const registerHref = localizedPath(locale, "register");
-  const [curtainPhase, setCurtainPhase] = useState<"idle" | "enter" | "exit">("idle");
-  const timersRef = useRef<number[]>([]);
-
   const navLinks = [
-    { label: dictionary.landing.navbar.operations, hash: "#operations" },
-    { label: dictionary.landing.navbar.contact, hash: "#contact" },
+    { label: dictionary.landing.navbar.operations, href: localizedPath(locale, "operations") },
+    { label: dictionary.landing.navbar.contact, href: localizedPath(locale, "contact") },
   ];
-
-  useEffect(() => {
-    return () => {
-      timersRef.current.forEach((timer) => window.clearTimeout(timer));
-    };
-  }, []);
-
-  const clearTransitionTimers = () => {
-    timersRef.current.forEach((timer) => window.clearTimeout(timer));
-    timersRef.current = [];
-  };
-
-  const handleSectionClick = (
-    event: MouseEvent<HTMLAnchorElement>,
-    hash: string
-  ) => {
-    const target = document.querySelector<HTMLElement>(hash);
-
-    if (!target || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
-
-    event.preventDefault();
-    clearTransitionTimers();
-    setCurtainPhase("enter");
-
-    timersRef.current = [
-      window.setTimeout(() => {
-        window.history.pushState(null, "", hash);
-        target.scrollIntoView({ block: "start", behavior: "auto" });
-      }, curtainCoverDelay),
-      window.setTimeout(() => setCurtainPhase("exit"), curtainCoverDelay + 140),
-      window.setTimeout(() => setCurtainPhase("idle"), curtainCoverDelay + 680),
-    ];
-  };
 
   const handleRouteClick = (
     event: MouseEvent<HTMLAnchorElement>,
@@ -87,30 +44,6 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
         animate={{ opacity: [0.35, 0.95, 0.35], scale: [0.85, 1.25, 0.85] }}
         transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut" }}
       />
-      {curtainPhase !== "idle" ? (
-        <div
-          key={curtainPhase}
-          aria-hidden="true"
-          className="fixed inset-0 z-[100] grid grid-cols-7 pointer-events-none"
-        >
-          {curtainPanels.map((panel) => (
-            <motion.div
-              key={panel}
-              className="origin-top bg-[var(--landing-transition-bg,#025453)]"
-              initial={{ scaleY: curtainPhase === "enter" ? 0 : 1 }}
-              animate={{ scaleY: curtainPhase === "enter" ? 1 : 0 }}
-              transition={{
-                duration: curtainDuration / 1000,
-                ease: [0.83, 0, 0.17, 1],
-                delay: (panel * curtainStagger) / 1000,
-              }}
-              style={{
-                transformOrigin: curtainPhase === "enter" ? "top" : "bottom",
-              }}
-            />
-          ))}
-        </div>
-      ) : null}
 
       <nav
         aria-label="Main navigation"
@@ -139,10 +72,10 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
         <div className="hidden items-center justify-center gap-3 px-6 lg:flex xl:gap-4 xl:px-12">
           <LandingMegaMenu locale={locale} mode="desktop" />
           {navLinks.map((link) => (
-            <a
-              key={link.hash}
-              href={localizedPath(locale, link.hash)}
-              onClick={(event) => handleSectionClick(event, link.hash)}
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={(event) => handleRouteClick(event, link.href)}
               className="group relative inline-flex min-h-10 min-w-32 items-center justify-center border border-[color:var(--landing-border)] bg-[var(--landing-panel-muted)] px-4 text-xs font-black uppercase tracking-[0.22em] text-[var(--landing-copy)] transition-colors hover:border-[color:var(--landing-accent-strong)] hover:bg-[var(--landing-panel-hover)] hover:text-[var(--landing-accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)]"
             >
               <span
@@ -166,7 +99,7 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
                 className="absolute inset-x-3 bottom-1 h-px origin-left scale-x-0 bg-[var(--landing-accent-strong)] transition-transform group-hover:scale-x-100"
               />
               {link.label}
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -174,6 +107,7 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
           <ThemeToggle locale={locale} appearance="landing" />
           <LocaleSwitcher locale={locale} inHeader={true} />
           <LandingMegaMenu locale={locale} mode="mobile" />
+          <MobilePublicMenu locale={locale} />
           <Link
             href={registerHref}
             onClick={(event) => handleRouteClick(event, registerHref)}

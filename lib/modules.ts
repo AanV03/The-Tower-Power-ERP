@@ -13,6 +13,8 @@ export type ModuleItem = {
   features: ModuleFeature[];
   imageSrc: string;
   imageAlt: string;
+  imageWidth: number;
+  imageHeight: number;
 };
 
 export type ModuleSection = {
@@ -20,7 +22,7 @@ export type ModuleSection = {
   items: ModuleItem[];
 };
 
-type LocalizedModuleContent = Omit<ModuleItem, "slug" | "category" | "imageSrc">;
+type LocalizedModuleContent = Omit<ModuleItem, "slug" | "category" | "imageSrc" | "imageWidth" | "imageHeight">;
 type SectionKey = "operations" | "logistics" | "finance" | "people" | "growth";
 
 type ModuleDefinition = {
@@ -35,6 +37,13 @@ const sectionLabels = {
   en: { operations: "Operations", logistics: "Logistics", finance: "Finance", people: "People", growth: "Growth" },
   fr: { operations: "Opérations", logistics: "Logistique", finance: "Finance", people: "Équipe", growth: "Croissance" },
 } satisfies Record<Locale, Record<SectionKey, string>>;
+
+const imageDimensions = {
+  "panel-operativo": [1850, 957], "punto-de-venta": [1860, 948], suscripciones: [1868, 947],
+  acceso: [1868, 955], catalogo: [1864, 905], compras: [1863, 914], almacenes: [1864, 840],
+  inventario: [1868, 809], finanzas: [1860, 820], contabilidad: [1861, 904], "rh-y-nomina": [1862, 814],
+  nomina: [1867, 850], especialistas: [1868, 798], marketing: [1772, 861], analytics: [1767, 805],
+} as const;
 
 function content(
   label: string,
@@ -184,10 +193,13 @@ const sectionOrder: SectionKey[] = ["operations", "logistics", "finance", "peopl
 
 function resolveModule(definition: ModuleDefinition, locale: Locale): ModuleItem {
   const localizedContent = definition.content[locale];
+  const [imageWidth, imageHeight] = imageDimensions[definition.slug as keyof typeof imageDimensions];
   return {
     slug: definition.slug,
     category: sectionLabels[locale][definition.section],
     imageSrc: definition.imageSrc,
+    imageWidth,
+    imageHeight,
     ...localizedContent,
     features: localizedContent.features.map((feature) => ({
       title: feature.title,

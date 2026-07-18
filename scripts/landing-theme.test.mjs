@@ -17,6 +17,11 @@ const moduleRouteSource = await readFile(new URL("../app/[locale]/modules/[slug]
 const enDictionarySource = await readFile(new URL("../lib/i18n/en.ts", import.meta.url), "utf8");
 const esDictionarySource = await readFile(new URL("../lib/i18n/es.ts", import.meta.url), "utf8");
 const frDictionarySource = await readFile(new URL("../lib/i18n/fr.ts", import.meta.url), "utf8");
+const moduleScreenshotSource = await readFile(new URL("../components/landing/module-screenshot.tsx", import.meta.url), "utf8").catch(() => "");
+const operationsPageSource = await readFile(new URL("../components/landing/operations-page.tsx", import.meta.url), "utf8").catch(() => "");
+const operationsRouteSource = await readFile(new URL("../app/[locale]/operations/page.tsx", import.meta.url), "utf8").catch(() => "");
+const contactPageSource = await readFile(new URL("../components/landing/contact-page.tsx", import.meta.url), "utf8").catch(() => "");
+const contactRouteSource = await readFile(new URL("../app/[locale]/contact/page.tsx", import.meta.url), "utf8").catch(() => "");
 
 function landingPaletteBlock(source) {
   const match = source.match(/\.landing-palette\s*\{(?<body>[\s\S]*?)\n\}/);
@@ -156,9 +161,10 @@ test("module page dictionaries localize all shared page chrome", () => {
 });
 
 test("public module template renders supplied images and real highlights", () => {
-  assert.match(moduleTemplateSource, /import Image from "next\/image"/);
-  assert.match(moduleTemplateSource, /src=\{module\.imageSrc\}/);
-  assert.match(moduleTemplateSource, /alt=\{module\.imageAlt\}/);
+  assert.match(moduleTemplateSource, /<ModuleScreenshot/);
+  assert.match(moduleScreenshotSource, /import Image from "next\/image"/);
+  assert.match(moduleScreenshotSource, /src=\{module\.imageSrc\}/);
+  assert.match(moduleScreenshotSource, /alt=\{module\.imageAlt\}/);
   assert.match(moduleTemplateSource, /feature\.description/);
   assert.doesNotMatch(moduleTemplateSource, /Screenshot preview coming soon/);
   assert.doesNotMatch(moduleTemplateSource, /Public preview copy for this capability/);
@@ -168,6 +174,48 @@ test("public module page has no create-account action", () => {
   assert.doesNotMatch(moduleTemplateSource, /href=\{"\/register"/);
   assert.doesNotMatch(moduleTemplateSource, /Create account/);
   assert.doesNotMatch(moduleTemplateSource, /ArrowRight/);
+});
+
+test("module screenshots use intrinsic dimensions in a full-width section", () => {
+  assert.match(moduleDataSource, /imageWidth:\s*number/);
+  assert.match(moduleDataSource, /imageHeight:\s*number/);
+  assert.match(moduleTemplateSource, /<ModuleScreenshot/);
+  assert.doesNotMatch(moduleTemplateSource, /lg:grid-cols-\[0\.9fr_1\.1fr\]/);
+  assert.doesNotMatch(moduleTemplateSource, /min-h-\[24rem\]/);
+  assert.match(moduleScreenshotSource, /width=\{module\.imageWidth\}/);
+  assert.match(moduleScreenshotSource, /height=\{module\.imageHeight\}/);
+  assert.match(moduleScreenshotSource, /className="h-auto w-full"/);
+});
+
+test("module screenshots expand into an accessible dialog", () => {
+  assert.match(moduleScreenshotSource, /role="dialog"/);
+  assert.match(moduleScreenshotSource, /aria-modal="true"/);
+  assert.match(moduleScreenshotSource, /event\.key === "Escape"/);
+  assert.match(moduleScreenshotSource, /document\.body\.style\.overflow/);
+  assert.match(moduleScreenshotSource, /trigger\?\.focus\(\)/);
+});
+
+test("localized public operations page exists", async () => {
+  await access(new URL("../app/[locale]/operations/page.tsx", import.meta.url));
+  assert.match(operationsPageSource, /dictionary\.landing\.operationsPage/);
+  assert.match(operationsRouteSource, /if \(!isLocale\(locale\)\)/);
+  assert.match(operationsRouteSource, /generateMetadata/);
+  assert.match(operationsPageSource, /moduleLinks\.map/);
+});
+
+test("localized public contact page exists", async () => {
+  await access(new URL("../app/[locale]/contact/page.tsx", import.meta.url));
+  assert.match(contactPageSource, /dictionary\.landing\.contactPage/);
+  assert.match(contactRouteSource, /if \(!isLocale\(locale\)\)/);
+  assert.match(contactRouteSource, /generateMetadata/);
+});
+
+test("landing navbar routes to operations and contact pages", () => {
+  assert.match(navbarSource, /localizedPath\(locale, "operations"\)/);
+  assert.match(navbarSource, /localizedPath\(locale, "contact"\)/);
+  assert.doesNotMatch(navbarSource, /#operations|#contact/);
+  assert.doesNotMatch(navbarSource, /handleSectionClick|curtainPhase/);
+  assert.match(navbarSource, /<MobilePublicMenu locale=\{locale\}/);
 });
 
 test("landing mega menu renders module titles without mini descriptions", () => {
@@ -239,7 +287,9 @@ test("localized legal pages keep locale-aware navigation", () => {
   assert.match(legalPageSource, /<LandingFooter locale=\{locale\}/);
   assert.match(navbarSource, /href=\{localizedHome\(locale\)\}/);
   assert.doesNotMatch(navbarSource, /href=\{\/"/);
-  assert.match(navbarSource, /href=\{localizedPath\(locale,\s*link\.hash\)\}/);
+  assert.match(navbarSource, /href=\{link\.href\}/);
+  assert.match(navbarSource, /localizedPath\(locale, "operations"\)/);
+  assert.match(navbarSource, /localizedPath\(locale, "contact"\)/);
 });
 
 test("landing mega menu and screenshot sections use localized dictionaries", () => {

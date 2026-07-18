@@ -1,10 +1,10 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Route } from "next";
 import { ArrowLeft, Sparkles } from "lucide-react";
 
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
+import { ModuleScreenshot } from "@/components/landing/module-screenshot";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import type { ModuleItem } from "@/lib/modules";
 
@@ -23,8 +23,8 @@ export function ModulePageTemplate({ module, locale }: ModulePageTemplateProps) 
 
       <section className="relative overflow-hidden border-b border-[color:var(--landing-border)] bg-[var(--landing-hero-bg)]">
         <div className="landing-dot-grid absolute inset-0" aria-hidden="true" />
-        <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-24">
-          <div>
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+          <div className="max-w-4xl">
             <Link
               href={`/${locale}` as Route}
               className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[var(--landing-accent-strong)] transition-colors hover:text-[var(--landing-text)]"
@@ -43,17 +43,8 @@ export function ModulePageTemplate({ module, locale }: ModulePageTemplateProps) 
             </p>
           </div>
 
-          <div className="border border-[color:var(--landing-border)] bg-[var(--landing-panel-strong)] p-4 shadow-2xl shadow-slate-950/10 dark:shadow-black/40">
-            <div className="relative min-h-[24rem] overflow-hidden border border-[color:var(--landing-border)] bg-[var(--landing-panel-muted)]">
-              <Image
-                src={module.imageSrc}
-                alt={module.imageAlt}
-                fill
-                priority
-                sizes="(min-width: 1024px) 55vw, 100vw"
-                className="object-contain"
-              />
-            </div>
+          <div className="mt-10 border border-[color:var(--landing-border)] bg-[var(--landing-panel-strong)] p-2 shadow-2xl shadow-slate-950/10 dark:shadow-black/40 sm:p-3">
+            <ModuleScreenshot module={module} expandLabel={pageCopy.expandScreenshot} closeLabel={pageCopy.closeScreenshot} />
           </div>
         </div>
       </section>
