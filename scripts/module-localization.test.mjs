@@ -70,6 +70,29 @@ test("landing navbar includes the localized theme toggle", async () => {
   assert.match(source, /<ThemeToggle locale=\{locale\} appearance="landing"/);
 });
 
+test("landing application boxes are informational and do not navigate to modules", async () => {
+  const source = await readFile(
+    new URL("../app/[locale]/page.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.doesNotMatch(source, /href="#modules"/);
+  assert.match(
+    source,
+    /\{appPills\.map\(\(\{ label, icon: Icon \}\) => \(\s*<article/,
+  );
+});
+
+test("landing workflow title uses a balanced desktop layout", async () => {
+  const source = await readFile(
+    new URL("../app/[locale]/page.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /lg:grid-cols-\[1\.1fr_0\.9fr\]/);
+  assert.match(source, /max-w-\[12ch\] text-balance/);
+});
+
 test("landing theme selector uses a circle reveal while dashboard keeps square", async () => {
   const navbar = await readFile(
     new URL("../components/landing/landing-navbar.tsx", import.meta.url),
@@ -160,6 +183,24 @@ test("hero operation buttons control the localized chart", async () => {
   assert.match(source, /selectedOperation\.chartTitle/);
   assert.match(source, /selectedOperation\.chartValues\.map/);
   assert.match(source, /useReducedMotion\(\)/);
+  assert.match(source, /const HERO_ROTATION_INTERVAL_MS = 5_000/);
+  assert.match(
+    source,
+    /const operationOrder: OperationId\[\] = \["memberships", "pos", "dashboard", "access"\]/,
+  );
+  assert.match(source, /setTimeout\([\s\S]*HERO_ROTATION_INTERVAL_MS/);
+  assert.match(
+    source,
+    /shouldReduceMotion \|\| isOperationPanelHovered \|\| isOperationPanelFocused/,
+  );
+  assert.match(source, /onMouseEnter=\{\(\) => setIsOperationPanelHovered\(true\)\}/);
+  assert.match(source, /onMouseLeave=\{\(\) => setIsOperationPanelHovered\(false\)\}/);
+  assert.match(source, /onPointerDownCapture=\{\(\) => \{/);
+  assert.match(source, /if \(!isPointerInteractionRef\.current\) \{/);
+  assert.match(source, /setIsOperationPanelFocused\(true\)/);
+  assert.match(source, /onBlurCapture=\{handleOperationPanelBlur\}/);
+  assert.match(source, /onClick=\{\(\) => selectOperation\(id\)\}/);
+  assert.match(source, /setRotationRestartKey\(\(key\) => key \+ 1\)/);
 });
 
 test("legacy legal routes redirect to canonical localized pages", async () => {

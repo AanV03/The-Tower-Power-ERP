@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FocusEvent } from "react";
 import {
   Activity,
   BadgeCheck,
@@ -16,6 +16,9 @@ import { getDictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type OperationId = "memberships" | "pos" | "dashboard" | "access";
+
+const HERO_ROTATION_INTERVAL_MS = 5_000;
+const operationOrder: OperationId[] = ["memberships", "pos", "dashboard", "access"];
 
 const operationChartValues: Record<OperationId, number[]> = {
   memberships: [44, 62, 55, 73, 66, 82, 70, 91, 78, 86, 68, 80],
@@ -89,8 +92,12 @@ function AnimateNumber({
 export default function Hero({ locale = "es" }: { locale?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const isPointerInteractionRef = useRef(false);
   const dictionary = getDictionary(locale as Locale);
   const [activeOperation, setActiveOperation] = useState<OperationId>("pos");
+  const [isOperationPanelHovered, setIsOperationPanelHovered] = useState(false);
+  const [isOperationPanelFocused, setIsOperationPanelFocused] = useState(false);
+  const [rotationRestartKey, setRotationRestartKey] = useState(0);
   const shouldReduceMotion = useReducedMotion();
 
   const heroStats = [
@@ -136,6 +143,38 @@ export default function Hero({ locale = "es" }: { locale?: string }) {
 
   const selectedOperation =
     operations.find(({ id }) => id === activeOperation) ?? operations[1];
+
+  const selectOperation = (id: OperationId) => {
+    setActiveOperation(id);
+    setRotationRestartKey((key) => key + 1);
+  };
+
+  const handleOperationPanelBlur = (event: FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      setIsOperationPanelFocused(false);
+    }
+  };
+
+  useEffect(() => {
+    if (shouldReduceMotion || isOperationPanelHovered || isOperationPanelFocused) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setActiveOperation((current) => {
+        const currentIndex = operationOrder.indexOf(current);
+        return operationOrder[(currentIndex + 1) % operationOrder.length];
+      });
+    }, HERO_ROTATION_INTERVAL_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    activeOperation,
+    isOperationPanelFocused,
+    isOperationPanelHovered,
+    rotationRestartKey,
+    shouldReduceMotion,
+  ]);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -243,7 +282,26 @@ export default function Hero({ locale = "es" }: { locale?: string }) {
           </div>
         </div>
 
-        <div className="relative hidden lg:block self-start pt-4 lg:pt-8">
+        <div
+          className="relative hidden self-start pt-4 lg:block lg:pt-8"
+          onMouseEnter={() => setIsOperationPanelHovered(true)}
+          onMouseLeave={() => setIsOperationPanelHovered(false)}
+          onPointerDownCapture={() => {
+            isPointerInteractionRef.current = true;
+          }}
+          onPointerUpCapture={() => {
+            isPointerInteractionRef.current = false;
+          }}
+          onPointerCancelCapture={() => {
+            isPointerInteractionRef.current = false;
+          }}
+          onFocusCapture={() => {
+            if (!isPointerInteractionRef.current) {
+              setIsOperationPanelFocused(true);
+            }
+          }}
+          onBlurCapture={handleOperationPanelBlur}
+        >
           <div className="border border-[color:var(--landing-border)] bg-[var(--landing-panel-strong)] p-4 sm:p-5 shadow-2xl shadow-slate-900/10 dark:shadow-black/50">
             <div className="mb-4 flex items-center justify-between border-b border-[color:var(--landing-border)] pb-3">
               <div>
@@ -266,7 +324,7 @@ export default function Hero({ locale = "es" }: { locale?: string }) {
                   key={id}
                   type="button"
                   aria-pressed={activeOperation === id}
-                  onClick={() => setActiveOperation(id)}
+                  onClick={() => selectOperation(id)}
                   className={cn(
                     "border p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent-strong)]",
                     activeOperation === id

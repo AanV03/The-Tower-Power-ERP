@@ -80,6 +80,25 @@ export const es = {
         growth: "Crecimiento",
       },
     },
+    modulePage: {
+      back: "Volver",
+      featuresEyebrow: "Funciones clave",
+      featuresTitle: "Lo más destacado de este módulo",
+      bannerEyebrow: "Creado para operaciones conectadas",
+      bannerTitle: "Explora The Tower Power con tu equipo",
+      expandScreenshot: "Ampliar captura",
+      closeScreenshot: "Cerrar vista",
+    },
+    operationsPage: {
+      metadataTitle: "Operaciones | The Tower Power", metadataDescription: "Descubre cómo The Tower Power conecta miembros, ventas, equipo, inventario y finanzas.", eyebrow: "Operaciones conectadas", title: "Opera cada sucursal desde un solo sistema", description: "The Tower Power conecta recepción, pagos, accesos, personal, inventario y supervisión financiera durante todo el día.", pillarsEyebrow: "Pilares operativos", pillarsTitle: "El trabajo que mantiene cada sede en movimiento",
+      pillars: [{ title: "Miembros y acceso", description: "Mantén alineados membresías, renovaciones, entradas y permisos de acceso." }, { title: "Ventas y facturación", description: "Conecta punto de venta, cargos recurrentes, facturas, devoluciones y pagos." }, { title: "Equipo y nómina", description: "Coordina asistencia, turnos, sesiones, comisiones y preparación de nómina." }, { title: "Inventario y finanzas", description: "Controla movimientos, compras, saldos y reportes entre sucursales." }],
+      flowEyebrow: "Flujo conectado", flowTitle: "De la actividad diaria a una operación conciliada", steps: [{ title: "La actividad se registra", description: "Ventas, accesos, renovaciones, turnos y movimientos se capturan donde ocurren." }, { title: "Los módulos se sincronizan", description: "Los registros relacionados se actualizan juntos para mantener información consistente." }, { title: "Los responsables actúan", description: "Los líderes revisan excepciones, comparan sucursales y toman decisiones informadas." }], modulesEyebrow: "Explora el sistema", modulesTitle: "Abre los módulos detrás del flujo", moduleAction: "Explorar módulo",
+    },
+    contactPage: {
+      metadataTitle: "Contacto | The Tower Power", metadataDescription: "Contacta a The Tower Power para soporte, ventas o preguntas del producto.", eyebrow: "Contacta a The Tower Power", title: "Cuéntanos qué necesita tu operación", description: "Comparte tu pregunta y el equipo adecuado podrá ayudarte con el siguiente paso.", responseNote: "Este formulario de demostración valida el mensaje localmente y no envía datos a un servidor.",
+      channels: [{ title: "Soporte", description: "Ayuda con acceso y uso diario del producto.", value: "support@thetowerpower.com" }, { title: "Ventas", description: "Preguntas sobre planes, sucursales e implementación.", value: "sales@thetowerpower.com" }, { title: "General", description: "Alianzas y otras preguntas del producto.", value: "hello@thetowerpower.com" }],
+      form: { title: "Enviar un mensaje", nameLabel: "Nombre", namePlaceholder: "Tu nombre", emailLabel: "Correo", emailPlaceholder: "tu@empresa.com", companyLabel: "Empresa o gimnasio", companyPlaceholder: "Tu organización", messageLabel: "Mensaje", messagePlaceholder: "¿Cómo podemos ayudarte?", requiredError: "Este campo es obligatorio.", emailError: "Ingresa un correo válido.", submit: "Validar mensaje", successTitle: "Mensaje listo", successDescription: "Tu mensaje pasó la validación local. Esta demo no lo envió a un servidor.", reset: "Escribir otro mensaje" },
+    },
     oneClickOps: "// OPERACIONES EN UN CLIC",
     gymWorkflowTitle: "Apps para cada flujo de trabajo en el gimnasio",
     builtForGyms: "// DISEÑADO PARA OPERACIONES DE GIMNASIO",
@@ -587,4 +606,3 @@ export const es = {
     },
   },
 } as const;
-

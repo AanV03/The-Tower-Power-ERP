@@ -84,28 +84,27 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           </div>
           <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-3">
             {appPills.map(({ label, icon: Icon }) => (
-              <a
+              <article
                 key={label}
-                href="#modules"
-                className="group flex min-h-20 min-w-0 items-center gap-4 border border-[color:var(--landing-border)] bg-[var(--landing-panel)] px-5 py-4 transition-colors hover:border-[color:var(--landing-accent-strong)] hover:bg-[var(--landing-panel-hover)]"
+                className="flex min-h-20 min-w-0 items-center gap-4 border border-[color:var(--landing-border)] bg-[var(--landing-panel)] px-5 py-4"
               >
                 <Icon className="h-5 w-5 shrink-0 text-[var(--landing-accent-strong)]" aria-hidden="true" />
-                <span className="min-w-0 break-words text-xs font-black uppercase leading-snug tracking-[0.08em] text-[var(--landing-copy)] group-hover:text-[var(--landing-text)] sm:tracking-[0.1em]">
+                <span className="min-w-0 break-words text-xs font-black uppercase leading-snug tracking-[0.08em] text-[var(--landing-copy)] sm:tracking-[0.1em]">
                   {label}
                 </span>
-              </a>
+              </article>
             ))}
           </div>
         </div>
       </section>
       
       <section id="modules" className="relative mx-auto w-full max-w-7xl scroll-mt-24 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-        <div className="mb-8 grid gap-6 sm:mb-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+        <div className="mb-8 grid gap-6 sm:mb-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
             <span className="mb-2 block font-mono text-sm uppercase tracking-widest text-[var(--landing-accent-strong)]">
               {dictionary.landing.builtForGyms}
             </span>
-            <h2 className="text-[clamp(2.25rem,9vw,4.5rem)] font-black uppercase leading-none tracking-normal text-[var(--landing-text)]">
+            <h2 className="max-w-[12ch] text-balance text-[clamp(2.25rem,6vw,4rem)] font-black uppercase leading-[0.98] tracking-normal text-[var(--landing-text)] lg:text-[clamp(3rem,4.5vw,4.25rem)]">
               {dictionary.landing.chooseWorkflowTitle}
             </h2>
           </div>

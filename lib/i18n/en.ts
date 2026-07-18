@@ -80,6 +80,29 @@ export const en = {
         growth: "Growth",
       },
     },
+    modulePage: {
+      back: "Back",
+      featuresEyebrow: "Key features",
+      featuresTitle: "What this module highlights",
+      bannerEyebrow: "Built for connected operations",
+      bannerTitle: "Explore The Tower Power with your team",
+      expandScreenshot: "Expand screenshot",
+      closeScreenshot: "Close preview",
+    },
+    operationsPage: {
+      metadataTitle: "Operations | The Tower Power", metadataDescription: "See how The Tower Power connects daily gym operations across members, sales, staff, inventory, and finance.",
+      eyebrow: "Connected gym operations", title: "Run every branch from one operating system", description: "The Tower Power keeps front desk activity, payments, access, staffing, stock, and financial oversight connected throughout the day.",
+      pillarsEyebrow: "Operating pillars", pillarsTitle: "The work that keeps every location moving",
+      pillars: [{ title: "Members and access", description: "Keep membership status, renewals, check-ins, and entry permissions aligned." }, { title: "Sales and billing", description: "Connect point-of-sale activity, recurring charges, invoices, refunds, and payments." }, { title: "Staff and payroll", description: "Coordinate attendance, shifts, sessions, commissions, and payroll preparation." }, { title: "Inventory and finance", description: "Track stock movements, purchasing, balances, and reporting across branches." }],
+      flowEyebrow: "Connected workflow", flowTitle: "From daily activity to a reconciled operation",
+      steps: [{ title: "Activity is captured", description: "Sales, check-ins, renewals, shifts, and stock movements enter the system where they happen." }, { title: "Modules stay synchronized", description: "Related records update together so teams work from consistent operational information." }, { title: "Managers reconcile and act", description: "Leaders review exceptions, compare branches, and make informed decisions from one view." }],
+      modulesEyebrow: "Explore the system", modulesTitle: "Open the modules behind the workflow", moduleAction: "Explore module",
+    },
+    contactPage: {
+      metadataTitle: "Contact | The Tower Power", metadataDescription: "Contact The Tower Power about product questions, support, or gym operations.", eyebrow: "Contact The Tower Power", title: "Tell us what your operation needs", description: "Share your question and the right team can help you explore the next step.", responseNote: "This demonstration form validates your message locally and does not send data to a server.",
+      channels: [{ title: "Support", description: "Help with product access and day-to-day use.", value: "support@thetowerpower.com" }, { title: "Sales", description: "Questions about plans, branches, and rollout.", value: "sales@thetowerpower.com" }, { title: "General", description: "Partnerships and other product questions.", value: "hello@thetowerpower.com" }],
+      form: { title: "Send a message", nameLabel: "Name", namePlaceholder: "Your name", emailLabel: "Email", emailPlaceholder: "you@company.com", companyLabel: "Company or gym", companyPlaceholder: "Your organization", messageLabel: "Message", messagePlaceholder: "How can we help?", requiredError: "This field is required.", emailError: "Enter a valid email address.", submit: "Submit message", successTitle: "Message ready", successDescription: "Your message passed local validation. This demo did not send it to a server.", reset: "Write another message" },
+    },
     oneClickOps: "// ONE-CLICK OPERATIONS",
     gymWorkflowTitle: "Apps for every gym workflow",
     builtForGyms: "// BUILT FOR GYM OPERATIONS",
@@ -589,4 +612,3 @@ export const en = {
     },
   },
 } as const;
-

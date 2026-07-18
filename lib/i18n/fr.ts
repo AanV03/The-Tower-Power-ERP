@@ -81,6 +81,25 @@ export const fr = {
         growth: "Croissance",
       },
     },
+    modulePage: {
+      back: "Retour",
+      featuresEyebrow: "Fonctions clés",
+      featuresTitle: "Les points forts de ce module",
+      bannerEyebrow: "Conçu pour des opérations connectées",
+      bannerTitle: "Explorez The Tower Power avec votre équipe",
+      expandScreenshot: "Agrandir la capture",
+      closeScreenshot: "Fermer l’aperçu",
+    },
+    operationsPage: {
+      metadataTitle: "Opérations | The Tower Power", metadataDescription: "Découvrez comment The Tower Power relie membres, ventes, équipe, stock et finance.", eyebrow: "Opérations connectées", title: "Pilotez chaque site depuis un seul système", description: "The Tower Power relie accueil, paiements, accès, personnel, stock et supervision financière toute la journée.", pillarsEyebrow: "Piliers opérationnels", pillarsTitle: "Le travail qui maintient chaque site en mouvement",
+      pillars: [{ title: "Membres et accès", description: "Alignez adhésions, renouvellements, entrées et autorisations d’accès." }, { title: "Ventes et facturation", description: "Reliez point de vente, prélèvements, factures, remboursements et paiements." }, { title: "Équipe et paie", description: "Coordonnez présence, horaires, séances, commissions et préparation de la paie." }, { title: "Stock et finance", description: "Suivez mouvements, achats, soldes et rapports entre les sites." }],
+      flowEyebrow: "Flux connecté", flowTitle: "De l’activité quotidienne à une opération rapprochée", steps: [{ title: "L’activité est enregistrée", description: "Ventes, accès, renouvellements, horaires et mouvements sont saisis à la source." }, { title: "Les modules restent synchronisés", description: "Les données liées évoluent ensemble pour garantir une information cohérente." }, { title: "Les responsables agissent", description: "Les dirigeants examinent les exceptions, comparent les sites et décident." }], modulesEyebrow: "Explorer le système", modulesTitle: "Ouvrez les modules derrière le flux", moduleAction: "Explorer le module",
+    },
+    contactPage: {
+      metadataTitle: "Contact | The Tower Power", metadataDescription: "Contactez The Tower Power pour le support, les ventes ou le produit.", eyebrow: "Contactez The Tower Power", title: "Expliquez-nous les besoins de votre activité", description: "Partagez votre question afin que la bonne équipe vous aide à avancer.", responseNote: "Ce formulaire de démonstration valide le message localement et n’envoie aucune donnée à un serveur.",
+      channels: [{ title: "Support", description: "Aide pour l’accès et l’utilisation quotidienne.", value: "support@thetowerpower.com" }, { title: "Ventes", description: "Questions sur les offres, sites et déploiement.", value: "sales@thetowerpower.com" }, { title: "Général", description: "Partenariats et autres questions produit.", value: "hello@thetowerpower.com" }],
+      form: { title: "Envoyer un message", nameLabel: "Nom", namePlaceholder: "Votre nom", emailLabel: "E-mail", emailPlaceholder: "vous@entreprise.com", companyLabel: "Entreprise ou salle", companyPlaceholder: "Votre organisation", messageLabel: "Message", messagePlaceholder: "Comment pouvons-nous vous aider ?", requiredError: "Ce champ est obligatoire.", emailError: "Saisissez une adresse e-mail valide.", submit: "Valider le message", successTitle: "Message prêt", successDescription: "Votre message a passé la validation locale. Cette démo ne l’a pas envoyé.", reset: "Écrire un autre message" },
+    },
     gymWorkflowTitle: "Des applications pour chaque flux de travail",
     builtForGyms: "// CONÇU POUR LES OPÉRATIONS EN SALLE",
     chooseWorkflowTitle: "Choisissez le flux. The Tower Power connecte le reste.",
@@ -587,4 +606,3 @@ export const fr = {
     },
   },
 } as const;
-
