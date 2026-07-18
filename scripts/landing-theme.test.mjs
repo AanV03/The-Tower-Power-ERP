@@ -13,6 +13,10 @@ const homeSource = await readFile(new URL("../app/[locale]/page.tsx", import.met
 const classGridSource = await readFile(new URL("../components/ClassGrid.tsx", import.meta.url), "utf8").catch(() => "");
 const tickerSource = await readFile(new URL("../components/KineticTicker.tsx", import.meta.url), "utf8").catch(() => "");
 const legalPageSource = await readFile(new URL("../components/landing/legal-page.tsx", import.meta.url), "utf8").catch(() => "");
+const moduleRouteSource = await readFile(new URL("../app/[locale]/modules/[slug]/page.tsx", import.meta.url), "utf8").catch(() => "");
+const enDictionarySource = await readFile(new URL("../lib/i18n/en.ts", import.meta.url), "utf8");
+const esDictionarySource = await readFile(new URL("../lib/i18n/es.ts", import.meta.url), "utf8");
+const frDictionarySource = await readFile(new URL("../lib/i18n/fr.ts", import.meta.url), "utf8");
 
 function landingPaletteBlock(source) {
   const match = source.match(/\.landing-palette\s*\{(?<body>[\s\S]*?)\n\}/);
@@ -105,16 +109,83 @@ test("localized public module landing route exists", async () => {
   await access(new URL("../app/[locale]/modules/[slug]/page.tsx", import.meta.url));
 });
 
+test("public module route localizes lookup and metadata", () => {
+  assert.match(moduleRouteSource, /moduleSlugs\.map/);
+  assert.match(moduleRouteSource, /if \(!isLocale\(locale\)\)/);
+  assert.match(moduleRouteSource, /getModuleBySlug\(slug, locale\)/);
+  assert.doesNotMatch(moduleRouteSource, /getModuleBySlug\(slug\);/);
+});
+
+test("public module catalog resolves content by locale", () => {
+  assert.match(moduleDataSource, /import type \{ Locale \} from "@\/lib\/i18n"/);
+  assert.match(moduleDataSource, /content:\s*Record<Locale, LocalizedModuleContent>/);
+  assert.match(moduleDataSource, /getMegaMenuSections\(locale:\s*Locale\)/);
+  assert.match(moduleDataSource, /getModuleBySlug\(slug:\s*string,\s*locale:\s*Locale\)/);
+  assert.match(moduleDataSource, /description:\s*feature\.description/);
+});
+
+test("every public module has an explicit supplied screenshot", () => {
+  const screenshots = [
+    "Panel Op.png", "POS.png", "Gestion Membresias.png", "Access Control.png",
+    "Product catalog.png", "Purchasing supply.png", "Warehouse Management.png",
+    "Inventory Stock.png", "Finance Module.png", "Accounting.png", "HR attendance.png",
+    "Payroll commissions.png", "Period Settlement.png", "Marketing retention.png",
+    "Analytics Intelligence.png",
+  ];
+
+  for (const screenshot of screenshots) {
+    assert.match(moduleDataSource, new RegExp(screenshot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+});
+
+test("module highlights contain real descriptions in every locale", () => {
+  assert.match(moduleDataSource, /features:\s*\[\s*\{\s*title:/);
+  assert.match(moduleDataSource, /description:\s*"[^"]{24,}"/);
+  assert.doesNotMatch(moduleDataSource, /Public preview copy for this capability/);
+});
+
+test("module page dictionaries localize all shared page chrome", () => {
+  for (const source of [enDictionarySource, esDictionarySource, frDictionarySource]) {
+    assert.match(source, /modulePage:\s*\{/);
+    assert.match(source, /back:/);
+    assert.match(source, /featuresEyebrow:/);
+    assert.match(source, /featuresTitle:/);
+    assert.match(source, /bannerEyebrow:/);
+    assert.match(source, /bannerTitle:/);
+  }
+});
+
+test("public module template renders supplied images and real highlights", () => {
+  assert.match(moduleTemplateSource, /import Image from "next\/image"/);
+  assert.match(moduleTemplateSource, /src=\{module\.imageSrc\}/);
+  assert.match(moduleTemplateSource, /alt=\{module\.imageAlt\}/);
+  assert.match(moduleTemplateSource, /feature\.description/);
+  assert.doesNotMatch(moduleTemplateSource, /Screenshot preview coming soon/);
+  assert.doesNotMatch(moduleTemplateSource, /Public preview copy for this capability/);
+});
+
+test("public module page has no create-account action", () => {
+  assert.doesNotMatch(moduleTemplateSource, /href=\{"\/register"/);
+  assert.doesNotMatch(moduleTemplateSource, /Create account/);
+  assert.doesNotMatch(moduleTemplateSource, /ArrowRight/);
+});
+
 test("landing mega menu renders module titles without mini descriptions", () => {
   assert.match(megaMenuSource, /\{item\.label\}/);
   assert.doesNotMatch(megaMenuSource, /\{item\.description\}/);
+});
+
+test("landing mega menu consumes the localized module catalog", () => {
+  assert.match(megaMenuSource, /getMegaMenuSections\(safeLocale\)/);
+  assert.doesNotMatch(megaMenuSource, /localizedModuleLabel/);
+  assert.doesNotMatch(megaMenuSource, /const labels:\s*Record<string, string>/);
 });
 
 test("hero revenue bars animate upward one by one on load", () => {
   assert.match(heroSource, /motion\.div/);
   assert.match(heroSource, /origin-bottom/);
   assert.match(heroSource, /delay:\s*index\s*\*\s*0\.\d+/);
-  assert.match(heroSource, /initial=\{\{\s*scaleY:\s*0/);
+  assert.match(heroSource, /initial=\{shouldReduceMotion\s*\?\s*false\s*:\s*\{\s*scaleY:\s*0/);
   assert.match(heroSource, /animate=\{\{\s*scaleY:\s*1/);
 });
 
@@ -127,7 +198,7 @@ test("hero stat values animate with a Framer Motion number helper", () => {
 test("module pages use a short back link and no start setup button", () => {
   assert.doesNotMatch(moduleTemplateSource, /Start setup/);
   assert.doesNotMatch(moduleTemplateSource, /Back to landing/);
-  assert.match(moduleTemplateSource, />\s*Back\s*</);
+  assert.match(moduleTemplateSource, /\{pageCopy\.back\}/);
 });
 
 test("landing navbar and mega menu avoid clipping on tablet widths", () => {
@@ -176,7 +247,7 @@ test("landing mega menu and screenshot sections use localized dictionaries", () 
   assert.match(navbarSource, /<LandingMegaMenu locale=\{locale\} mode="mobile"/);
   assert.match(megaMenuSource, /getDictionary\(safeLocale\)/);
   assert.match(megaMenuSource, /dictionary\.landing\.megaMenu\.button/);
-  assert.match(megaMenuSource, /localizedModuleLabel/);
+  assert.match(megaMenuSource, /getMegaMenuSections\(safeLocale\)/);
   assert.match(classGridSource, /dictionary\.landing\.classGrid/);
   assert.match(tickerSource, /dictionary\.landing\.ticker\.primary/);
   assert.match(tickerSource, /dictionary\.landing\.ticker\.outline/);

@@ -80,6 +80,13 @@ export const es = {
         growth: "Crecimiento",
       },
     },
+    modulePage: {
+      back: "Volver",
+      featuresEyebrow: "Funciones clave",
+      featuresTitle: "Lo más destacado de este módulo",
+      bannerEyebrow: "Creado para operaciones conectadas",
+      bannerTitle: "Explora The Tower Power con tu equipo",
+    },
     oneClickOps: "// OPERACIONES EN UN CLIC",
     gymWorkflowTitle: "Apps para cada flujo de trabajo en el gimnasio",
     builtForGyms: "// DISEÑADO PARA OPERACIONES DE GIMNASIO",
@@ -587,4 +594,3 @@ export const es = {
     },
   },
 } as const;
-

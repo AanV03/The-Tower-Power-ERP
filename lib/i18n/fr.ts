@@ -81,6 +81,13 @@ export const fr = {
         growth: "Croissance",
       },
     },
+    modulePage: {
+      back: "Retour",
+      featuresEyebrow: "Fonctions clés",
+      featuresTitle: "Les points forts de ce module",
+      bannerEyebrow: "Conçu pour des opérations connectées",
+      bannerTitle: "Explorez The Tower Power avec votre équipe",
+    },
     gymWorkflowTitle: "Des applications pour chaque flux de travail",
     builtForGyms: "// CONÇU POUR LES OPÉRATIONS EN SALLE",
     chooseWorkflowTitle: "Choisissez le flux. The Tower Power connecte le reste.",
@@ -587,4 +594,3 @@ export const fr = {
     },
   },
 } as const;
-

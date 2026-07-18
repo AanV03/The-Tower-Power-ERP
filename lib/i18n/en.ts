@@ -80,6 +80,13 @@ export const en = {
         growth: "Growth",
       },
     },
+    modulePage: {
+      back: "Back",
+      featuresEyebrow: "Key features",
+      featuresTitle: "What this module highlights",
+      bannerEyebrow: "Built for connected operations",
+      bannerTitle: "Explore The Tower Power with your team",
+    },
     oneClickOps: "// ONE-CLICK OPERATIONS",
     gymWorkflowTitle: "Apps for every gym workflow",
     builtForGyms: "// BUILT FOR GYM OPERATIONS",
@@ -589,4 +596,3 @@ export const en = {
     },
   },
 } as const;
-
