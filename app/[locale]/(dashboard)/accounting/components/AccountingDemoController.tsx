@@ -41,6 +41,7 @@ export function AccountingDemoController(props: AccountingDashboardProps) {
         onSelectAccount: (accountId) => dispatch({ type: "select-account", accountId }),
         onSelectEntry: (entryId) => dispatch({ type: "select-entry", entryId }),
         onDeleteEntry: (entryId) => dispatch({ type: "delete-entry", entryId }),
+        onCreateAccount: () => dispatch({ type: "create-account" }),
       }}
     />
   );

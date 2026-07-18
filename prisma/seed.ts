@@ -44,6 +44,23 @@ const MODULE_IDS = [
 ] as const;
 
 const GRANULAR_LEVELS = ["read", "write", "approve", "admin"] as const;
+const BUSINESS_PERMISSIONS = [
+  "hr.read",
+  "hr.employee.write",
+  "hr.contract.write",
+  "hr.attendance.write",
+  "payroll.read",
+  "payroll.period.write",
+  "payroll.receipt.write",
+  "payroll.preview",
+  "payroll.approve",
+  "payroll.pay",
+  "accounting.read",
+  "accounting.account.write",
+  "accounting.journal.write",
+  "accounting.post",
+  "accounting.void",
+] as const;
 
 function granularPermissions(moduleIds: readonly (typeof MODULE_IDS)[number][]) {
   return moduleIds.flatMap((moduleId) => GRANULAR_LEVELS.map((level) => `${moduleId}.${level}`));
@@ -60,6 +77,7 @@ function withDashboardRead(permissions: readonly string[]) {
 const ALL_PERMISSIONS = withDashboardRead([
   ...granularPermissions(MODULE_IDS),
   ...managePermissions(MODULE_IDS),
+  ...BUSINESS_PERMISSIONS,
 ]);
 
 const ROLE_DEFINITIONS = [
@@ -89,10 +107,12 @@ const ROLE_DEFINITIONS = [
     scope: RoleScope.TENANT,
     description: "Usuario de auditoría financiera y operativa.",
     permissions: withDashboardRead([
-      ...["finance", "accounting", "analytics", "inventory", "payroll", "integrations"].map(
-        (moduleId) => `${moduleId}.read`,
-      ),
-      ...managePermissions(["finance", "accounting", "analytics", "inventory", "payroll", "integrations"]),
+      "finance.read",
+      "accounting.read",
+      "payroll.read",
+      "analytics.read",
+      "inventory.read",
+      "integrations.read",
     ]),
   },
   {
@@ -100,8 +120,11 @@ const ROLE_DEFINITIONS = [
     scope: RoleScope.BRANCH,
     description: "Usuario operativo para miembros, RH y especialistas.",
     permissions: withDashboardRead([
-      ...granularPermissions(["memberships", "access", "hr", "specialists"]),
-      ...managePermissions(["memberships", "access", "hr", "specialists"]),
+      "memberships.read",
+      "access.read",
+      "hr.read",
+      "hr.attendance.write",
+      "specialists.read",
     ]),
   },
 ] as const;

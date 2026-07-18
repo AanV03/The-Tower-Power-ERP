@@ -25,6 +25,192 @@ import {
 import { cn } from "@/lib/utils";
 import type { JournalEntryEditorProps, JournalEntryType } from "./types";
 
+export function JournalEntryLinesEditor({
+  entry,
+  status,
+  labels,
+  actions,
+}: Pick<JournalEntryEditorProps, "entry" | "status" | "labels" | "actions">) {
+  const disabled = status === "loading" || status === "error";
+
+  return (
+    <Card className="border-border/70 bg-card/80 shadow-xs ring-1 ring-foreground/5">
+      <CardHeader className="space-y-1 pb-3">
+        <CardTitle className="text-base">Partidas de la poliza</CardTitle>
+        <CardDescription>Asigna cuentas contables y captura debe / haber para el cuadre.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {status === "loading" ? (
+          <TableSkeleton rows={4} columns={5} />
+        ) : (
+          <>
+          <div className="space-y-3 md:hidden">
+            {entry.lines.map((line, index) => {
+              const accountInputId = `journal-line-${line.id}-account`;
+              const descriptionInputId = `journal-line-${line.id}-description`;
+              const debitInputId = `journal-line-${line.id}-debit`;
+              const creditInputId = `journal-line-${line.id}-credit`;
+
+              return (
+                <div key={line.id} className="rounded-lg border border-border bg-background p-3">
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-foreground">Partida {index + 1}</p>
+                    <Button
+                      size="icon-sm"
+                      disabled={disabled}
+                      onClick={() => actions?.onRemoveLine?.(line.id)}
+                      aria-label="Eliminar partida"
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:bg-destructive/60 disabled:text-destructive-foreground"
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" />
+                    </Button>
+                  </div>
+                  <div className="grid gap-3">
+                    <label className="space-y-1.5" htmlFor={accountInputId}>
+                      <span className="text-xs font-semibold uppercase text-muted-foreground">Cuenta</span>
+                      <Input
+                        id={accountInputId}
+                        value={`${line.accountCode} - ${line.accountName}`}
+                        disabled={disabled}
+                        onChange={(event) =>
+                          actions?.onLineChange?.(line.id, "accountName", event.target.value)
+                        }
+                      />
+                    </label>
+                    <label className="space-y-1.5" htmlFor={descriptionInputId}>
+                      <span className="text-xs font-semibold uppercase text-muted-foreground">Descripcion</span>
+                      <Input
+                        id={descriptionInputId}
+                        value={line.description}
+                        disabled={disabled}
+                        onChange={(event) =>
+                          actions?.onLineChange?.(line.id, "description", event.target.value)
+                        }
+                      />
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="space-y-1.5" htmlFor={debitInputId}>
+                        <span className="text-xs font-semibold uppercase text-muted-foreground">{labels.debit}</span>
+                        <Input
+                          id={debitInputId}
+                          className="text-right tabular-nums"
+                          type="number"
+                          value={line.debit || ""}
+                          disabled={disabled}
+                          onChange={(event) =>
+                            actions?.onLineChange?.(line.id, "debit", Number(event.target.value))
+                          }
+                        />
+                      </label>
+                      <label className="space-y-1.5" htmlFor={creditInputId}>
+                        <span className="text-xs font-semibold uppercase text-muted-foreground">{labels.credit}</span>
+                        <Input
+                          id={creditInputId}
+                          className="text-right tabular-nums"
+                          type="number"
+                          value={line.credit || ""}
+                          disabled={disabled}
+                          onChange={(event) =>
+                            actions?.onLineChange?.(line.id, "credit", Number(event.target.value))
+                          }
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <div className="rounded-lg border border-dashed border-border bg-muted/20 p-2">
+              <Button variant="ghost" size="sm" disabled={disabled} onClick={actions?.onAddLine} className="w-full justify-start">
+                <Plus className="size-4" aria-hidden="true" />
+                {labels.addLine}
+              </Button>
+            </div>
+          </div>
+
+          <div className="hidden rounded-lg border border-border bg-background md:block">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead className="min-w-[220px]">{labels.account}</TableHead>
+                  <TableHead className="min-w-[220px]">{labels.description}</TableHead>
+                  <TableHead className="min-w-[120px] text-right">{labels.debit}</TableHead>
+                  <TableHead className="min-w-[120px] text-right">{labels.credit}</TableHead>
+                  <TableHead className="w-12" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {entry.lines.map((line) => (
+                  <TableRow key={line.id}>
+                    <TableCell>
+                      <Input
+                        value={`${line.accountCode} - ${line.accountName}`}
+                        disabled={disabled}
+                        onChange={(event) =>
+                          actions?.onLineChange?.(line.id, "accountName", event.target.value)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        value={line.description}
+                        disabled={disabled}
+                        onChange={(event) =>
+                          actions?.onLineChange?.(line.id, "description", event.target.value)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        className="text-right tabular-nums"
+                        type="number"
+                        value={line.debit || ""}
+                        disabled={disabled}
+                        onChange={(event) =>
+                          actions?.onLineChange?.(line.id, "debit", Number(event.target.value))
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        className="text-right tabular-nums"
+                        type="number"
+                        value={line.credit || ""}
+                        disabled={disabled}
+                        onChange={(event) =>
+                          actions?.onLineChange?.(line.id, "credit", Number(event.target.value))
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="icon-sm"
+                        disabled={disabled}
+                        onClick={() => actions?.onRemoveLine?.(line.id)}
+                        aria-label={labels.removeLine}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:bg-destructive/60 disabled:text-destructive-foreground"
+                      >
+                        <Trash2 className="size-4" aria-hidden="true" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="border-t border-border bg-muted/20 p-3">
+              <Button variant="ghost" size="sm" disabled={disabled} onClick={actions?.onAddLine}>
+                <Plus className="size-4" aria-hidden="true" />
+                {labels.addLine}
+              </Button>
+            </div>
+          </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function JournalEntryEditor({
   locale,
   entry,
@@ -120,92 +306,6 @@ export function JournalEntryEditor({
           </label>
         </div>
       </CardHeader>
-
-      <CardContent>
-        {status === "loading" ? (
-          <TableSkeleton rows={4} columns={5} />
-        ) : (
-          <div className="overflow-x-auto rounded-lg border border-border bg-background">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="min-w-[220px]">{labels.account}</TableHead>
-                  <TableHead className="min-w-[220px]">{labels.description}</TableHead>
-                  <TableHead className="min-w-[120px] text-right">{labels.debit}</TableHead>
-                  <TableHead className="min-w-[120px] text-right">{labels.credit}</TableHead>
-                  <TableHead className="w-12" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {entry.lines.map((line) => (
-                  <TableRow key={line.id}>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <Input
-                          value={`${line.accountCode} - ${line.accountName}`}
-                          disabled={disabled}
-                          onChange={(event) =>
-                            actions?.onLineChange?.(line.id, "accountName", event.target.value)
-                          }
-                        />
-                        <span className="text-xs text-muted-foreground">{line.accountId}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        value={line.description}
-                        disabled={disabled}
-                        onChange={(event) =>
-                          actions?.onLineChange?.(line.id, "description", event.target.value)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        className="text-right tabular-nums"
-                        type="number"
-                        value={line.debit || ""}
-                        disabled={disabled}
-                        onChange={(event) =>
-                          actions?.onLineChange?.(line.id, "debit", Number(event.target.value))
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        className="text-right tabular-nums"
-                        type="number"
-                        value={line.credit || ""}
-                        disabled={disabled}
-                        onChange={(event) =>
-                          actions?.onLineChange?.(line.id, "credit", Number(event.target.value))
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        disabled={disabled || entry.lines.length <= 2}
-                        onClick={() => actions?.onRemoveLine?.(line.id)}
-                        aria-label={labels.removeLine}
-                      >
-                        <Trash2 className="size-4" aria-hidden="true" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="border-t border-border bg-muted/20 p-3">
-              <Button variant="ghost" size="sm" disabled={disabled} onClick={actions?.onAddLine}>
-                <Plus className="size-4" aria-hidden="true" />
-                {labels.addLine}
-              </Button>
-            </div>
-          </div>
-        )}
-      </CardContent>
 
       <CardFooter className="flex flex-col gap-4 border-t border-border/70 pt-4">
         <div className="grid w-full gap-3 sm:grid-cols-3">

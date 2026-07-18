@@ -14,7 +14,9 @@ export function AccountingHeader({
   branchLabel,
   labels,
   actions,
-  canRegister,
+  primaryActionLabel,
+  onPrimaryAction,
+  canPrimaryAction,
 }: {
   title: string;
   subtitle: string;
@@ -22,7 +24,9 @@ export function AccountingHeader({
   branchLabel: string;
   labels: AccountingLabels;
   actions?: AccountingActionHandlers;
-  canRegister: boolean;
+  primaryActionLabel: string;
+  onPrimaryAction?: () => void;
+  canPrimaryAction: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -51,10 +55,10 @@ export function AccountingHeader({
               headerPrimaryActionClass,
               "focus-visible:ring-2 focus-visible:ring-offset-2",
             )}
-            disabled={!canRegister}
-            onClick={actions?.onRegisterEntry}
+            disabled={!canPrimaryAction}
+            onClick={onPrimaryAction}
           >
-            {labels.registerEntry}
+            {primaryActionLabel}
           </Button>
           <Button
             variant="outline"

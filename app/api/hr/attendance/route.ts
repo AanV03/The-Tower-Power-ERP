@@ -15,7 +15,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "hr" });
+    const context = await requireApiContext({ moduleId: "hr", permission: "hr.attendance.write" });
     const data = AttendanceSchema.parse(await request.json());
 
     // 1. Verify employee exists and belongs to the tenant

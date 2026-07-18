@@ -230,10 +230,11 @@ async function hrSummary(context: TenantContext): Promise<ApiModuleSummary> {
     : null;
   const today = getDayBoundsForTimeZone(new Date(), scopedBranch?.timezone ?? DEFAULT_TIME_ZONE);
 
-  const [employees, attendanceToday, payrollPeriods] = await Promise.all([
+  const [employees, attendanceToday, openAttendance, contracts] = await Promise.all([
     prisma.employee.count({ where: { ...branchWhere(context), status: "ACTIVE" } }),
+    prisma.timeClock.count({ where: { ...branchWhere(context), clockIn: { gte: today.start, lt: today.end } } }),
     prisma.timeClock.count({ where: { ...branchWhere(context), clockIn: { gte: today.start, lt: today.end }, clockOut: null } }),
-    prisma.payrollPeriod.count({ where: { ...tenantWhere(context), status: "DRAFT" } }),
+    prisma.employeeContract.count({ where: tenantWhere(context) }),
   ]);
 
   return {
@@ -241,12 +242,13 @@ async function hrSummary(context: TenantContext): Promise<ApiModuleSummary> {
     metrics: [
       metric("employees", "Active staff", String(employees), "Current"),
       metric("attendance", "Attendance today", String(attendanceToday), "Today", "success"),
-      metric("payrollDrafts", "Draft payrolls", String(payrollPeriods), "Review", payrollPeriods > 0 ? "warning" : "default"),
+      metric("openAttendance", "Open attendance", String(openAttendance), "Today", openAttendance > 0 ? "warning" : "success"),
+      metric("contracts", "Visible contracts", String(contracts), "Records"),
     ],
     chart: [
       { label: "Staff", value: employees },
       { label: "Attendance", value: attendanceToday },
-      { label: "Payroll", value: payrollPeriods },
+      { label: "Contracts", value: contracts },
     ],
     rows: [row("Attendance records today", context.branchId ?? "Consolidated", "active", String(attendanceToday), "HR")],
   };
@@ -467,8 +469,8 @@ async function payrollSummary(context: TenantContext): Promise<ApiModuleSummary>
     moduleId: "payroll",
     metrics: [
       metric("draftPeriods", "Draft periods", String(draftPeriods), "Review", draftPeriods > 0 ? "warning" : "success"),
-      metric("employees", "Active employees", String(employees), "Current"),
-      metric("attendance", "Attendance today", String(attendanceToday), "Today", "success"),
+      metric("employees", "People in payroll", String(employees), "Current"),
+      metric("attendance", "Open attendance incidents", String(attendanceToday), "Review", attendanceToday > 0 ? "warning" : "success"),
       metric("netPay", "Net payroll", formatCurrency(sumDecimal(netPay._sum.netAmount)), "Pending"),
     ],
     chart: [
