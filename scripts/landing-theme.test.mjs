@@ -22,6 +22,8 @@ const operationsPageSource = await readFile(new URL("../components/landing/opera
 const operationsRouteSource = await readFile(new URL("../app/[locale]/operations/page.tsx", import.meta.url), "utf8").catch(() => "");
 const contactPageSource = await readFile(new URL("../components/landing/contact-page.tsx", import.meta.url), "utf8").catch(() => "");
 const contactRouteSource = await readFile(new URL("../app/[locale]/contact/page.tsx", import.meta.url), "utf8").catch(() => "");
+const contactFormSource = await readFile(new URL("../components/landing/contact-form.tsx", import.meta.url), "utf8").catch(() => "");
+const mobilePublicMenuSource = await readFile(new URL("../components/landing/mobile-public-menu.tsx", import.meta.url), "utf8").catch(() => "");
 
 function landingPaletteBlock(source) {
   const match = source.match(/\.landing-palette\s*\{(?<body>[\s\S]*?)\n\}/);
@@ -193,6 +195,8 @@ test("module screenshots expand into an accessible dialog", () => {
   assert.match(moduleScreenshotSource, /event\.key === "Escape"/);
   assert.match(moduleScreenshotSource, /document\.body\.style\.overflow/);
   assert.match(moduleScreenshotSource, /trigger\?\.focus\(\)/);
+  assert.match(moduleScreenshotSource, /closeRef\.current\?\.focus\(\)/);
+  assert.match(moduleScreenshotSource, /event\.key === "Tab"/);
 });
 
 test("localized public operations page exists", async () => {
@@ -208,6 +212,8 @@ test("localized public contact page exists", async () => {
   assert.match(contactPageSource, /dictionary\.landing\.contactPage/);
   assert.match(contactRouteSource, /if \(!isLocale\(locale\)\)/);
   assert.match(contactRouteSource, /generateMetadata/);
+  assert.match(contactFormSource, /"aria-describedby": error \? errorId : undefined/);
+  assert.match(contactFormSource, /id=\{errorId\}/);
 });
 
 test("landing navbar routes to operations and contact pages", () => {
@@ -216,6 +222,10 @@ test("landing navbar routes to operations and contact pages", () => {
   assert.doesNotMatch(navbarSource, /#operations|#contact/);
   assert.doesNotMatch(navbarSource, /handleSectionClick|curtainPhase/);
   assert.match(navbarSource, /<MobilePublicMenu locale=\{locale\}/);
+  assert.match(navbarSource, /event\.metaKey/);
+  assert.match(navbarSource, /hidden min-h-10[\s\S]*lg:inline-flex/);
+  assert.match(mobilePublicMenuSource, /triggerRef\.current\?\.focus\(\)/);
+  assert.match(mobilePublicMenuSource, /aria-controls="mobile-public-navigation"/);
 });
 
 test("landing mega menu renders module titles without mini descriptions", () => {

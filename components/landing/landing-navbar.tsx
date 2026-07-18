@@ -26,6 +26,7 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
     event: MouseEvent<HTMLAnchorElement>,
     href: Route
   ) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     startRouteTransition(href);
   };
@@ -104,14 +105,16 @@ export function LandingNavbar({ locale = "es" }: { locale?: Locale }) {
         </div>
 
         <div className="flex items-center justify-end gap-3 px-4 sm:px-6 lg:px-8">
-          <ThemeToggle locale={locale} appearance="landing" />
-          <LocaleSwitcher locale={locale} inHeader={true} />
+          <span className="hidden items-center gap-3 sm:flex">
+            <ThemeToggle locale={locale} appearance="landing" />
+            <LocaleSwitcher locale={locale} inHeader={true} />
+          </span>
           <LandingMegaMenu locale={locale} mode="mobile" />
           <MobilePublicMenu locale={locale} />
           <Link
             href={registerHref}
             onClick={(event) => handleRouteClick(event, registerHref)}
-            className="inline-flex min-h-10 items-center justify-center gap-2 bg-[var(--landing-primary)] px-4 text-xs font-black uppercase tracking-[0.16em] text-white transition-all duration-300 hover:bg-[var(--landing-primary-light)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)] sm:px-5 lg:min-h-11 lg:px-7"
+            className="hidden min-h-10 items-center justify-center gap-2 bg-[var(--landing-primary)] px-4 text-xs font-black uppercase tracking-[0.16em] text-white transition-all duration-300 hover:bg-[var(--landing-primary-light)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)] sm:px-5 lg:inline-flex lg:min-h-11 lg:px-7"
           >
             <span className="hidden sm:inline">{dictionary.landing.navbar.startSetup}</span>
             <span className="sm:hidden">{dictionary.landing.navbar.start}</span>

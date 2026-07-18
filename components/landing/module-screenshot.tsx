@@ -15,14 +15,20 @@ type Props = {
 export function ModuleScreenshot({ module, expandLabel, closeLabel }: Props) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
     const trigger = triggerRef.current;
     document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
+      if (event.key === "Tab") {
+        event.preventDefault();
+        closeRef.current?.focus();
+      }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => {
@@ -41,7 +47,7 @@ export function ModuleScreenshot({ module, expandLabel, closeLabel }: Props) {
       {open ? (
         <div role="dialog" aria-modal="true" aria-label={module.label} className="fixed inset-0 z-[200] grid place-items-center bg-black/90 p-3 sm:p-6">
           <button type="button" onClick={() => setOpen(false)} className="absolute inset-0 cursor-default" aria-label={closeLabel} />
-          <button type="button" onClick={() => setOpen(false)} className="absolute right-4 top-4 z-10 inline-flex items-center gap-2 bg-white px-3 py-2 text-xs font-black uppercase text-slate-950"><X className="h-4 w-4" />{closeLabel}</button>
+          <button ref={closeRef} type="button" onClick={() => setOpen(false)} className="absolute right-4 top-4 z-10 inline-flex items-center gap-2 bg-white px-3 py-2 text-xs font-black uppercase text-slate-950"><X className="h-4 w-4" />{closeLabel}</button>
           <Image src={module.imageSrc} alt={module.imageAlt} width={module.imageWidth} height={module.imageHeight} sizes="100vw" className="relative max-h-[calc(100svh-6rem)] w-auto max-w-full object-contain" priority />
         </div>
       ) : null}
