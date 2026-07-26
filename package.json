@@ -14,6 +14,7 @@
     "test:db-env": "node --test scripts/check-env.test.mjs",
     "test:auth": "node --experimental-strip-types --test scripts/auth-password.test.mjs scripts/rbac.test.mjs",
     "test:api": "node --experimental-strip-types --test scripts/api.test.mjs scripts/navigation.test.mjs scripts/maintenance.test.mjs scripts/seed-dev.test.mjs",
+    "test:e2e": "playwright test",
     "test:localization": "node --experimental-strip-types --test scripts/module-localization.test.mjs",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -62,6 +63,7 @@
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.62.0",
     "@tailwindcss/postcss": "^4.3.1",
     "@types/animejs": "^3.1.13",
     "@types/bcryptjs": "^3.0.0",

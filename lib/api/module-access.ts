@@ -4,6 +4,7 @@ import type { ModuleId } from "@/data/navigation";
 export type ModuleAccess = {
   moduleKey: ModuleKey;
   permission: string;
+  allowSystemWithoutTenant?: boolean;
 };
 
 const MODULE_ACCESS: Record<ModuleId, ModuleAccess> = {
@@ -16,7 +17,11 @@ const MODULE_ACCESS: Record<ModuleId, ModuleAccess> = {
   hr: { moduleKey: "HR", permission: "hr.manage" },
   marketing: { moduleKey: "MARKETING", permission: "marketing.manage" },
   specialists: { moduleKey: "SPECIALISTS", permission: "specialists.manage" },
-  admin: { moduleKey: "ADMIN", permission: "admin.manage" },
+  admin: {
+    moduleKey: "ADMIN",
+    permission: "admin.manage",
+    allowSystemWithoutTenant: true,
+  },
   catalog: { moduleKey: "CATALOG", permission: "catalog.manage" },
   purchases: { moduleKey: "PURCHASES", permission: "purchases.manage" },
   warehouse: { moduleKey: "WAREHOUSE", permission: "warehouse.manage" },
@@ -33,6 +38,16 @@ export function resolveModuleAccess(moduleId: string): ModuleAccess | null {
   }
 
   return null;
+}
+
+export function isAdministrationPath(pathname: string) {
+  const normalizedPath = pathname.replace(/^\/(?:en|es|fr)(?=\/)/, "");
+  return (
+    normalizedPath === "/admin" ||
+    normalizedPath.startsWith("/admin/") ||
+    normalizedPath === "/api/admin" ||
+    normalizedPath.startsWith("/api/admin/")
+  );
 }
 
 const ROUTE_PERMISSIONS: Array<{
@@ -58,6 +73,8 @@ const ROUTE_PERMISSIONS: Array<{
   { method: "GET", pattern: /^\/api\/accounting\/journal-entries$/, permission: "accounting.read" },
   { method: "POST", pattern: /^\/api\/accounting\/journal-entries$/, permission: "accounting.journal.write" },
   { method: "POST", pattern: /^\/api\/accounting\/journal-entries\/[^/]+\/void$/, permission: "accounting.void" },
+  { method: "GET", pattern: /^\/api\/admin\/tenant$/, permission: "admin.manage" },
+  { method: "PATCH", pattern: /^\/api\/admin\/tenant$/, permission: "admin.manage" },
 ];
 
 export function resolveRoutePermission(method: string, pathname: string) {

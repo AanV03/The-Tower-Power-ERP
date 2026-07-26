@@ -44,16 +44,27 @@ export async function GET(request: Request) {
       ...(searchParams.get("status") ? { status: searchParams.get("status") as BranchStatus } : {}),
     };
 
-    const [items, total] = await Promise.all([
+    const [employees, total] = await Promise.all([
       prisma.employee.findMany({
         where,
-        include: { branch: true, position: true, user: true, contracts: true },
+        include: {
+          branch: true,
+          position: true,
+          membership: {
+            select: { user: true },
+          },
+          contracts: true,
+        },
         orderBy: { createdAt: "desc" },
         skip: pagination.skip,
         take: pagination.take,
       }),
       prisma.employee.count({ where }),
     ]);
+    const items = employees.map(({ membership, ...employee }) => ({
+      ...employee,
+      user: membership?.user ?? null,
+    }));
 
     return ok({ items, total, pagination });
   } catch (error) {

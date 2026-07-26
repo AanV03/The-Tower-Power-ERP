@@ -18,7 +18,9 @@ model Tenant {
   brandColors               Json?
   brandIdentity             Json?
   accessDevices             AccessDevice[]
+  auditLogs                 AuditLog[]
   attendanceRecords         AttendanceRecord[]
+  branchMemberships         BranchMembership[]
   branchBudgets             BranchBudget[]
   branches                  Branch[]
   cashSessions              CashSession[]
@@ -32,6 +34,7 @@ model Tenant {
   journalEntries            JournalEntry[]
   journalEntryLines         JournalEntryLine[]
   members                   Member[]
+  memberships               TenantMembership[]
   membershipPlans           MembershipPlan[]
   outboxEvents              OutboxEvent[]
   paymentGatewayEvents      PaymentGatewayEvent[]
@@ -42,9 +45,11 @@ model Tenant {
   positions                 Position[]
   productCategories         ProductCategory[]
   products                  Product[]
+  roleAssignments           RoleAssignment[]
   roles                     Role[]
   saleItems                 SaleItem[]
   sales                     Sale[]
+  securityEvents            SecurityEvent[]
   specialistCommissions     SpecialistCommission[]
   specialistContracts       SpecialistContract[]
   specialistServices        SpecialistService[]
@@ -59,7 +64,7 @@ model Tenant {
   modules                   TenantModule[]
   plan                      SaasPlan?                  @relation(fields: [planId], references: [id])
   timeClocks                TimeClock[]
-  users                     User[]
+  userInvitations           UserInvitation[]
   warehouses                Warehouse[]
 
   @@index([status])
@@ -106,22 +111,25 @@ model Branch {
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   accessDevices      AccessDevice[]
+  auditLogs          AuditLog[]
   attendanceRecords  AttendanceRecord[]
   branchBudgets      BranchBudget[]
+  branchMemberships  BranchMembership[]
+  defaultMemberships TenantMembership[]  @relation("TenantMembershipDefaultBranch")
   tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   employees          Employee[]
   invoices           Invoice[]
   members            Member[]
   payments           Payment[]
   posRegisters       PosRegister[]
+  roleAssignments    RoleAssignment[]
   sales              Sale[]
   specialistSessions SpecialistSession[]
   specialists        Specialist[]
   timeClocks         TimeClock[]
-  user_roles         UserRole[]
-  users              User[]
   warehouses         Warehouse[]
 
+  @@unique([tenantId, id])
   @@unique([tenantId, code])
   @@index([tenantId, status])
   @@map("branches")
@@ -129,8 +137,6 @@ model Branch {
 
 model User {
   id                         String                     @id @default(cuid())
-  tenantId                   String?
-  branchId                   String?
   name                       String?
   firstName                  String?
   lastName                   String?
@@ -139,27 +145,51 @@ model User {
   emailVerified              DateTime?
   image                      String?
   passwordHash               String?
-  employeeId                 String?                    @unique
   status                     UserStatus                 @default(INVITED)
   createdAt                  DateTime                   @default(now())
   updatedAt                  DateTime                   @updatedAt
-  twoFactorEnabled           Boolean                    @default(false)
-  twoFactorSecret            String?
   accounts                   Account[]
+  mfaCredentials             MfaCredential[]
+  recoveryCodes              RecoveryCode[]
   closedCashSessions         CashSession[]              @relation("CashSessionClosedBy")
   openedCashSessions         CashSession[]              @relation("CashSessionOpenedBy")
+  memberships                TenantMembership[]
   sessions                   Session[]
   cancelledSubscriptions     SubscriptionCancellation[] @relation("SubscriptionCancellationActor")
   approvedSubscriptionPauses SubscriptionPause[]        @relation("SubscriptionPauseApprover")
-  roles                      UserRole[]
-  branch                     Branch?                    @relation(fields: [branchId], references: [id])
-  employee                   Employee?                  @relation(fields: [employeeId], references: [id])
-  tenant                     Tenant?                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@unique([tenantId, email])
-  @@index([tenantId, status])
-  @@index([tenantId, branchId])
+  @@index([status])
   @@map("users")
+}
+
+model TenantMembership {
+  id                      String             @id @default(cuid())
+  tenantId                String
+  userId                  String
+  defaultBranchId         String?
+  employeeId              String?
+  status                  MembershipStatus   @default(INVITED)
+  joinedAt                DateTime?
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  assignedRoleAssignments RoleAssignment[]   @relation("RoleAssignmentActor")
+  auditLogs               AuditLog[]         @relation("AuditLogActor")
+  branchMemberships       BranchMembership[]
+  defaultBranch           Branch?            @relation("TenantMembershipDefaultBranch", fields: [tenantId, defaultBranchId], references: [tenantId, id])
+  employee                Employee?          @relation(fields: [tenantId, employeeId], references: [tenantId, id])
+  roleAssignments         RoleAssignment[]   @relation("RoleAssignmentMember")
+  securityEvents          SecurityEvent[]
+  sessions                Session[]
+  sentInvitations         UserInvitation[]   @relation("InvitationActor")
+  tenant                  Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, userId])
+  @@unique([tenantId, employeeId])
+  @@index([userId, status])
+  @@index([tenantId, status])
+  @@map("tenant_memberships")
 }
 
 model Account {
@@ -183,14 +213,57 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
+  id           String            @id @default(cuid())
+  sessionToken String            @unique
+  jti          String            @unique @default(cuid())
   userId       String
+  tenantId     String?
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isRevoked    Boolean           @default(false)
+  lastActivity DateTime          @default(now())
+  ipAddress    String?
+  deviceInfo   Json?
+  membership   TenantMembership? @relation(fields: [tenantId, userId], references: [tenantId, userId])
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@index([tenantId, userId])
+  @@index([userId, isRevoked, expires])
   @@map("sessions")
+}
+
+model MfaCredential {
+  id              String            @id @default(cuid())
+  userId          String
+  type            MfaCredentialType @default(TOTP)
+  label           String?
+  secretEncrypted String
+  isEnabled       Boolean           @default(false)
+  verifiedAt      DateTime?
+  lastUsedAt      DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  recoveryCodes   RecoveryCode[]
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, id])
+  @@index([userId, isEnabled])
+  @@map("mfa_credentials")
+}
+
+model RecoveryCode {
+  id           String        @id @default(cuid())
+  userId       String
+  credentialId String
+  codeHash     String        @unique
+  usedAt       DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime      @default(now())
+  credential   MfaCredential @relation(fields: [userId, credentialId], references: [userId, id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, usedAt])
+  @@map("recovery_codes")
 }
 
 model VerificationToken {
@@ -210,10 +283,11 @@ model Role {
   description String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+  assignments RoleAssignment[]
   permissions RolePermission[]
   tenant      Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  users       UserRole[]
 
+  @@unique([tenantId, id])
   @@unique([tenantId, name])
   @@index([tenantId, scope])
   @@map("roles")
@@ -222,27 +296,124 @@ model Role {
 model Permission {
   id          String           @id @default(cuid())
   key         String           @unique
+  moduleKey   ModuleKey
+  resource    String
+  action      String
   description String?
   createdAt   DateTime         @default(now())
   roles       RolePermission[]
 
+  @@unique([moduleKey, resource, action])
+  @@index([moduleKey, resource])
   @@map("permissions")
 }
 
-model UserRole {
-  userId    String
-  roleId    String
-  branchId  String?
-  createdAt DateTime @default(now())
-  id        String   @id
-  branches  Branch?  @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model RoleAssignment {
+  id                     String            @id @default(cuid())
+  tenantId               String
+  membershipId           String
+  roleId                 String
+  branchId               String?
+  assignedByMembershipId String?
+  validFrom              DateTime          @default(now())
+  validUntil             DateTime?
+  revokedAt              DateTime?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  assignedByMembership   TenantMembership? @relation("RoleAssignmentActor", fields: [tenantId, assignedByMembershipId], references: [tenantId, id])
+  branch                 Branch?           @relation(fields: [tenantId, branchId], references: [tenantId, id])
+  membership             TenantMembership  @relation("RoleAssignmentMember", fields: [tenantId, membershipId], references: [tenantId, id], onDelete: Cascade)
+  role                   Role              @relation(fields: [tenantId, roleId], references: [tenantId, id], onDelete: Cascade)
+  tenant                 Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, roleId, branchId])
-  @@index([branchId])
-  @@index([roleId])
-  @@map("user_roles")
+  @@unique([tenantId, membershipId, roleId, branchId])
+  @@index([tenantId, membershipId, validFrom, validUntil])
+  @@index([tenantId, roleId])
+  @@index([tenantId, branchId])
+  @@map("role_assignments")
+}
+
+model BranchMembership {
+  id           String           @id @default(cuid())
+  tenantId     String
+  membershipId String
+  branchId     String
+  validFrom    DateTime         @default(now())
+  validUntil   DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  branch       Branch           @relation(fields: [tenantId, branchId], references: [tenantId, id], onDelete: Cascade)
+  membership   TenantMembership @relation(fields: [tenantId, membershipId], references: [tenantId, id], onDelete: Cascade)
+  tenant       Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, membershipId, branchId])
+  @@index([tenantId, branchId])
+  @@index([tenantId, membershipId, validFrom, validUntil])
+  @@map("branch_memberships")
+}
+
+model AuditLog {
+  id            String           @id @default(cuid())
+  tenantId      String
+  actorId       String
+  branchId      String?
+  action        String
+  entity        String
+  entityId      String?
+  oldValues     Json?
+  newValues     Json?
+  ipAddress     String?
+  correlationId String
+  createdAt     DateTime         @default(now())
+  actor         TenantMembership @relation("AuditLogActor", fields: [tenantId, actorId], references: [tenantId, id])
+  branch        Branch?          @relation(fields: [tenantId, branchId], references: [tenantId, id])
+  tenant        Tenant           @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, actorId, createdAt])
+  @@index([tenantId, entity, entityId])
+  @@index([tenantId, correlationId])
+  @@map("audit_logs")
+}
+
+model SecurityEvent {
+  id         String            @id @default(cuid())
+  tenantId   String?
+  userId     String?
+  eventType  SecurityEventType
+  ipAddress  String?
+  userAgent  String?
+  metadata   Json?
+  createdAt  DateTime          @default(now())
+  membership TenantMembership? @relation(fields: [tenantId, userId], references: [tenantId, userId])
+  tenant     Tenant?           @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, eventType, createdAt])
+  @@index([tenantId, userId, createdAt])
+  @@index([ipAddress, createdAt])
+  @@map("security_events")
+}
+
+model UserInvitation {
+  id                    String           @id @default(cuid())
+  tenantId              String
+  email                 String
+  tokenHash             String           @unique
+  roleAssignments       Json
+  branchIds             Json
+  expiresAt             DateTime
+  status                InvitationStatus @default(PENDING)
+  invitedByMembershipId String
+  acceptedAt            DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  invitedByMembership   TenantMembership @relation("InvitationActor", fields: [tenantId, invitedByMembershipId], references: [tenantId, id])
+  tenant                Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, email, status])
+  @@index([tenantId, expiresAt])
+  @@map("user_invitations")
 }
 
 model RolePermission {
@@ -758,8 +929,9 @@ model Employee {
   payrollItems      PayrollItem[]
   specialists       Specialist[]
   timeClocks        TimeClock[]
-  user              User?
+  membership        TenantMembership?
 
+  @@unique([tenantId, id])
   @@unique([tenantId, email])
   @@index([tenantId, branchId])
   @@index([tenantId, status])
@@ -1095,6 +1267,35 @@ enum UserStatus {
   ACTIVE
   INVITED
   SUSPENDED
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+}
+
+enum MfaCredentialType {
+  TOTP
+}
+
+enum SecurityEventType {
+  LOGIN_FAILED
+  ACCOUNT_LOCKED
+  ACCOUNT_UNLOCKED
+  PASSWORD_CHANGED
+  PASSWORD_RESET
+  SESSION_REVOKED
+  MFA_CHALLENGE_FAILED
+  MFA_ENABLED
+  MFA_DISABLED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
 }
 
 enum RoleScope {

@@ -11,22 +11,28 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
 
   const context = await requireApiContext();
 
-  const user = (await prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: context.userId },
     include: {
-      tenant: true,
-      branch: true,
-      employee: {
+      memberships: {
+        where: { tenantId: context.tenantId },
+        take: 1,
         include: {
-          position: true,
-          contracts: {
-            orderBy: { startDate: "desc" },
-            take: 1,
+          tenant: true,
+          defaultBranch: true,
+          employee: {
+            include: {
+              position: true,
+              contracts: {
+                orderBy: { startDate: "desc" },
+                take: 1,
+              },
+            },
           },
         },
       },
     },
-  })) as any;
+  });
 
   if (!user) {
     return (
@@ -39,18 +45,20 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
   }
 
   const displayRole = context.roles[0] || "User";
+  const membership = user.memberships[0] ?? null;
+  const employee = membership?.employee ?? null;
 
-  const hasEmployeeRecord = !!user.employee;
+  const hasEmployeeRecord = !!employee;
   const simulatedEmployee = {
-    id: user.employee?.id ?? `EMP-SIM-${user.id.slice(-6).toUpperCase()}`,
-    firstName: user.employee?.firstName ?? user.firstName ?? user.name?.split(" ")[0] ?? "Usuario",
-    lastName: user.employee?.lastName ?? user.lastName ?? user.name?.split(" ").slice(1).join(" ") ?? "The Tower Power",
-    phone: user.employee?.phone ?? user.phone ?? null,
-    position: user.employee?.position?.name ?? (l === "es" ? "Administrador de Sistemas" : "Systems Administrator"),
-    hireDate: user.employee?.hireDate ? user.employee.hireDate.toISOString() : user.createdAt.toISOString(),
-    contractType: user.employee?.contracts?.[0]?.type ?? "FULL_TIME",
-    salary: user.employee?.contracts?.[0]?.salary ? Number(user.employee.contracts[0].salary) : 45000,
-    status: user.employee?.status ?? "ACTIVE",
+    id: employee?.id ?? `EMP-SIM-${user.id.slice(-6).toUpperCase()}`,
+    firstName: employee?.firstName ?? user.firstName ?? user.name?.split(" ")[0] ?? "Usuario",
+    lastName: employee?.lastName ?? user.lastName ?? user.name?.split(" ").slice(1).join(" ") ?? "The Tower Power",
+    phone: employee?.phone ?? user.phone ?? null,
+    position: employee?.position?.name ?? (l === "es" ? "Administrador de Sistemas" : "Systems Administrator"),
+    hireDate: employee?.hireDate ? employee.hireDate.toISOString() : user.createdAt.toISOString(),
+    contractType: employee?.contracts?.[0]?.type ?? "FULL_TIME",
+    salary: employee?.contracts?.[0]?.salary ? Number(employee.contracts[0].salary) : 45000,
+    status: employee?.status ?? "ACTIVE",
     isSimulated: !hasEmployeeRecord,
   };
 
@@ -60,12 +68,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
     name: user.name,
     email: user.email,
     image: user.image,
-    firstName: user.firstName ?? user.employee?.firstName ?? null,
-    lastName: user.lastName ?? user.employee?.lastName ?? null,
-    phone: user.phone ?? user.employee?.phone ?? null,
+    firstName: user.firstName ?? employee?.firstName ?? null,
+    lastName: user.lastName ?? employee?.lastName ?? null,
+    phone: user.phone ?? employee?.phone ?? null,
     role: displayRole,
-    tenantName: user.tenant?.name ?? null,
-    branchName: user.branch?.name ?? null,
+    tenantName: membership?.tenant.name ?? null,
+    branchName: membership?.defaultBranch?.name ?? null,
     employee: simulatedEmployee,
   };
 

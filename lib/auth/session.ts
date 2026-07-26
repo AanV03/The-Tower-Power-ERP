@@ -1,4 +1,5 @@
-import type { TenantContext } from "@/lib/auth/rbac";
+import { RoleScope } from "@prisma/client";
+import type { AuthorizationContext } from "@/lib/auth/rbac";
 
 export const TOWER_POWER_SESSION_COOKIE = "tower_power_session";
 export const TOWER_POWER_TWO_FACTOR_COOKIE = "tower_power_2fa_challenge";
@@ -14,12 +15,15 @@ type BaseTokenPayload = {
   typ: TokenType;
   sub: string;
   userId: string;
-  tenantId: string;
+  tenantId: string | null;
   branchId?: string | null;
+  branchIds: string[];
   role: string;
   roles: string[];
+  roleScopes: RoleScope[];
   permissions: string[];
   modules: string[];
+  isSystemAdmin: boolean;
   iat: number;
   exp: number;
 };
@@ -108,14 +112,19 @@ async function signInput(input: string) {
   return bytesToBase64Url(new Uint8Array(signature));
 }
 
-export function tenantContextFromToken(payload: AuthTokenPayload): TenantContext {
+export function tenantContextFromToken(
+  payload: AuthTokenPayload,
+): AuthorizationContext {
   return {
     userId: payload.userId,
     tenantId: payload.tenantId,
     branchId: payload.branchId,
+    branchIds: payload.branchIds,
     roles: payload.roles,
+    roleScopes: payload.roleScopes,
     permissions: payload.permissions,
     modules: payload.modules,
+    isSystemAdmin: payload.isSystemAdmin,
   };
 }
 
@@ -155,7 +164,20 @@ export async function verifyAuthToken<T extends AuthTokenPayload>(
 
   if (payload.exp <= now) return null;
   if (expectedType && payload.typ !== expectedType) return null;
-  if (!payload.userId || !payload.tenantId || !payload.role) return null;
+  const hasSystemScope =
+    Array.isArray(payload.roleScopes) &&
+    payload.roleScopes.includes(RoleScope.SYSTEM);
+  const hasValidAuthorizationLists =
+    Array.isArray(payload.branchIds) &&
+    Array.isArray(payload.roles) &&
+    Array.isArray(payload.roleScopes) &&
+    Array.isArray(payload.permissions) &&
+    Array.isArray(payload.modules);
+
+  if (!payload.userId || !payload.role) return null;
+  if (!hasValidAuthorizationLists) return null;
+  if (!payload.tenantId && !hasSystemScope) return null;
+  if (payload.isSystemAdmin !== hasSystemScope) return null;
 
   return payload as T;
 }

@@ -245,21 +245,7 @@ Owner and Super Admin keep all permissions.
 
 In `lib/auth/tenant-context.ts`, include the same business permissions in `DEFAULT_PERMISSIONS` for the Owner role.
 
-- [ ] **Step 6: Gate demo bypass**
-
-In `lib/api/context.ts`, replace:
-
-```ts
-const DEMO_MODE_GUARD_BYPASS = true;
-```
-
-with:
-
-```ts
-const DEMO_MODE_GUARD_BYPASS = process.env.GERPY_DEMO_RBAC_BYPASS === "true";
-```
-
-- [ ] **Step 7: Verify**
+- [ ] **Step 6: Verify**
 
 Run:
 
@@ -269,7 +255,7 @@ node --test scripts/rbac.test.mjs scripts/api.test.mjs
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 7: Commit**
 
 Run:
 

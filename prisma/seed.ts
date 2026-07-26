@@ -1,8 +1,14 @@
 import "dotenv/config";
 
-import { randomUUID } from "node:crypto";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { ModuleKey, Prisma, PrismaClient, RoleScope, UserStatus } from "@prisma/client";
+import {
+  MembershipStatus,
+  ModuleKey,
+  Prisma,
+  PrismaClient,
+  RoleScope,
+  UserStatus,
+} from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const connectionString = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
@@ -72,6 +78,24 @@ function managePermissions(moduleIds: readonly (typeof MODULE_IDS)[number][]) {
 
 function withDashboardRead(permissions: readonly string[]) {
   return Array.from(new Set(["dashboard.read", ...permissions]));
+}
+
+function permissionData(key: string) {
+  const [moduleId, ...segments] = key.split(".");
+  const action = segments.pop();
+  const moduleKey = moduleId?.toUpperCase() as ModuleKey;
+
+  if (!moduleId || !action || !Object.values(ModuleKey).includes(moduleKey)) {
+    throw new Error(`Invalid permission key during seed: ${key}`);
+  }
+
+  return {
+    key,
+    moduleKey,
+    resource: segments.join(".") || moduleId,
+    action,
+    description: `Permite ${key}.`,
+  };
 }
 
 const ALL_PERMISSIONS = withDashboardRead([
@@ -171,13 +195,19 @@ const USER_DEFINITIONS: SeedUserDefinition[] = [
 type PrismaTransactionClient = Prisma.TransactionClient;
 
 async function cleanDatabase(tx: PrismaTransactionClient) {
-  await tx.tenant.deleteMany();
-
-  await tx.userRole.deleteMany();
-  await tx.rolePermission.deleteMany();
-  await tx.account.deleteMany();
+  await tx.auditLog.deleteMany();
+  await tx.securityEvent.deleteMany();
+  await tx.userInvitation.deleteMany();
+  await tx.recoveryCode.deleteMany();
+  await tx.mfaCredential.deleteMany();
   await tx.session.deleteMany();
+  await tx.account.deleteMany();
   await tx.verificationToken.deleteMany();
+  await tx.roleAssignment.deleteMany();
+  await tx.branchMembership.deleteMany();
+  await tx.tenantMembership.deleteMany();
+  await tx.rolePermission.deleteMany();
+  await tx.tenant.deleteMany();
   await tx.user.deleteMany();
   await tx.role.deleteMany();
   await tx.permission.deleteMany();
@@ -234,10 +264,7 @@ async function main() {
     });
 
     await tx.permission.createMany({
-      data: ALL_PERMISSIONS.map((key) => ({
-        key,
-        description: `Permite ${key}.`,
-      })),
+      data: ALL_PERMISSIONS.map(permissionData),
       skipDuplicates: true,
     });
 
@@ -249,19 +276,19 @@ async function main() {
       },
     });
     const permissionByKey = new Map(permissions.map((permission) => [permission.key, permission.id]));
-    const roleByName = new Map<string, string>();
+    const roleByName = new Map<string, { id: string; scope: RoleScope }>();
 
     for (const roleDefinition of ROLE_DEFINITIONS) {
       const role = await tx.role.create({
         data: {
-          tenantId: roleDefinition.scope === RoleScope.SYSTEM ? null : tenant.id,
+          tenantId: tenant.id,
           name: roleDefinition.name,
           scope: roleDefinition.scope,
           description: roleDefinition.description,
         },
       });
 
-      roleByName.set(role.name, role.id);
+      roleByName.set(role.name, { id: role.id, scope: role.scope });
 
       await tx.rolePermission.createMany({
         data: roleDefinition.permissions.map((permissionKey) => {
@@ -285,13 +312,10 @@ async function main() {
 
       const user = await tx.user.create({
         data: {
-          tenantId: isOrphan ? null : tenant.id,
-          branchId: isOrphan ? null : branch.id,
           name: userDefinition.name,
           email: userDefinition.email,
           passwordHash,
           status: UserStatus.ACTIVE,
-          twoFactorEnabled: false,
         },
       });
 
@@ -299,19 +323,36 @@ async function main() {
         continue;
       }
 
-      const roleId = roleByName.get(userDefinition.role);
+      const role = roleByName.get(userDefinition.role);
 
-      if (!roleId) {
+      if (!role) {
         throw new Error(`Missing role during seed: ${userDefinition.role}`);
       }
 
-      await tx.userRole.create({
+      const membership = await tx.tenantMembership.create({
         data: {
-          id: randomUUID(),
+          tenantId: tenant.id,
           userId: user.id,
-          roleId,
+          defaultBranchId: branch.id,
+          status: MembershipStatus.ACTIVE,
+          joinedAt: new Date(),
+        },
+      });
+
+      await tx.branchMembership.create({
+        data: {
+          tenantId: tenant.id,
+          membershipId: membership.id,
           branchId: branch.id,
-          createdAt: new Date(),
+        },
+      });
+
+      await tx.roleAssignment.create({
+        data: {
+          tenantId: tenant.id,
+          membershipId: membership.id,
+          roleId: role.id,
+          branchId: role.scope === RoleScope.BRANCH ? branch.id : null,
         },
       });
     }
@@ -321,6 +362,9 @@ async function main() {
     console.log(`Branch: ${branch.name}`);
     console.log(`Password demo para todos los usuarios: ${DEMO_PASSWORD}`);
     console.log(`Usuario huerfano: ${ORPHAN_EMAIL}`);
+  }, {
+    maxWait: 10_000,
+    timeout: 60_000,
   });
 }
 

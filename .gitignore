@@ -13,6 +13,8 @@ pnpm-debug.log*
 .superpowers/
 tsconfig.tsbuildinfo
 .lighthouseci/
+playwright-report/
+test-results/
 tmp/
 tsconfig.tsbuildinfo
 # Sentry Config File

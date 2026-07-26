@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 import { defaultLocale, locales } from "@/lib/i18n";
+import { isAdministrationPath } from "@/lib/api/module-access";
 import {
   TOWER_POWER_SESSION_COOKIE,
   getAuthSecret,
@@ -60,12 +61,15 @@ const PROTECTED_PAGE_PREFIXES = [
 
 type MiddlewareAuthContext = {
   userId: string;
-  tenantId: string;
+  tenantId: string | null;
   branchId?: string | null;
+  branchIds: string[];
   role: string;
   roles: string[];
+  roleScopes: string[];
   permissions: string[];
   modules: string[];
+  isSystemAdmin: boolean;
 };
 
 function hasLocale(pathname: string) {
@@ -144,10 +148,13 @@ async function getMiddlewareAuthContext(request: NextRequest): Promise<Middlewar
       userId: sessionPayload.userId,
       tenantId: sessionPayload.tenantId,
       branchId: sessionPayload.branchId,
+      branchIds: sessionPayload.branchIds,
       role: sessionPayload.role,
       roles: sessionPayload.roles,
+      roleScopes: sessionPayload.roleScopes,
       permissions: sessionPayload.permissions,
       modules: sessionPayload.modules,
+      isSystemAdmin: sessionPayload.isSystemAdmin,
     };
   }
 
@@ -158,17 +165,22 @@ async function getMiddlewareAuthContext(request: NextRequest): Promise<Middlewar
   const userId = readString(nextAuthToken?.sub);
   const tenantId = readString(nextAuthToken?.tenantId);
   const roles = readStringList(nextAuthToken?.roles);
+  const roleScopes = readStringList(nextAuthToken?.roleScopes);
+  const isSystemAdmin = roleScopes.includes("SYSTEM");
 
-  if (!userId || !tenantId) return null;
+  if (!userId || (!tenantId && !isSystemAdmin)) return null;
 
   return {
     userId,
     tenantId,
     branchId: readString(nextAuthToken?.branchId),
+    branchIds: readStringList(nextAuthToken?.branchIds),
     role: roles[0] ?? "USER",
     roles,
+    roleScopes,
     permissions: readStringList(nextAuthToken?.permissions),
     modules: readStringList(nextAuthToken?.modules),
+    isSystemAdmin,
   };
 }
 
@@ -194,9 +206,20 @@ function nextWithTenantHeaders(request: NextRequest, context: MiddlewareAuthCont
   const requestHeaders = new Headers(request.headers);
 
   requestHeaders.set("x-user-id", context.userId);
-  requestHeaders.set("x-tenant-id", context.tenantId);
   requestHeaders.set("x-user-role", context.role);
   requestHeaders.set("x-user-roles", context.roles.join(","));
+  requestHeaders.set("x-user-role-scopes", context.roleScopes.join(","));
+  requestHeaders.set("x-system-admin", String(context.isSystemAdmin));
+  requestHeaders.set("x-request-method", request.method);
+  requestHeaders.set("x-request-path", request.nextUrl.pathname);
+
+  if (context.tenantId) {
+    requestHeaders.set("x-tenant-id", context.tenantId);
+    requestHeaders.set("x-auth-tenant-id", context.tenantId);
+  } else {
+    requestHeaders.delete("x-tenant-id");
+    requestHeaders.delete("x-auth-tenant-id");
+  }
 
   if (context.branchId) {
     requestHeaders.set("x-branch-id", context.branchId);
@@ -209,6 +232,13 @@ function nextWithTenantHeaders(request: NextRequest, context: MiddlewareAuthCont
       headers: requestHeaders,
     },
   });
+}
+
+function forbiddenResponse(code: string, message: string) {
+  return NextResponse.json(
+    { ok: false, error: code, message },
+    { status: 403 },
+  );
 }
 
 export async function middleware(request: NextRequest) {
@@ -244,8 +274,29 @@ export async function middleware(request: NextRequest) {
   if (protectedRoute) {
     const context = await getMiddlewareAuthContext(request);
 
-    if (!context?.tenantId) {
+    if (!context) {
       return unauthorizedResponse(request);
+    }
+
+    const requestedTenantId = request.headers.get("x-tenant-id");
+    if (
+      requestedTenantId &&
+      (!context.tenantId || requestedTenantId !== context.tenantId)
+    ) {
+      return forbiddenResponse(
+        "TENANT_MISMATCH",
+        "The requested tenant does not match the authenticated session.",
+      );
+    }
+
+    if (
+      !context.tenantId &&
+      !(context.isSystemAdmin && isAdministrationPath(pathname))
+    ) {
+      return forbiddenResponse(
+        "TENANT_REQUIRED",
+        "A tenant context is required for this route.",
+      );
     }
 
     return nextWithTenantHeaders(request, context);

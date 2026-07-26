@@ -312,7 +312,7 @@ async function specialistsSummary(context: TenantContext): Promise<ApiModuleSumm
 async function adminSummary(context: TenantContext): Promise<ApiModuleSummary> {
   const [branches, users, modules] = await Promise.all([
     prisma.branch.count({ where: tenantWhere(context) }),
-    prisma.user.count({ where: tenantWhere(context) }),
+    prisma.tenantMembership.count({ where: tenantWhere(context) }),
     prisma.tenantModule.count({ where: { ...tenantWhere(context), enabled: true } }),
   ]);
 

@@ -1,4 +1,10 @@
-import { randomUUID } from 'node:crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+} from 'node:crypto';
+import { ModuleKey } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { generateSecret, generateURI, verify } from 'otplib';
 
@@ -13,6 +19,65 @@ type SessionPayloadInput = Omit<AuthTokenPayload, 'iat' | 'exp' | 'sub'>;
 const DEFAULT_BOOTSTRAP_MODULES = ['DASHBOARD', 'POS'] as const;
 const DEFAULT_BOOTSTRAP_PERMISSIONS = ['dashboard.read', 'pos.manage'] as const;
 
+function permissionDefinition(key: string) {
+  const [moduleSegment, ...segments] = key.split('.');
+  const action = segments.pop() ?? 'manage';
+  const resource = segments.join('.') || moduleSegment;
+  const moduleKey = moduleSegment.toUpperCase() as ModuleKey;
+
+  if (!Object.values(ModuleKey).includes(moduleKey)) {
+    throw new Error(`INVALID_PERMISSION_MODULE:${key}`);
+  }
+
+  return { key, moduleKey, resource, action };
+}
+
+function getMfaEncryptionKey() {
+  const secret =
+    process.env.MFA_ENCRYPTION_KEY ??
+    process.env.AUTH_SECRET ??
+    process.env.NEXTAUTH_SECRET;
+
+  if (!secret) throw new Error('MFA_ENCRYPTION_KEY_REQUIRED');
+  return createHash('sha256').update(secret).digest();
+}
+
+function encryptMfaSecret(secret: string) {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv('aes-256-gcm', getMfaEncryptionKey(), iv);
+  const encrypted = Buffer.concat([
+    cipher.update(secret, 'utf8'),
+    cipher.final(),
+  ]);
+  const tag = cipher.getAuthTag();
+
+  return [
+    'v1',
+    iv.toString('base64url'),
+    tag.toString('base64url'),
+    encrypted.toString('base64url'),
+  ].join('.');
+}
+
+function decryptMfaSecret(value: string) {
+  const [version, iv, tag, encrypted] = value.split('.');
+  if (version !== 'v1' || !iv || !tag || !encrypted) {
+    throw new Error('INVALID_MFA_SECRET');
+  }
+
+  const decipher = createDecipheriv(
+    'aes-256-gcm',
+    getMfaEncryptionKey(),
+    Buffer.from(iv, 'base64url'),
+  );
+  decipher.setAuthTag(Buffer.from(tag, 'base64url'));
+
+  return Buffer.concat([
+    decipher.update(Buffer.from(encrypted, 'base64url')),
+    decipher.final(),
+  ]).toString('utf8');
+}
+
 function assertActiveTenantContext(context: Awaited<ReturnType<typeof getTenantContext>>) {
   if (!context?.tenantId) {
     throw new Error('TENANT_CONTEXT_MISSING');
@@ -24,10 +89,13 @@ function assertActiveTenantContext(context: Awaited<ReturnType<typeof getTenantC
     userId: context.userId,
     tenantId: context.tenantId,
     branchId: context.branchId,
+    branchIds: context.branchIds,
     role,
     roles: context.roles,
+    roleScopes: context.roleScopes,
     permissions: context.permissions,
     modules: context.modules,
+    isSystemAdmin: context.isSystemAdmin,
   };
 }
 
@@ -95,13 +163,15 @@ export class AuthService {
         }));
 
       const permissions = await Promise.all(
-        DEFAULT_BOOTSTRAP_PERMISSIONS.map((key) =>
-          tx.permission.upsert({
+        DEFAULT_BOOTSTRAP_PERMISSIONS.map((key) => {
+          const definition = permissionDefinition(key);
+
+          return tx.permission.upsert({
             where: { key },
             update: {},
-            create: { key, description: `Allows ${key}.` },
-          }),
-        ),
+            create: { ...definition, description: `Allows ${key}.` },
+          });
+        }),
       );
 
       await tx.rolePermission.createMany({
@@ -114,8 +184,6 @@ export class AuthService {
 
       const user = await tx.user.create({
         data: {
-          tenantId: tenant.id,
-          branchId: branch.id,
           name: payload.name,
           email,
           passwordHash: hashedPassword,
@@ -123,12 +191,29 @@ export class AuthService {
         },
       });
 
-      await tx.userRole.create({
+      const membership = await tx.tenantMembership.create({
         data: {
-          id: randomUUID(),
+          tenantId: tenant.id,
           userId: user.id,
-          roleId: role.id,
+          defaultBranchId: branch.id,
+          status: 'ACTIVE',
+          joinedAt: new Date(),
+        },
+      });
+
+      await tx.branchMembership.create({
+        data: {
+          tenantId: tenant.id,
+          membershipId: membership.id,
           branchId: branch.id,
+        },
+      });
+
+      await tx.roleAssignment.create({
+        data: {
+          tenantId: tenant.id,
+          membershipId: membership.id,
+          roleId: role.id,
         },
       });
 
@@ -149,10 +234,13 @@ export class AuthService {
       userId: context.userId,
       tenantId: context.tenantId,
       branchId: context.branchId,
+      branchIds: context.branchIds,
       role: context.role,
       roles: context.roles,
+      roleScopes: context.roleScopes,
       permissions: context.permissions,
       modules: context.modules,
+      isSystemAdmin: context.isSystemAdmin,
     } satisfies SessionPayloadInput;
   }
 
@@ -166,8 +254,15 @@ export class AuthService {
         email: true,
         passwordHash: true,
         status: true,
-        twoFactorEnabled: true,
-        twoFactorSecret: true,
+        mfaCredentials: {
+          where: {
+            type: 'TOTP',
+            isEnabled: true,
+            revokedAt: null,
+          },
+          select: { id: true },
+          take: 1,
+        },
       },
     });
 
@@ -182,11 +277,7 @@ export class AuthService {
 
     const basePayload = await AuthService.createSessionPayloadForUser(user.id);
 
-    if (user.twoFactorEnabled) {
-      if (!user.twoFactorSecret) {
-        throw new Error('TWO_FACTOR_NOT_CONFIGURED');
-      }
-
+    if (user.mfaCredentials.length > 0) {
       return {
         status: 'TWO_FACTOR_REQUIRED' as const,
         user: {
@@ -246,29 +337,49 @@ export class AuthService {
       select: {
         id: true,
         email: true,
-        tenantId: true,
-        tenant: {
-          select: { name: true },
+        memberships: {
+          where: { status: 'ACTIVE' },
+          select: {
+            tenant: {
+              select: { name: true },
+            },
+          },
+          take: 1,
         },
       },
     });
 
-    if (!user?.tenantId) {
+    const tenant = user?.memberships[0]?.tenant;
+    if (!user || !tenant) {
       throw new Error('USER_NOT_FOUND');
     }
 
     const secret = generateSecret();
     const label = user.email ?? user.id;
-    const issuer = `The Tower Power ${user.tenant?.name ?? 'ERP'}`;
+    const issuer = `The Tower Power ${tenant.name}`;
     const otpauthUrl = generateURI({ issuer, label, secret });
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        twoFactorSecret: secret,
-        twoFactorEnabled: false,
-      },
-    });
+    await prisma.$transaction([
+      prisma.mfaCredential.updateMany({
+        where: {
+          userId: user.id,
+          type: 'TOTP',
+          revokedAt: null,
+        },
+        data: {
+          isEnabled: false,
+          revokedAt: new Date(),
+        },
+      }),
+      prisma.mfaCredential.create({
+        data: {
+          userId: user.id,
+          type: 'TOTP',
+          secretEncrypted: encryptMfaSecret(secret),
+          isEnabled: false,
+        },
+      }),
+    ]);
 
     return {
       secret,
@@ -277,25 +388,30 @@ export class AuthService {
   }
 
   static async enableTwoFactor(userId: string, code: string) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        twoFactorSecret: true,
+    const credential = await prisma.mfaCredential.findFirst({
+      where: {
+        userId,
+        type: 'TOTP',
+        revokedAt: null,
       },
+      orderBy: { createdAt: 'desc' },
     });
 
-    if (!user?.twoFactorSecret) {
+    if (!credential) {
       throw new Error('TWO_FACTOR_NOT_CONFIGURED');
     }
 
-    if (!(await verifyTotp(code, user.twoFactorSecret))) {
+    if (!(await verifyTotp(code, decryptMfaSecret(credential.secretEncrypted)))) {
       throw new Error('INVALID_TWO_FACTOR_CODE');
     }
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { twoFactorEnabled: true },
+    await prisma.mfaCredential.update({
+      where: { id: credential.id },
+      data: {
+        isEnabled: true,
+        verifiedAt: new Date(),
+        lastUsedAt: new Date(),
+      },
     });
 
     return { enabled: true };
@@ -309,24 +425,51 @@ export class AuthService {
         name: true,
         email: true,
         status: true,
-        tenantId: true,
-        twoFactorEnabled: true,
-        twoFactorSecret: true,
+        memberships: {
+          where: challenge.tenantId
+            ? {
+                tenantId: challenge.tenantId,
+                status: 'ACTIVE',
+                tenant: { status: 'ACTIVE' },
+              }
+            : { status: 'ACTIVE' },
+          select: { tenantId: true },
+          take: 1,
+        },
+        mfaCredentials: {
+          where: {
+            type: 'TOTP',
+            isEnabled: true,
+            revokedAt: null,
+          },
+          select: {
+            id: true,
+            secretEncrypted: true,
+          },
+          take: 1,
+        },
       },
     });
 
+    const credential = user?.mfaCredentials[0];
     if (
       !user ||
       user.status !== 'ACTIVE' ||
-      !user.twoFactorEnabled ||
-      user.tenantId !== challenge.tenantId
+      !credential ||
+      (challenge.tenantId &&
+        user.memberships[0]?.tenantId !== challenge.tenantId)
     ) {
       throw new Error('INVALID_TWO_FACTOR_CHALLENGE');
     }
 
-    if (!(await verifyTotp(code, user.twoFactorSecret))) {
+    if (!(await verifyTotp(code, decryptMfaSecret(credential.secretEncrypted)))) {
       throw new Error('INVALID_TWO_FACTOR_CODE');
     }
+
+    await prisma.mfaCredential.update({
+      where: { id: credential.id },
+      data: { lastUsedAt: new Date() },
+    });
 
     return {
       status: 'AUTHENTICATED' as const,
@@ -340,10 +483,13 @@ export class AuthService {
         userId: challenge.userId,
         tenantId: challenge.tenantId,
         branchId: challenge.branchId,
+        branchIds: challenge.branchIds,
         role: challenge.role,
         roles: challenge.roles,
+        roleScopes: challenge.roleScopes,
         permissions: challenge.permissions,
         modules: challenge.modules,
+        isSystemAdmin: challenge.isSystemAdmin,
       } satisfies SessionPayloadInput,
     };
   }
