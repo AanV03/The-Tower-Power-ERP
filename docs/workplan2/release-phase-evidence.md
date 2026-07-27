@@ -1,18 +1,92 @@
-# Workplan 2.0 Buffer & Release Phase Status
+# Workplan 2.0 Release Phase Evidence
 
-Date: 2026-07-11
-Repository: `C:\Dev\The Tower Power`
-Sprint: Buffer & Release Phase
-Status: Not Started
+Date: 2026-07-27
+Status: Deployment baseline and backend CI prepared
 
-## Phase Focus
+## Evidence
 
-Production environment configuration checks, database backup policy validation, and official project handover sign-off.
+- Backend workflow: `.github/workflows/backend.yml`
+- Safe Phase 2 scripts:
+  `prisma/safe-migrations/phase2-security/`
+- Prisma migration history: `prisma/migrations/`
+- RLS installation: `prisma/rls.sql`
+- Isolation test: `scripts/tenant-isolation.test.mjs`
+- Session test: `scripts/session-revocation.test.mjs`
 
-## Current Worked State vs. Workplan 2.0
+## Standard Deployment
 
-| Workplan 2.0 Focus | Status in The Tower Power | Gaps / Actions Needed |
-|---|---|---|
-| **Production Config Verification** | **Pending** | Validate all `.env.example` configurations. |
-| **Backup & DB Strategy** | **Pending** | Document Supabase PostgreSQL backup schema and MongoDB collections indexing. |
-| **Official Handover Package** | **Pending** | Compile screenshots, video logs, test execution summaries, and final route tables. |
+Use this path when Prisma reports that Phase 2 is already applied:
+
+```bash
+npm ci
+npx prisma generate
+npx prisma migrate status
+npx prisma migrate deploy
+psql "$DIRECT_URL" -v ON_ERROR_STOP=1 -f prisma/rls.sql
+```
+
+Do not edit or replace an already-applied migration. Prisma records its
+checksum and will report drift if its SQL changes.
+
+## Legacy Phase 2 Baseline
+
+Use this only when the database contains the pre-Phase-2 schema and
+`20260726041423_phase2_security_audit` is not recorded as applied.
+
+1. Create and verify a restorable database backup.
+2. Stop writes that create legacy sessions or change MFA state.
+3. Run the expand script:
+
+```bash
+psql "$DIRECT_URL" -v ON_ERROR_STOP=1 \
+  -f prisma/safe-migrations/phase2-security/01-expand.sql
+```
+
+4. Keep authentication writes stopped and run the batched backfill:
+
+```bash
+psql "$DIRECT_URL" -v ON_ERROR_STOP=1 \
+  -f prisma/safe-migrations/phase2-security/02-backfill.sql
+```
+
+Legacy sessions are revoked. Accounts containing plaintext legacy MFA
+secrets are suspended and require controlled MFA re-enrollment.
+
+5. Verify all affected users are either suspended or have an enabled
+`mfa_credentials` record.
+6. Run the contract script:
+
+```bash
+psql "$DIRECT_URL" -v ON_ERROR_STOP=1 \
+  -f prisma/safe-migrations/phase2-security/03-contract.sql
+```
+
+7. Baseline the equivalent historical migration, then deploy the
+remaining migrations:
+
+```bash
+npx prisma migrate resolve \
+  --applied 20260726041423_phase2_security_audit
+npx prisma migrate deploy
+psql "$DIRECT_URL" -v ON_ERROR_STOP=1 -f prisma/rls.sql
+```
+
+8. Deploy the new application version, run authentication smoke tests,
+and only then restore normal traffic.
+
+## Release Gate
+
+Deployment is accepted only when these commands finish successfully:
+
+```bash
+npm run typecheck
+npm run test:auth
+npm run test:api
+node --experimental-strip-types --test \
+  scripts/tenant-isolation.test.mjs
+npm run test:session
+npm run test:e2e
+```
+
+The contract step must not be forced past a failed precondition. Restore
+the backup or correct the affected data, then rerun the step.
