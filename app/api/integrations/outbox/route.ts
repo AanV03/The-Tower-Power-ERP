@@ -18,6 +18,28 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
+    const authorization = request.headers.get("authorization");
+    if (authorization?.startsWith("Bearer ")) {
+      const secret = process.env.CRON_SECRET?.trim();
+      if (!secret || secret.length < 16) {
+        throw new ApiError(
+          "The cron secret is not configured.",
+          503,
+          "CRON_SECRET_NOT_CONFIGURED",
+        );
+      }
+
+      if (authorization !== `Bearer ${secret}`) {
+        throw new ApiError(
+          "A valid cron authorization is required.",
+          401,
+          "INVALID_CRON_AUTHORIZATION",
+        );
+      }
+
+      return ok(await processOutboxBatch());
+    }
+
     const context = await requireApiContext({ moduleId: "integrations" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);

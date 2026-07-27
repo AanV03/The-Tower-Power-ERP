@@ -16,8 +16,13 @@ test("builds a deterministic development seed config", () => {
   assert.equal(config.superadmin.email, DEFAULT_SUPERADMIN_EMAIL);
   assert.equal(config.superadmin.password, "CustomSeed!123");
   assert.equal(config.tenant.name, "The Tower Power Demo Gym");
+  assert.equal(config.tenants.length, 2);
+  assert.notEqual(config.tenants[0].tenant.name, config.tenants[1].tenant.name);
+  assert.equal(config.admin.name, "Admin");
+  assert.equal(config.employee.name, "Empleado");
   assert.equal(config.modules.includes("MAINTENANCE"), true);
   assert.equal(config.permissions.includes("maintenance.manage"), true);
+  assert.equal(config.permissions.includes("payroll.pay"), true);
 });
 
 test("uses an explicit demo password outside production when no seed password is configured", () => {

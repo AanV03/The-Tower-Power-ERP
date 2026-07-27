@@ -118,9 +118,14 @@ function isPublicAuthApi(pathname: string) {
 }
 
 function isSignedServiceApi(request: NextRequest) {
+  if (request.nextUrl.pathname !== "/api/integrations/outbox") return false;
+  if (request.method === "POST") return true;
+
+  const cronSecret = process.env.CRON_SECRET?.trim();
   return (
-    request.method === "POST" &&
-    request.nextUrl.pathname === "/api/integrations/outbox"
+    request.method === "GET" &&
+    Boolean(cronSecret) &&
+    request.headers.get("authorization") === `Bearer ${cronSecret}`
   );
 }
 

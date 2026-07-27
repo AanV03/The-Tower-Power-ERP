@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { loginSchema } from '@/modules/auth/schemas/auth.schema';
 import { AuthService } from '@/modules/auth/services/auth.service';
+import { consumeLoginAttempt } from '@/lib/auth/login-rate-limit';
 import {
   createAuthToken,
   createPersistedSession,
@@ -18,7 +19,29 @@ const secureCookie = process.env.NODE_ENV === 'production';
 
 export async function POST(req: NextRequest) {
   const metadata = getSessionRequestMetadata(req);
+  const rateLimit = consumeLoginAttempt(metadata.ipAddress);
   let attemptedEmail: string | null = null;
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'RATE_LIMITED',
+        message: 'Demasiados intentos de inicio de sesion. Intenta de nuevo en un minuto.',
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(rateLimit.retryAfterSeconds),
+          'X-RateLimit-Limit': '5',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': String(
+            Math.ceil(rateLimit.resetAt.getTime() / 1_000),
+          ),
+        },
+      },
+    );
+  }
 
   try {
     const body = await req.json();
