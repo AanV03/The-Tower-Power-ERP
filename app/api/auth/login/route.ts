@@ -4,6 +4,9 @@ import { loginSchema } from '@/modules/auth/schemas/auth.schema';
 import { AuthService } from '@/modules/auth/services/auth.service';
 import {
   createAuthToken,
+  createPersistedSession,
+  getSessionRequestMetadata,
+  recordLoginFailure,
   TOWER_POWER_SESSION_COOKIE,
   TOWER_POWER_TWO_FACTOR_COOKIE,
   TOWER_POWER_TWO_FACTOR_SETUP_COOKIE,
@@ -14,9 +17,13 @@ import {
 const secureCookie = process.env.NODE_ENV === 'production';
 
 export async function POST(req: NextRequest) {
+  const metadata = getSessionRequestMetadata(req);
+  let attemptedEmail: string | null = null;
+
   try {
     const body = await req.json();
     const credentials = loginSchema.parse(body);
+    attemptedEmail = credentials.email;
     const result = await AuthService.login(credentials);
 
     if (result.status === 'TWO_FACTOR_REQUIRED') {
@@ -47,7 +54,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (result.status === 'AUTHENTICATED') {
-      const sessionToken = await createAuthToken(result.payload, SESSION_MAX_AGE_SECONDS);
+      const { token: sessionToken } = await createPersistedSession(
+        result.payload,
+        metadata,
+      );
       const response = NextResponse.json(
         {
           ok: true,
@@ -87,6 +97,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (error.message === 'INVALID_CREDENTIALS') {
+      await recordLoginFailure(
+        attemptedEmail,
+        metadata,
+        error.message,
+      );
       return NextResponse.json(
         { ok: false, error: 'INVALID_CREDENTIALS', message: 'Credenciales invalidas.' },
         { status: 401 },
@@ -97,6 +112,11 @@ export async function POST(req: NextRequest) {
       error.message === 'TENANT_CONTEXT_MISSING' ||
       error.message === 'TWO_FACTOR_NOT_CONFIGURED'
     ) {
+      await recordLoginFailure(
+        attemptedEmail,
+        metadata,
+        error.message,
+      );
       return NextResponse.json(
         { ok: false, error: error.message, message: 'La cuenta no esta lista para iniciar sesion.' },
         { status: 403 },

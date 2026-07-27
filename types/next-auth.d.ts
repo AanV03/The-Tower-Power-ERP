@@ -25,11 +25,15 @@ declare module "next-auth" {
     permissions?: string[];
     modules?: string[];
     isSystemAdmin?: boolean;
+    sessionIpAddress?: string | null;
+    sessionUserAgent?: string | null;
+    sessionCorrelationId?: string | null;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
+    jti?: string;
     tenantId?: string | null;
     branchId?: string | null;
     branchIds?: string[];

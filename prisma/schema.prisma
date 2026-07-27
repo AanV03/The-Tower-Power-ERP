@@ -1280,7 +1280,9 @@ enum MfaCredentialType {
 }
 
 enum SecurityEventType {
+  LOGIN_SUCCEEDED
   LOGIN_FAILED
+  LOGOUT
   ACCOUNT_LOCKED
   ACCOUNT_UNLOCKED
   PASSWORD_CHANGED

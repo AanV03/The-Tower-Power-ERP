@@ -7,6 +7,14 @@ import Google from "next-auth/providers/google";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeEmail, verifyPassword } from "@/lib/auth/password";
 import { ensureTenantForUser, getTenantContext } from "@/lib/auth/tenant-context";
+import {
+  getSessionRequestMetadata,
+  persistNextAuthSession,
+  recordLoginFailure,
+  revokeSessionByJti,
+  SESSION_MAX_AGE_SECONDS,
+  validateSessionJti,
+} from "@/lib/auth/session";
 
 function readString(value: unknown) {
   return typeof value === "string" ? value : null;
@@ -24,7 +32,10 @@ function readRoleScopes(value: unknown) {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: SESSION_MAX_AGE_SECONDS,
+  },
   trustHost: true,
   pages: {
     signIn: "/login",
@@ -37,11 +48,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const email = normalizeEmail(String(credentials?.email ?? ""));
         const password = String(credentials?.password ?? "");
+        const metadata = getSessionRequestMetadata(request);
 
-        if (!email || !password) return null;
+        if (!email || !password) {
+          await recordLoginFailure(email, metadata);
+          return null;
+        }
 
         const user = await prisma.user.findUnique({
           where: { email },
@@ -53,17 +68,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
           },
         });
-        if (!user || user.status !== "ACTIVE") return null;
-        if (user.mfaCredentials.length > 0) return null;
+        if (!user || user.status !== "ACTIVE") {
+          await recordLoginFailure(email, metadata);
+          return null;
+        }
+        if (user.mfaCredentials.length > 0) {
+          await recordLoginFailure(email, metadata, "MFA_REQUIRED");
+          return null;
+        }
 
         const validPassword = await verifyPassword(password, user.passwordHash);
-        if (!validPassword) return null;
+        if (!validPassword) {
+          await recordLoginFailure(email, metadata);
+          return null;
+        }
 
         return {
           id: user.id,
           name: user.name,
           email: user.email,
           image: user.image,
+          sessionIpAddress: metadata.ipAddress,
+          sessionUserAgent: metadata.userAgent,
+          sessionCorrelationId: metadata.correlationId,
         };
       },
     }),
@@ -81,6 +108,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
     async jwt({ token, user }) {
+      const isNewSession = Boolean(user?.id);
       if (user?.id) {
         token.sub = user.id;
       }
@@ -96,6 +124,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       token.permissions = context?.permissions ?? [];
       token.modules = context?.modules ?? [];
       token.isSystemAdmin = context?.isSystemAdmin ?? false;
+
+      if (isNewSession) {
+        token.jti = crypto.randomUUID();
+        await persistNextAuthSession({
+          jti: token.jti,
+          userId: token.sub,
+          tenantId: token.tenantId,
+          branchId: token.branchId,
+          metadata: {
+            ipAddress: user?.sessionIpAddress ?? null,
+            userAgent: user?.sessionUserAgent ?? null,
+            correlationId: user?.sessionCorrelationId ?? null,
+          },
+        });
+      } else {
+        const jti = readString(token.jti);
+        if (
+          !jti ||
+          !(await validateSessionJti({
+            jti,
+            userId: token.sub,
+            tenantId: token.tenantId,
+          }))
+        ) {
+          return null;
+        }
+      }
 
       return token;
     },
@@ -113,6 +168,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       return session;
+    },
+  },
+  events: {
+    async signOut(message) {
+      if (!("token" in message)) return;
+
+      const jti = readString(message.token?.jti);
+      if (jti) {
+        await revokeSessionByJti(jti, { reason: "LOGOUT" });
+      }
     },
   },
 });

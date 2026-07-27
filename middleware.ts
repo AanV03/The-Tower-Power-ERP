@@ -7,6 +7,7 @@ import {
   TOWER_POWER_SESSION_COOKIE,
   getAuthSecret,
   type SessionTokenPayload,
+  validateSessionJti,
   verifyAuthToken,
 } from "@/lib/auth/session";
 
@@ -163,12 +164,20 @@ async function getMiddlewareAuthContext(request: NextRequest): Promise<Middlewar
     secret: getAuthSecret(),
   });
   const userId = readString(nextAuthToken?.sub);
+  const jti = readString(nextAuthToken?.jti);
   const tenantId = readString(nextAuthToken?.tenantId);
   const roles = readStringList(nextAuthToken?.roles);
   const roleScopes = readStringList(nextAuthToken?.roleScopes);
   const isSystemAdmin = roleScopes.includes("SYSTEM");
 
-  if (!userId || (!tenantId && !isSystemAdmin)) return null;
+  if (
+    !userId ||
+    !jti ||
+    (!tenantId && !isSystemAdmin) ||
+    !(await validateSessionJti({ jti, userId, tenantId }))
+  ) {
+    return null;
+  }
 
   return {
     userId,
@@ -306,5 +315,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  runtime: "nodejs",
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

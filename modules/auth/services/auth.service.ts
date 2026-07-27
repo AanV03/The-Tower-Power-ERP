@@ -17,7 +17,11 @@ import { LoginDTO, RegisterDTO } from '../schemas/auth.schema';
 type SessionPayloadInput = Omit<AuthTokenPayload, 'iat' | 'exp' | 'sub'>;
 
 const DEFAULT_BOOTSTRAP_MODULES = ['DASHBOARD', 'POS'] as const;
-const DEFAULT_BOOTSTRAP_PERMISSIONS = ['dashboard.read', 'pos.manage'] as const;
+const DEFAULT_BOOTSTRAP_PERMISSIONS = [
+  'dashboard.read',
+  'pos.read',
+  'pos.write',
+] as const;
 
 function permissionDefinition(key: string) {
   const [moduleSegment, ...segments] = key.split('.');

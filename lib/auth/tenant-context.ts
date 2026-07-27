@@ -24,6 +24,13 @@ const DEFAULT_MODULES: ModuleKey[] = [
   ModuleKey.MAINTENANCE,
 ];
 
+const DEFAULT_PERMISSION_LEVELS = [
+  "read",
+  "write",
+  "approve",
+  "admin",
+] as const;
+
 const DEFAULT_PERMISSIONS = [
   "dashboard.read",
   "hr.read",
@@ -41,23 +48,11 @@ const DEFAULT_PERMISSIONS = [
   "accounting.journal.write",
   "accounting.post",
   "accounting.void",
-  "memberships.manage",
-  "access.manage",
-  "finance.manage",
-  "pos.manage",
-  "inventory.manage",
-  "hr.manage",
-  "marketing.manage",
-  "specialists.manage",
-  "admin.manage",
-  "catalog.manage",
-  "purchases.manage",
-  "warehouse.manage",
-  "accounting.manage",
-  "payroll.manage",
-  "analytics.manage",
-  "integrations.manage",
-  "maintenance.manage",
+  ...DEFAULT_MODULES.flatMap((moduleKey) =>
+    DEFAULT_PERMISSION_LEVELS.map(
+      (level) => `${moduleKey.toLowerCase()}.${level}`,
+    ),
+  ),
 ];
 
 type PrismaTx = Prisma.TransactionClient;

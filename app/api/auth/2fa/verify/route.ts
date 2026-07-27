@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import {
-  createAuthToken,
+  createPersistedSession,
+  getSessionRequestMetadata,
+  recordMfaChallengeFailure,
   TOWER_POWER_SESSION_COOKIE,
   TOWER_POWER_TWO_FACTOR_COOKIE,
   TOWER_POWER_TWO_FACTOR_SETUP_COOKIE,
@@ -17,6 +19,9 @@ import { AuthService } from '@/modules/auth/services/auth.service';
 const secureCookie = process.env.NODE_ENV === 'production';
 
 export async function POST(req: NextRequest) {
+  const metadata = getSessionRequestMetadata(req);
+  let challengeForAudit: TwoFactorChallengePayload | null = null;
+
   try {
     const body = await req.json();
     const { code } = twoFactorVerifySchema.parse(body);
@@ -36,8 +41,12 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      challengeForAudit = challenge;
       const result = await AuthService.verifyTwoFactorLogin(challenge, code);
-      const sessionToken = await createAuthToken(result.payload, SESSION_MAX_AGE_SECONDS);
+      const { token: sessionToken } = await createPersistedSession(
+        result.payload,
+        metadata,
+      );
       const response = NextResponse.json(
         {
           ok: true,
@@ -79,7 +88,10 @@ export async function POST(req: NextRequest) {
 
       await AuthService.enableTwoFactor(setup.userId, code);
       const result = await AuthService.createAuthenticatedResult(setup.userId);
-      const sessionToken = await createAuthToken(result.payload, SESSION_MAX_AGE_SECONDS);
+      const { token: sessionToken } = await createPersistedSession(
+        result.payload,
+        metadata,
+      );
       const response = NextResponse.json(
         {
           ok: true,
@@ -128,6 +140,14 @@ export async function POST(req: NextRequest) {
       error.message === 'INVALID_TWO_FACTOR_CODE' ||
       error.message === 'TWO_FACTOR_NOT_CONFIGURED'
     ) {
+      if (challengeForAudit) {
+        await recordMfaChallengeFailure({
+          userId: challengeForAudit.userId,
+          tenantId: challengeForAudit.tenantId,
+          metadata,
+          reason: error.message,
+        });
+      }
       return NextResponse.json(
         { ok: false, error: error.message, message: 'Codigo 2FA invalido.' },
         { status: 401 },
