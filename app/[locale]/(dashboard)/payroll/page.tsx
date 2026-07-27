@@ -1,5 +1,6 @@
-import { PayrollDashboard } from "@/components/modules/payroll/payroll-dashboard";
 import type { Locale } from "@/lib/i18n";
+
+import { PayrollDashboard } from "./components/payroll-dashboard";
 
 export default async function PayrollPage({
   params,
