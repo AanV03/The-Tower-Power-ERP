@@ -110,3 +110,8 @@ test("resolves granular permissions for operational routes", () => {
   assert.equal(resolveRoutePermission("POST", "/api/pos/checkout"), "pos.write");
   assert.equal(resolveRoutePermission("PATCH", "/api/specialists/settlements"), "specialists.approve");
 });
+
+test("does not expose permissions for removed demonstration routes", () => {
+  assert.equal(resolveRoutePermission("POST", "/api/memberships/demo-member"), null);
+  assert.equal(resolveRoutePermission("GET", "/api/sentry-example-api"), null);
+});

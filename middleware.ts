@@ -117,6 +117,13 @@ function isPublicAuthApi(pathname: string) {
   );
 }
 
+function isSignedServiceApi(request: NextRequest) {
+  return (
+    request.method === "POST" &&
+    request.nextUrl.pathname === "/api/integrations/outbox"
+  );
+}
+
 function isProtectedPage(pathname: string) {
   const normalizedPath = stripLocale(pathname);
   return PROTECTED_PAGE_PREFIXES.some(
@@ -275,7 +282,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (pathname.startsWith("/api") && isPublicAuthApi(pathname)) {
+  if (
+    pathname.startsWith("/api") &&
+    (isPublicAuthApi(pathname) || isSignedServiceApi(request))
+  ) {
     return NextResponse.next();
   }
 

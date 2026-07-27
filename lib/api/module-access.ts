@@ -227,7 +227,7 @@ const ROUTE_PERMISSIONS: RoutePermission[] = [
   },
   {
     method: "POST",
-    pattern: /^\/api\/memberships\/(?:demo-member|members|plans|subscriptions)$/,
+    pattern: /^\/api\/memberships\/(?:members|plans|subscriptions)$/,
     permission: "memberships.write",
   },
   {
