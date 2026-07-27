@@ -24,32 +24,40 @@ if (process.env.NODE_ENV !== "production") {
 
 export type TenantTransactionClient = Prisma.TransactionClient;
 
-export async function withTenantTransaction<T>(
+export async function setTenantTransactionContext(
+  tx: TenantTransactionClient,
   tenantId: string,
-  operation: (tx: TenantTransactionClient) => Promise<T>,
-): Promise<T> {
+) {
   const normalizedTenantId = tenantId.trim();
 
   if (!normalizedTenantId) {
     throw new Error("TENANT_ID_REQUIRED");
   }
 
+  await tx.$executeRawUnsafe("SET LOCAL ROLE authenticated");
+
+  const [setting] = await tx.$queryRaw<Array<{ tenantId: string | null }>>`
+    SELECT set_config(
+      'app.current_tenant_id',
+      ${normalizedTenantId},
+      true
+    ) AS "tenantId"
+  `;
+
+  if (setting?.tenantId !== normalizedTenantId) {
+    throw new Error("TENANT_CONTEXT_NOT_SET");
+  }
+
+  return normalizedTenantId;
+}
+
+export async function withTenantTransaction<T>(
+  tenantId: string,
+  operation: (tx: TenantTransactionClient) => Promise<T>,
+): Promise<T> {
   return prisma.$transaction(
     async (tx) => {
-      await tx.$executeRawUnsafe("SET LOCAL ROLE authenticated");
-
-      const [setting] = await tx.$queryRaw<Array<{ tenantId: string | null }>>`
-        SELECT set_config(
-          'app.current_tenant_id',
-          ${normalizedTenantId},
-          true
-        ) AS "tenantId"
-      `;
-
-      if (setting?.tenantId !== normalizedTenantId) {
-        throw new Error("TENANT_CONTEXT_NOT_SET");
-      }
-
+      await setTenantTransactionContext(tx, tenantId);
       return operation(tx);
     },
     {

@@ -586,6 +586,7 @@ async function seedFinanceAndPeople(tx, tenantId, branchId) {
     ["1000", "Bancos", "ASSET"],
     ["4000", "Ingresos por ventas", "INCOME"],
     ["5000", "Costo de ventas", "EXPENSE"],
+    ["5100", "Gasto de nomina", "EXPENSE"],
   ];
 
   for (const [code, name, type] of accounts) {

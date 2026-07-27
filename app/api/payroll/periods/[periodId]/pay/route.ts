@@ -1,6 +1,6 @@
 import { requireApiContext } from "@/lib/api/context";
-import { ApiError, fail, ok } from "@/lib/api/response";
-import { prisma } from "@/lib/db/prisma";
+import { fail, ok } from "@/lib/api/response";
+import { postPayrollToAccounting } from "@/lib/accounting/payroll-posting";
 
 export const runtime = "nodejs";
 
@@ -12,24 +12,12 @@ export async function POST(
     const context = await requireApiContext({ moduleId: "payroll", permission: "payroll.pay" });
     const { periodId } = await params;
 
-    const result = await prisma.payrollPeriod.updateMany({
-      where: {
-        id: periodId,
-        tenantId: context.tenantId,
-        status: "APPROVED",
-      },
-      data: { status: "PAID" },
+    const result = await postPayrollToAccounting({
+      tenantId: context.tenantId,
+      payrollPeriodId: periodId,
     });
 
-    if (result.count === 0) {
-      throw new ApiError("Only approved payroll periods can be marked as paid.", 409, "PAYROLL_PERIOD_NOT_APPROVED");
-    }
-
-    const period = await prisma.payrollPeriod.findFirstOrThrow({
-      where: { id: periodId, tenantId: context.tenantId },
-    });
-
-    return ok(period);
+    return ok(result);
   } catch (error) {
     return fail(error);
   }

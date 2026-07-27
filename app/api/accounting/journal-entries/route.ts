@@ -58,6 +58,14 @@ export async function POST(request: Request) {
       permission: data.status === "POSTED" ? "accounting.post" : "accounting.journal.write",
     });
 
+    if (data.sourceType.toUpperCase() === "PAYROLL") {
+      throw new ApiError(
+        "PAYROLL journal entries must be created by the payroll payment workflow.",
+        409,
+        "RESERVED_JOURNAL_SOURCE",
+      );
+    }
+
     if (!isBalancedJournal(data.lines)) {
       throw new ApiError("Journal entry must be balanced before it can be saved.", 400, "JOURNAL_NOT_BALANCED");
     }
