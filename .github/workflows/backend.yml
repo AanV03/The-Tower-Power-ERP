@@ -99,6 +99,9 @@ jobs:
           node --experimental-strip-types --test
           scripts/tenant-isolation.test.mjs
 
+      - name: Core backend integration test
+        run: npm run test:core-integration
+
       - name: Session revocation integration test
         run: npm run test:session
 

@@ -108,7 +108,7 @@ test("dispatches a branch-role notification only to active scoped members", asyn
 
   assert.equal(notification.targetRoleId, "role-reception");
   assert.deepEqual(capture.data.recipients.createMany.data, [
-    { tenantId: "tenant-a", userId: "user-a" },
+    { userId: "user-a" },
   ]);
 });
 
@@ -143,8 +143,8 @@ test("broadcasts to active tenant memberships when no target is provided", async
   });
 
   assert.deepEqual(capture.data.recipients.createMany.data, [
-    { tenantId: "tenant-a", userId: "user-a" },
-    { tenantId: "tenant-a", userId: "user-b" },
+    { userId: "user-a" },
+    { userId: "user-b" },
   ]);
 });
 

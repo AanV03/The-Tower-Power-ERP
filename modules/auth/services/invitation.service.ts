@@ -169,28 +169,26 @@ async function upsertBranchMemberships(
     );
   }
 
-  await Promise.all(
-    branchIds.map((branchId) =>
-      tx.branchMembership.upsert({
-        where: {
-          tenantId_membershipId_branchId: {
-            tenantId,
-            membershipId,
-            branchId,
-          },
-        },
-        update: {
-          revokedAt: null,
-          validUntil: null,
-        },
-        create: {
+  for (const branchId of branchIds) {
+    await tx.branchMembership.upsert({
+      where: {
+        tenantId_membershipId_branchId: {
           tenantId,
           membershipId,
           branchId,
         },
-      }),
-    ),
-  );
+      },
+      update: {
+        revokedAt: null,
+        validUntil: null,
+      },
+      create: {
+        tenantId,
+        membershipId,
+        branchId,
+      },
+    });
+  }
 }
 
 async function upsertRoleAssignment(

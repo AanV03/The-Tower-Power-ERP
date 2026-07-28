@@ -225,12 +225,13 @@ export async function triggerNotification(rawInput: TriggerNotificationInput) {
     const now = new Date();
     await assertBranch(tx, input.tenantId, input.branchId);
 
-    const [directUserId, roleRecipients, broadcastUserIds] =
-      await Promise.all([
-        resolveDirectRecipient(tx, input, now),
-        resolveRoleRecipients(tx, input, now),
-        resolveBroadcastRecipients(tx, input, now),
-      ]);
+    const directUserId = await resolveDirectRecipient(tx, input, now);
+    const roleRecipients = await resolveRoleRecipients(tx, input, now);
+    const broadcastUserIds = await resolveBroadcastRecipients(
+      tx,
+      input,
+      now,
+    );
     const recipientUserIds = Array.from(
       new Set([
         ...(directUserId ? [directUserId] : []),
@@ -261,7 +262,6 @@ export async function triggerNotification(rawInput: TriggerNotificationInput) {
         recipients: {
           createMany: {
             data: recipientUserIds.map((userId) => ({
-              tenantId: input.tenantId,
               userId,
             })),
           },
