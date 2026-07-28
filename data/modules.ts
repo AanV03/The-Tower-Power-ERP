@@ -245,7 +245,7 @@ export const moduleConfigs: Record<ModuleId, ModuleConfig> = {
     title: { es: "RH y nómina", en: "HR and payroll", fr: "RH et paie" },
     subtitle: {
       es: "Expedientes digitales, asistencias, horas extra, nómina y comisiones.",
-      en: "Digital records, attendance, overtime, payroll, and commissions.",
+      en: "Digital records, contracts, and daily staff attendance.",
       fr: "Dossiers numériques, présences, heures supplémentaires, paie et commissions.",
     },
     primaryAction: { es: "Alta empleado", en: "Add employee", fr: "Ajouter employé" },
@@ -253,7 +253,7 @@ export const moduleConfigs: Record<ModuleId, ModuleConfig> = {
       { label: { es: "Personal activo", en: "Active staff", fr: "Personnel actif" }, value: "214", change: "+5", tone: "default" },
       { label: { es: "Asistencia", en: "Attendance", fr: "Présence" }, value: "96%", change: "Hoy", tone: "success" },
       { label: { es: "Horas extra", en: "Overtime", fr: "Heures supplémentaires" }, value: "82h", change: "Semana", tone: "warning" },
-      { label: { es: "Comisiones", en: "Commissions", fr: "Commissions" }, value: "$74K", change: "+12%", tone: "success" },
+      { label: { es: "Incidencias", en: "Incidents", fr: "Incidents" }, value: "12", change: "Revisar", tone: "warning" },
     ],
     chart: [
       { label: "Lun", value: 91 },
@@ -446,11 +446,11 @@ export const moduleConfigs: Record<ModuleId, ModuleConfig> = {
   },
   payroll: {
     id: "payroll",
-    title: { es: "Nomina y comisiones", en: "Payroll and commissions", fr: "Paie et commissions" },
+    title: { es: "Nomina", en: "Payroll", fr: "Paie" },
     subtitle: {
-      es: "Periodos de nomina, contratos, asistencias, horas extra, deducciones y netos.",
-      en: "Payroll periods, contracts, attendance, overtime, deductions, and net pay.",
-      fr: "Periodes de paie, contrats, presences, heures extra, deductions et net.",
+      es: "Periodos, recibos, deducciones, comisiones y cierre de pago.",
+      en: "Periods, receipts, deductions, commissions, and payment close.",
+      fr: "Periodes, recus, deductions, commissions et cloture de paiement.",
     },
     primaryAction: { es: "Crear periodo", en: "Create period", fr: "Creer periode" },
     metrics: [

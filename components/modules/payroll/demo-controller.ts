@@ -1,0 +1,64 @@
+import type {
+  PayrollReadinessInput,
+  PayrollReceiptFilters,
+  PayrollReceiptView,
+  PayrollStatusLabel,
+} from "./types";
+
+export function filterPayrollReceipts(receipts: PayrollReceiptView[], filters: PayrollReceiptFilters) {
+  const normalizedQuery = filters.query.trim().toLowerCase();
+
+  return receipts.filter((receipt) => {
+    const matchesQuery =
+      normalizedQuery.length === 0 ||
+      [receipt.employeeName, receipt.employeeEmail, receipt.position, receipt.branch]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedQuery);
+    const matchesBranch = filters.branch.length === 0 || receipt.branch === filters.branch;
+    const matchesStatus = filters.status === "all" || receipt.status === filters.status;
+
+    return matchesQuery && matchesBranch && matchesStatus;
+  });
+}
+
+export function getPayrollReadiness(input: PayrollReadinessInput) {
+  const incidentCount = input.missingReceipts + input.openAttendances;
+  const canApprove = input.receiptCount > 0 && incidentCount === 0;
+
+  return {
+    canApprove,
+    incidentCount,
+    severity: incidentCount > 0 ? "danger" : input.receiptCount > 0 ? "success" : "warning",
+  } as const;
+}
+
+export function createPayrollExportRows(receipts: PayrollReceiptView[]) {
+  return [
+    ["Empleado", "Sucursal", "Estado", "Base", "Horas extra", "Comision", "Deducciones", "Neto"],
+    ...receipts.map((receipt) => [
+      receipt.employeeName,
+      receipt.branch,
+      receipt.status,
+      receipt.baseLabel,
+      receipt.overtimeLabel,
+      receipt.commissionLabel,
+      receipt.deductionsLabel,
+      receipt.netLabel,
+    ]),
+  ];
+}
+
+export function validPayrollTransition(from: PayrollStatusLabel, to: PayrollStatusLabel) {
+  if (from === to) return { ok: true } as const;
+  if (from === "DRAFT" && to === "APPROVED") return { ok: true } as const;
+  if (from === "APPROVED" && to === "PAID") return { ok: true } as const;
+  if (from === "DRAFT" && to === "PAID") {
+    return { ok: false, code: "PAYROLL_PERIOD_NOT_APPROVED" } as const;
+  }
+  if (from === "PAID") {
+    return { ok: false, code: "PAYROLL_PERIOD_LOCKED" } as const;
+  }
+
+  return { ok: false, code: "INVALID_PAYROLL_TRANSITION" } as const;
+}

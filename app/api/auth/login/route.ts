@@ -2,21 +2,51 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { loginSchema } from '@/modules/auth/schemas/auth.schema';
 import { AuthService } from '@/modules/auth/services/auth.service';
+import { consumeLoginAttempt } from '@/lib/auth/login-rate-limit';
 import {
   createAuthToken,
-  GERPY_SESSION_COOKIE,
-  GERPY_TWO_FACTOR_COOKIE,
-  GERPY_TWO_FACTOR_SETUP_COOKIE,
+  createPersistedSession,
+  getSessionRequestMetadata,
+  recordLoginFailure,
+  TOWER_POWER_SESSION_COOKIE,
+  TOWER_POWER_TWO_FACTOR_COOKIE,
+  TOWER_POWER_TWO_FACTOR_SETUP_COOKIE,
+  SESSION_MAX_AGE_SECONDS,
   TWO_FACTOR_CHALLENGE_MAX_AGE_SECONDS,
-  TWO_FACTOR_SETUP_MAX_AGE_SECONDS,
 } from '@/lib/auth/session';
 
 const secureCookie = process.env.NODE_ENV === 'production';
 
 export async function POST(req: NextRequest) {
+  const metadata = getSessionRequestMetadata(req);
+  const rateLimit = consumeLoginAttempt(metadata.ipAddress);
+  let attemptedEmail: string | null = null;
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'RATE_LIMITED',
+        message: 'Demasiados intentos de inicio de sesion. Intenta de nuevo en un minuto.',
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(rateLimit.retryAfterSeconds),
+          'X-RateLimit-Limit': '5',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': String(
+            Math.ceil(rateLimit.resetAt.getTime() / 1_000),
+          ),
+        },
+      },
+    );
+  }
+
   try {
     const body = await req.json();
     const credentials = loginSchema.parse(body);
+    attemptedEmail = credentials.email;
     const result = await AuthService.login(credentials);
 
     if (result.status === 'TWO_FACTOR_REQUIRED') {
@@ -33,9 +63,9 @@ export async function POST(req: NextRequest) {
         { status: 200 },
       );
 
-      response.cookies.delete(GERPY_SESSION_COOKIE);
-      response.cookies.delete(GERPY_TWO_FACTOR_SETUP_COOKIE);
-      response.cookies.set(GERPY_TWO_FACTOR_COOKIE, challengeToken, {
+      response.cookies.delete(TOWER_POWER_SESSION_COOKIE);
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_SETUP_COOKIE);
+      response.cookies.set(TOWER_POWER_TWO_FACTOR_COOKIE, challengeToken, {
         httpOnly: true,
         secure: secureCookie,
         sameSite: 'lax',
@@ -46,28 +76,32 @@ export async function POST(req: NextRequest) {
       return response;
     }
 
-    if (result.status === 'TWO_FACTOR_SETUP_REQUIRED') {
-      const setupToken = await createAuthToken(
+    if (result.status === 'AUTHENTICATED') {
+      const { token: sessionToken } = await createPersistedSession(
         result.payload,
-        TWO_FACTOR_SETUP_MAX_AGE_SECONDS,
+        metadata,
       );
       const response = NextResponse.json(
         {
           ok: true,
-          twoFactorSetupRequired: true,
-          message: 'Configura 2FA para completar el acceso.',
+          user: result.user,
+          session: {
+            userId: result.payload.userId,
+            tenantId: result.payload.tenantId,
+            role: result.payload.role,
+          },
         },
         { status: 200 },
       );
 
-      response.cookies.delete(GERPY_SESSION_COOKIE);
-      response.cookies.delete(GERPY_TWO_FACTOR_COOKIE);
-      response.cookies.set(GERPY_TWO_FACTOR_SETUP_COOKIE, setupToken, {
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_COOKIE);
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_SETUP_COOKIE);
+      response.cookies.set(TOWER_POWER_SESSION_COOKIE, sessionToken, {
         httpOnly: true,
         secure: secureCookie,
         sameSite: 'lax',
         path: '/',
-        maxAge: TWO_FACTOR_SETUP_MAX_AGE_SECONDS,
+        maxAge: SESSION_MAX_AGE_SECONDS,
       });
 
       return response;
@@ -86,6 +120,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (error.message === 'INVALID_CREDENTIALS') {
+      await recordLoginFailure(
+        attemptedEmail,
+        metadata,
+        error.message,
+      );
       return NextResponse.json(
         { ok: false, error: 'INVALID_CREDENTIALS', message: 'Credenciales invalidas.' },
         { status: 401 },
@@ -96,6 +135,11 @@ export async function POST(req: NextRequest) {
       error.message === 'TENANT_CONTEXT_MISSING' ||
       error.message === 'TWO_FACTOR_NOT_CONFIGURED'
     ) {
+      await recordLoginFailure(
+        attemptedEmail,
+        metadata,
+        error.message,
+      );
       return NextResponse.json(
         { ok: false, error: error.message, message: 'La cuenta no esta lista para iniciar sesion.' },
         { status: 403 },

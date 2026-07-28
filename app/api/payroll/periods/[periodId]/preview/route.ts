@@ -79,7 +79,7 @@ function splitSpecialistName(name: string) {
 }
 
 function isSpecialistPayrollEmployee(email: string | null) {
-  return Boolean(email?.startsWith("specialist-") && email.endsWith("@gerpy.demo"));
+  return Boolean(email?.startsWith("specialist-") && email.endsWith("@towerpower.demo"));
 }
 
 async function getFallbackBranchId(tx: Prisma.TransactionClient, tenantId: string, branchId?: string | null) {
@@ -109,7 +109,7 @@ async function resolveSpecialistPayrollEmployee(
     createdAt: Date;
   },
 ) {
-  const email = `specialist-${input.specialistId}@gerpy.demo`;
+  const email = `specialist-${input.specialistId}@towerpower.demo`;
   const existingEmployee = await tx.employee.findFirst({
     where: {
       tenantId: input.tenantId,
@@ -186,6 +186,7 @@ async function upsertPayrollItem(
       employeeId: input.employeeId,
       name: input.displayName,
       source: input.source,
+      sourceLabel: input.source === "SPECIALIST" ? "Especialista / comision" : "Empleado",
       base: input.baseAmount.toString(),
       overtime: input.overtimeAmount.toString(),
       commission: input.commissionAmount.toString(),
@@ -202,7 +203,7 @@ export async function POST(
   { params }: { params: Promise<{ periodId: string }> },
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "payroll" });
+    const context = await requireApiContext({ moduleId: "payroll", permission: "payroll.preview" });
     const { periodId } = await params;
 
     const result = await prisma.$transaction(async (tx) => {

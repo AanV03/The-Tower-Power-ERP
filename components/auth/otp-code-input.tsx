@@ -87,7 +87,7 @@ export function OtpCodeInput({ id, label, value, onChange, hasError }: OtpCodeIn
   }
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5" data-testid={id}>
       <label id={`${id}-label`} className="auth-label block text-sm font-medium">
         {label}
       </label>
@@ -95,6 +95,7 @@ export function OtpCodeInput({ id, label, value, onChange, hasError }: OtpCodeIn
         {digits.map((digit, index) => (
           <input
             key={index}
+            data-testid={`${id}-digit-${index + 1}`}
             ref={(element) => {
               inputRefs.current[index] = element;
             }}

@@ -77,10 +77,18 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   ];
 
   return (
-    <section className="erp-section space-y-6" role="main" aria-label={moduleConfigs.dashboard.title[l]}>
+    <section
+      className="erp-section space-y-6"
+      role="main"
+      aria-label={moduleConfigs.dashboard.title[l]}
+      data-testid="dashboard-page"
+    >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1">
-          <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
+          <h1
+            className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground"
+            data-testid="dashboard-heading"
+          >
             <Activity className="size-7 text-primary" aria-hidden="true" />
             {moduleConfigs.dashboard.title[l]}
           </h1>

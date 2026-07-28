@@ -1,22 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import type { Route } from "next";
 import { useState, type FormEvent } from "react";
 import { AlertCircle, CheckCircle2, Dumbbell, Mail } from "lucide-react";
 
 import { AuthShell } from "@/components/layout/auth-shell";
+import { getDictionary, type Locale } from "@/lib/i18n";
+import { localizedPath } from "@/lib/localized-routing";
 import { cn } from "@/lib/utils";
 
 function validateEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function signInHref() {
-  return "/login" as Route;
-}
-
-export function PasswordRecoveryForm() {
+export function PasswordRecoveryForm({ locale = "es" }: { locale?: Locale }) {
+  const dictionary = getDictionary(locale);
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touched, setTouched] = useState(false);
@@ -33,7 +31,7 @@ export function PasswordRecoveryForm() {
     setErrorMessage("");
 
     if (!validateEmail(email)) {
-      setErrorMessage(email.length === 0 ? "Email is required." : "Enter a valid email address.");
+      setErrorMessage(email.length === 0 ? dictionary.auth.errors.emailRequired : dictionary.auth.errors.emailInvalid);
       return;
     }
 
@@ -73,7 +71,7 @@ export function PasswordRecoveryForm() {
   }
 
   return (
-    <AuthShell>
+    <AuthShell locale={locale} backLabel={dictionary.auth.backToHome}>
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <div
@@ -83,10 +81,10 @@ export function PasswordRecoveryForm() {
           </div>
           <div>
             <h1 className="auth-heading text-2xl font-bold tracking-tight">
-              Password Recovery
+              {dictionary.auth.passwordRecovery.title}
             </h1>
             <p className="auth-muted mt-1 text-sm">
-              Enter your email and Gerpy will send recovery instructions if the account exists.
+              {dictionary.auth.passwordRecovery.subtitle}
             </p>
           </div>
         </div>
@@ -97,7 +95,7 @@ export function PasswordRecoveryForm() {
           <form onSubmit={handleSubmit} noValidate className="space-y-5 px-8 py-8">
             <div className="space-y-1.5">
               <label htmlFor="password-recovery-email" className="auth-label block text-sm font-medium">
-                Email
+                {dictionary.auth.fields.email}
               </label>
               <div className="relative">
                 <span className="auth-field-icon pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
@@ -107,7 +105,7 @@ export function PasswordRecoveryForm() {
                   id="password-recovery-email"
                   type="email"
                   autoComplete="email"
-                  placeholder="you@gym.com"
+                  placeholder={dictionary.auth.placeholders.email}
                   value={email}
                   onChange={(event) => {
                     setEmail(event.target.value);
@@ -147,17 +145,17 @@ export function PasswordRecoveryForm() {
                 "disabled:cursor-not-allowed disabled:opacity-60"
               )}
             >
-              {isSubmitting ? "Sending recovery email..." : "Send recovery email"}
+              {isSubmitting ? dictionary.auth.passwordRecovery.loading : dictionary.auth.passwordRecovery.submit}
             </button>
           </form>
 
           <div className="auth-divider border-t px-8 py-5 text-center text-sm">
-            Remembered your password?{" "}
+            {dictionary.auth.passwordRecovery.footerPrefix}{" "}
             <Link
-              href={signInHref()}
+              href={localizedPath(locale, "login")}
               className="auth-link font-semibold underline-offset-4 transition-colors hover:underline"
             >
-              Sign in
+              {dictionary.auth.passwordRecovery.footerAction}
             </Link>
           </div>
         </div>

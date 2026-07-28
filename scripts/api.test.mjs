@@ -2,12 +2,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { formatCurrency, parsePagination } from "../lib/api/pagination.ts";
-import { resolveModuleAccess } from "../lib/api/module-access.ts";
+import { resolveModuleAccess, resolveRoutePermission } from "../lib/api/module-access.ts";
 
 test("resolves module ids to Prisma module keys and permissions", () => {
   assert.deepEqual(resolveModuleAccess("memberships"), {
     moduleKey: "MEMBERSHIPS",
-    permission: "memberships.manage",
+    permission: "memberships.read",
   });
 
   assert.deepEqual(resolveModuleAccess("dashboard"), {
@@ -21,42 +21,42 @@ test("resolves module ids to Prisma module keys and permissions", () => {
 test("resolves premium ERP module ids to Prisma module keys and permissions", () => {
   assert.deepEqual(resolveModuleAccess("catalog"), {
     moduleKey: "CATALOG",
-    permission: "catalog.manage",
+    permission: "catalog.read",
   });
 
   assert.deepEqual(resolveModuleAccess("purchases"), {
     moduleKey: "PURCHASES",
-    permission: "purchases.manage",
+    permission: "purchases.read",
   });
 
   assert.deepEqual(resolveModuleAccess("warehouse"), {
     moduleKey: "WAREHOUSE",
-    permission: "warehouse.manage",
+    permission: "warehouse.read",
   });
 
   assert.deepEqual(resolveModuleAccess("accounting"), {
     moduleKey: "ACCOUNTING",
-    permission: "accounting.manage",
+    permission: "accounting.read",
   });
 
   assert.deepEqual(resolveModuleAccess("payroll"), {
     moduleKey: "PAYROLL",
-    permission: "payroll.manage",
+    permission: "payroll.read",
   });
 
   assert.deepEqual(resolveModuleAccess("analytics"), {
     moduleKey: "ANALYTICS",
-    permission: "analytics.manage",
+    permission: "analytics.read",
   });
 
   assert.deepEqual(resolveModuleAccess("integrations"), {
     moduleKey: "INTEGRATIONS",
-    permission: "integrations.manage",
+    permission: "integrations.read",
   });
 
   assert.deepEqual(resolveModuleAccess("maintenance"), {
     moduleKey: "MAINTENANCE",
-    permission: "maintenance.manage",
+    permission: "maintenance.read",
   });
 });
 
@@ -80,4 +80,38 @@ test("parses bounded API pagination from URL search params", () => {
 test("formats currency values for API summaries", () => {
   assert.equal(formatCurrency(1420, "MXN"), "$1,420");
   assert.equal(formatCurrency("690.50", "MXN"), "$690.50");
+});
+
+test("resolves action permissions for hr payroll and accounting routes", () => {
+  assert.equal(resolveRoutePermission("GET", "/api/hr/time-clock"), "hr.read");
+  assert.equal(resolveRoutePermission("POST", "/api/hr/time-clock"), "hr.attendance.write");
+  assert.equal(resolveRoutePermission("GET", "/api/hr/employees"), "hr.read");
+  assert.equal(resolveRoutePermission("POST", "/api/hr/employees"), "hr.employee.write");
+
+  assert.equal(resolveRoutePermission("GET", "/api/payroll/periods"), "payroll.read");
+  assert.equal(resolveRoutePermission("POST", "/api/payroll/periods"), "payroll.period.write");
+  assert.equal(resolveRoutePermission("POST", "/api/payroll/periods/period_1/preview"), "payroll.preview");
+  assert.equal(resolveRoutePermission("POST", "/api/payroll/periods/period_1/approve"), "payroll.approve");
+  assert.equal(resolveRoutePermission("POST", "/api/payroll/periods/period_1/pay"), "payroll.pay");
+
+  assert.equal(resolveRoutePermission("GET", "/api/accounting/accounts"), "accounting.read");
+  assert.equal(resolveRoutePermission("POST", "/api/accounting/accounts"), "accounting.account.write");
+  assert.equal(resolveRoutePermission("POST", "/api/accounting/journal-entries"), "accounting.journal.write");
+  assert.equal(resolveRoutePermission("POST", "/api/accounting/journal-entries/entry_1/void"), "accounting.void");
+});
+
+test("resolves granular permissions for operational routes", () => {
+  assert.equal(resolveRoutePermission("GET", "/api/catalog/products"), "catalog.read");
+  assert.equal(resolveRoutePermission("POST", "/api/catalog/products"), "catalog.write");
+  assert.equal(resolveRoutePermission("DELETE", "/api/catalog/products/product_1"), "catalog.admin");
+  assert.equal(resolveRoutePermission("GET", "/api/finance/invoices"), "finance.read");
+  assert.equal(resolveRoutePermission("POST", "/api/finance/payments"), "finance.write");
+  assert.equal(resolveRoutePermission("GET", "/api/pos/sales"), "pos.read");
+  assert.equal(resolveRoutePermission("POST", "/api/pos/checkout"), "pos.write");
+  assert.equal(resolveRoutePermission("PATCH", "/api/specialists/settlements"), "specialists.approve");
+});
+
+test("does not expose permissions for removed demonstration routes", () => {
+  assert.equal(resolveRoutePermission("POST", "/api/memberships/demo-member"), null);
+  assert.equal(resolveRoutePermission("GET", "/api/sentry-example-api"), null);
 });

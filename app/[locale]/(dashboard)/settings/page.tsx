@@ -14,8 +14,22 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
   const user = await prisma.user.findUnique({
     where: { id: context.userId },
     include: {
-      tenant: true,
-      branch: true,
+      memberships: {
+        where: { tenantId: context.tenantId },
+        take: 1,
+        include: {
+          tenant: true,
+          defaultBranch: true,
+        },
+      },
+      mfaCredentials: {
+        where: {
+          isEnabled: true,
+          revokedAt: null,
+        },
+        select: { id: true },
+        take: 1,
+      },
     },
   });
 
@@ -29,18 +43,24 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
     );
   }
 
+  const membership = user.memberships[0] ?? null;
   const userData = {
     id: user.id,
     name: user.name,
     email: user.email,
     role: context.roles[0] || "User",
-    tenantName: user.tenant?.name ?? null,
-    branchName: user.branch?.name ?? null,
-    twoFactorEnabled: user.twoFactorEnabled,
+    tenantName: membership?.tenant.name ?? null,
+    branchName: membership?.defaultBranch?.name ?? null,
+    twoFactorEnabled: user.mfaCredentials.length > 0,
   };
 
   return (
-    <section className="erp-section space-y-6" role="main" aria-label={dict.common.settings}>
+    <section
+      className="erp-section space-y-6"
+      role="main"
+      aria-label={dict.common.settings}
+      data-testid="settings-page"
+    >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1">
           <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">

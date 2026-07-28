@@ -1,12 +1,12 @@
-# ERP Gerpy - Analisis centralizado de estado actual
+# ERP The Tower Power - Analisis centralizado de estado actual
 
 Fecha de analisis: 2026-05-29  
 Documento base: `C:\Users\aaron\Desktop\workplan.pdf`  
-Repositorio: `C:\Dev\School\Gerpy`
+Repositorio: `C:\Dev\School\The Tower Power`
 
 ## Resumen ejecutivo
 
-Gerpy ya cuenta con una base tecnica considerable para un ERP SaaS de gimnasios: frontend de dashboard, autenticacion, tenant context, RBAC, modulos navegables, APIs tenant-scoped, Prisma/PostgreSQL para transacciones y MongoDB/Mongoose para documentos flexibles. Frente al workplan, el proyecto cumple o supera gran parte del Sprint 1 y tiene fundamentos adelantados para Sprints 2 a 5.
+The Tower Power ya cuenta con una base tecnica considerable para un ERP SaaS de gimnasios: frontend de dashboard, autenticacion, tenant context, RBAC, modulos navegables, APIs tenant-scoped, Prisma/PostgreSQL para transacciones y MongoDB/Mongoose para documentos flexibles. Frente al workplan, el proyecto cumple o supera gran parte del Sprint 1 y tiene fundamentos adelantados para Sprints 2 a 5.
 
 El estado actual debe clasificarse como "arquitectura y plataforma ERP avanzada con MVP funcional parcial", no como ERP finalizado. El sistema ya modela casi todos los dominios relevantes, pero muchos modulos todavia operan como resumen/KPI + endpoints base GET/POST. Faltan flujos transaccionales completos, reglas de negocio, actualizaciones/cancelaciones, jobs, integraciones, auditoria automatica y pantallas especializadas.
 
@@ -220,6 +220,6 @@ Existe base de pruebas y build, pero falta integracion E2E, freeze y entrega fin
 
 ## Conclusion
 
-Gerpy esta tecnicamente por delante del Sprint 1 y tiene una base muy fuerte para evolucionar rapido. La mayor diferencia entre el estado actual y el workplan no esta en el schema ni en la arquitectura, sino en los entregables demostrables: pantallas funcionales, workflows transaccionales, CI visible, motores de negocio y evidencia de pruebas.
+The Tower Power esta tecnicamente por delante del Sprint 1 y tiene una base muy fuerte para evolucionar rapido. La mayor diferencia entre el estado actual y el workplan no esta en el schema ni en la arquitectura, sino en los entregables demostrables: pantallas funcionales, workflows transaccionales, CI visible, motores de negocio y evidencia de pruebas.
 
 Si el objetivo inmediato es defender avance al 2026-05-29, el mensaje correcto es: "Sprint 1 esta sustancialmente cubierto y se adelanto arquitectura de los Sprints 2-5; falta cerrar CI/evidencias y convertir modulos base en flujos operativos completos".

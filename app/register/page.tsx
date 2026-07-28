@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   AlertCircle,
   CheckCircle2,
@@ -28,6 +28,8 @@ import {
   MultiStateBadge,
   type BadgeState,
 } from "@/components/ui/multi-state-badge";
+import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { localizedPath } from "@/lib/localized-routing";
 import { cn } from "@/lib/utils";
 
 type RegisterField = "name" | "email" | "password" | "confirm";
@@ -70,7 +72,7 @@ const passwordRules = [
   },
   {
     id: "lower",
-    label: "One lowercase letter",
+    label: "lower",
     test: (value: string) => /[a-z]/.test(value),
   },
   {
@@ -84,8 +86,6 @@ const passwordRules = [
     test: (value: string) => /[^A-Za-z0-9]/.test(value),
   },
 ] as const;
-
-const strengthLabels = ["", "Weak", "Basic", "Fair", "Good", "Strong"];
 
 function validateEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -122,7 +122,15 @@ function RuleItem({
   );
 }
 
-function StrengthBar({ metCount }: { metCount: number }) {
+function StrengthBar({
+  metCount,
+  label,
+  labels,
+}: {
+  metCount: number;
+  label: string;
+  labels: string[];
+}) {
   const colors = [
     "bg-destructive",
     "bg-warning",
@@ -134,7 +142,7 @@ function StrengthBar({ metCount }: { metCount: number }) {
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <span className="auth-muted text-xs">Password strength</span>
+        <span className="auth-muted text-xs">{label}</span>
 
         {metCount > 0 && (
           <span
@@ -147,7 +155,7 @@ function StrengthBar({ metCount }: { metCount: number }) {
               metCount === 5 && "auth-success-text",
             )}
           >
-            {strengthLabels[metCount]}
+            {labels[metCount]}
           </span>
         )}
       </div>
@@ -290,8 +298,30 @@ function InputField({
   );
 }
 
+function localeFromPathname(pathname: string | null): Locale {
+  const firstSegment = pathname?.split("/").filter(Boolean)[0];
+  return firstSegment && isLocale(firstSegment) ? firstSegment : "es";
+}
+
 export default function RegisterPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = localeFromPathname(pathname);
+  const dictionary = getDictionary(locale);
+  const strengthLabels = [
+    "",
+    dictionary.auth.strength.weak,
+    dictionary.auth.strength.weak,
+    dictionary.auth.strength.fair,
+    dictionary.auth.strength.good,
+    dictionary.auth.strength.strong,
+  ];
+  const lowercaseRuleLabel =
+    locale === "fr"
+      ? "Au moins une lettre minuscule"
+      : locale === "en"
+        ? "At least one lowercase letter"
+        : "Al menos una letra minuscula";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -335,6 +365,16 @@ export default function RegisterPage() {
   const metRules = passwordRules.map((rule) => ({
     ...rule,
     met: rule.test(password),
+    label:
+      rule.id === "length"
+        ? dictionary.auth.passwordRules.length
+        : rule.id === "upper"
+          ? dictionary.auth.passwordRules.upper
+          : rule.id === "number"
+            ? dictionary.auth.passwordRules.number
+            : rule.id === "special"
+              ? dictionary.auth.passwordRules.special
+              : lowercaseRuleLabel,
   }));
 
   const metCount = metRules.filter((rule) => rule.met).length;
@@ -345,25 +385,25 @@ export default function RegisterPage() {
     const nextErrors = { ...emptyErrors };
 
     if (name.trim().length < 2) {
-      nextErrors.name = "Full name is required.";
+      nextErrors.name = dictionary.auth.errors.nameMin;
     }
 
     if (!validateEmail(email)) {
       nextErrors.email =
         email.length === 0
-          ? "Email is required."
-          : "Enter a valid email address.";
+          ? dictionary.auth.errors.emailRequired
+          : dictionary.auth.errors.emailInvalid;
     }
 
     if (!allRulesMet) {
       nextErrors.password =
-        "Password does not meet the requirements.";
+        dictionary.auth.errors.passwordRequirements;
     }
 
     if (confirm.length === 0) {
-      nextErrors.confirm = "Confirm your password.";
+      nextErrors.confirm = dictionary.auth.errors.confirmRequired;
     } else if (confirm !== password) {
-      nextErrors.confirm = "Passwords do not match.";
+      nextErrors.confirm = dictionary.auth.errors.confirmMismatch;
     }
 
     setFieldErrors(nextErrors);
@@ -394,7 +434,7 @@ export default function RegisterPage() {
     setFormError(
       payload?.message ??
         payload?.error ??
-        "Registration failed. Please try again.",
+        dictionary.auth.registration.failed,
     );
   }
 
@@ -414,7 +454,7 @@ export default function RegisterPage() {
     ) {
       throw new Error(
         payload?.message ??
-          "Could not generate 2FA setup.",
+          dictionary.auth.twoFactor.setupFailed,
       );
     }
 
@@ -474,7 +514,7 @@ export default function RegisterPage() {
       setFormError(
         error instanceof Error
           ? error.message
-          : "Registration failed. Please try again.",
+          : dictionary.auth.registration.failed,
       );
 
       setSubmitBadgeState("error");
@@ -492,7 +532,7 @@ export default function RegisterPage() {
 
     if (twoFactorCode.length !== 6) {
       setFormError(
-        "Enter the 6-digit authenticator code.",
+        dictionary.auth.twoFactor.codeRequired,
       );
 
       return;
@@ -518,19 +558,19 @@ export default function RegisterPage() {
       if (!response.ok || !payload?.ok) {
         setFormError(
           payload?.message ??
-            "Invalid authentication code.",
+            dictionary.auth.twoFactor.invalidCode,
         );
 
         return;
       }
 
-      router.push("/es/dashboard");
+      router.push(localizedPath(locale, "dashboard"));
       router.refresh();
     } catch (error) {
       setFormError(
         error instanceof Error
           ? error.message
-          : "Could not verify the authentication code.",
+          : dictionary.auth.twoFactor.verifyFailed,
       );
     } finally {
       setIsVerifyingTwoFactor(false);
@@ -538,7 +578,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthShell id="register-page">
+    <AuthShell id="register-page" locale={locale} backLabel={dictionary.auth.backToHome}>
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <div className="auth-icon-tile flex size-14 items-center justify-center rounded-2xl shadow-lg">
@@ -558,14 +598,14 @@ export default function RegisterPage() {
           <div>
             <h1 className="auth-heading text-2xl font-bold tracking-tight">
               {setupQrCodeDataUrl
-                ? "Secure your account"
-                : "Create your account"}
+                ? dictionary.auth.twoFactor.setupTitle
+                : dictionary.auth.signup.title}
             </h1>
 
             <p className="auth-muted mt-1 text-sm">
               {setupQrCodeDataUrl
-                ? "Scan the QR code and verify 2FA before entering the dashboard."
-                : "Start managing your gym with Gerpy ERP."}
+                ? dictionary.auth.twoFactor.setupDashboardSubtitle
+                : dictionary.auth.signup.subtitle}
             </p>
           </div>
         </div>
@@ -585,14 +625,14 @@ export default function RegisterPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={setupQrCodeDataUrl}
-                    alt="Gerpy 2FA QR code"
+                    alt="The Tower Power 2FA QR code"
                     className="mx-auto aspect-square w-full max-w-64 rounded-lg"
                   />
                 </div>
 
                 {setupSecret && (
                   <div className="auth-manual-key rounded-lg border p-3 text-xs">
-                    Manual key:{" "}
+                    {dictionary.auth.twoFactor.manualKey}:{" "}
                     <span className="font-mono">
                       {setupSecret}
                     </span>
@@ -601,7 +641,7 @@ export default function RegisterPage() {
 
                 <OtpCodeInput
                   id="register-2fa-code"
-                  label="Authenticator code"
+                  label={dictionary.auth.twoFactor.code}
                   value={twoFactorCode}
                   onChange={setTwoFactorCode}
                   hasError={Boolean(formError)}
@@ -632,10 +672,10 @@ export default function RegisterPage() {
                   {isVerifyingTwoFactor ? (
                     <span className="flex items-center justify-center gap-2">
                       <Spinner />
-                      Verifying...
+                      {dictionary.auth.twoFactor.verifying}
                     </span>
                   ) : (
-                    "Enable 2FA and continue"
+                    dictionary.auth.twoFactor.enable
                   )}
                 </button>
               </form>
@@ -648,8 +688,8 @@ export default function RegisterPage() {
               >
                 <InputField
                   id="register-name"
-                  label="Full name"
-                  placeholder="Alex Rivera"
+                label={dictionary.auth.fields.name}
+                  placeholder={dictionary.auth.placeholders.name}
                   value={name}
                   onChange={(value) => {
                     setName(value);
@@ -670,9 +710,9 @@ export default function RegisterPage() {
 
                 <InputField
                   id="register-email"
-                  label="Email"
+                  label={dictionary.auth.fields.email}
                   type="email"
-                  placeholder="you@gym.com"
+                  placeholder={dictionary.auth.placeholders.email}
                   value={email}
                   onChange={(value) => {
                     setEmail(value);
@@ -696,7 +736,7 @@ export default function RegisterPage() {
                     htmlFor="register-password"
                     className="auth-label block text-sm font-medium"
                   >
-                    Password
+                    {dictionary.auth.fields.password}
                   </label>
 
                   <div className="relative">
@@ -713,7 +753,7 @@ export default function RegisterPage() {
                         showPassword ? "text" : "password"
                       }
                       autoComplete="new-password"
-                      placeholder="Create a secure password"
+                      placeholder={dictionary.auth.placeholders.password}
                       value={password}
                       onChange={(event) => {
                         setPassword(event.target.value);
@@ -738,8 +778,8 @@ export default function RegisterPage() {
                       type="button"
                       aria-label={
                         showPassword
-                          ? "Hide password"
-                          : "Show password"
+                          ? dictionary.auth.actions.hidePassword
+                          : dictionary.auth.actions.showPassword
                       }
                       onClick={() =>
                         setShowPassword(
@@ -763,6 +803,8 @@ export default function RegisterPage() {
                     >
                       <StrengthBar
                         metCount={metCount}
+                        label={dictionary.auth.passwordStrength}
+                        labels={strengthLabels}
                       />
 
                       <ul className="space-y-2 pt-1">
@@ -795,7 +837,7 @@ export default function RegisterPage() {
                     htmlFor="register-confirm"
                     className="auth-label block text-sm font-medium"
                   >
-                    Confirm password
+                    {dictionary.auth.fields.confirmPassword}
                   </label>
 
                   <div className="relative">
@@ -812,7 +854,7 @@ export default function RegisterPage() {
                         showConfirm ? "text" : "password"
                       }
                       autoComplete="new-password"
-                      placeholder="Repeat your password"
+                      placeholder={dictionary.auth.placeholders.password}
                       value={confirm}
                       onChange={(event) => {
                         setConfirm(event.target.value);
@@ -844,8 +886,8 @@ export default function RegisterPage() {
                       type="button"
                       aria-label={
                         showConfirm
-                          ? "Hide confirmation"
-                          : "Show confirmation"
+                          ? dictionary.auth.actions.hideConfirmation
+                          : dictionary.auth.actions.showConfirmation
                       }
                       onClick={() =>
                         setShowConfirm(
@@ -870,7 +912,7 @@ export default function RegisterPage() {
                           aria-hidden="true"
                         />
 
-                        Passwords match
+                        {dictionary.auth.signup.passwordMatch}
                       </p>
                     )}
 
@@ -917,7 +959,7 @@ export default function RegisterPage() {
                     {isLoading ? (
                       <span className="flex items-center justify-center gap-2">
                         <Spinner />
-                        Creating account...
+                        {dictionary.auth.signup.loading}
                       </span>
                     ) : (
                       <span className="flex items-center justify-center gap-2">
@@ -926,7 +968,7 @@ export default function RegisterPage() {
                           aria-hidden="true"
                         />
 
-                        Create account
+                        {dictionary.auth.signup.submit}
                       </span>
                     )}
                   </button>
@@ -945,12 +987,12 @@ export default function RegisterPage() {
 
           {!setupQrCodeDataUrl && (
             <div className="auth-divider border-t px-8 py-5 text-center text-sm">
-              Already have an account?{" "}
+              {dictionary.auth.signup.footerPrefix}{" "}
               <Link
-                href="/login"
+                href={localizedPath(locale, "login")}
                 className="auth-link font-semibold underline-offset-4 transition-colors hover:underline"
               >
-                Sign in
+                {dictionary.auth.signup.footerAction}
               </Link>
             </div>
           )}
@@ -958,19 +1000,19 @@ export default function RegisterPage() {
 
         {!setupQrCodeDataUrl && (
           <p className="auth-muted mt-6 text-center text-xs">
-            By signing up you accept the{" "}
+            {dictionary.auth.legal.signupPrefix}{" "}
             <Link
-              href="#"
+              href={localizedPath(locale, "legal/terms")}
               className="underline underline-offset-4 transition-colors hover:text-[var(--auth-foreground)]"
             >
-              Terms of use
+              {dictionary.auth.legal.terms}
             </Link>{" "}
-            and the{" "}
+            {dictionary.auth.legal.and}{" "}
             <Link
-              href="#"
+              href={localizedPath(locale, "legal/privacy")}
               className="underline underline-offset-4 transition-colors hover:text-[var(--auth-foreground)]"
             >
-              Privacy policy
+              {dictionary.auth.legal.privacy}
             </Link>
             .
           </p>

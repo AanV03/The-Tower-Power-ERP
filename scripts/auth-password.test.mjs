@@ -9,17 +9,17 @@ import {
 } from "../lib/auth/password.ts";
 
 test("normalizes email for credential lookup", () => {
-  assert.equal(normalizeEmail("  MANAGER@GERPY.MX "), "manager@gerpy.mx");
+  assert.equal(normalizeEmail("  MANAGER@TOWERPOWER.MX "), "manager@towerpower.mx");
 });
 
 test("requires the project password policy for new credentials", () => {
   assert.equal(isPasswordValid("weak"), false);
-  assert.equal(isPasswordValid("Gerpy2026!"), true);
+  assert.equal(isPasswordValid("The Tower Power2026!"), true);
 });
 
 test("verifies a password against a bcrypt hash", async () => {
-  const hash = await hashPassword("Gerpy2026!");
-  const ok = await verifyPassword("Gerpy2026!", hash);
+  const hash = await hashPassword("The Tower Power2026!");
+  const ok = await verifyPassword("The Tower Power2026!", hash);
 
   assert.equal(ok, true);
 });

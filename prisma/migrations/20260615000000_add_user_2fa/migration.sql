@@ -1,3 +1,0 @@
-ALTER TABLE "users"
-  ADD COLUMN IF NOT EXISTS "twoFactorSecret" TEXT,
-  ADD COLUMN IF NOT EXISTS "twoFactorEnabled" BOOLEAN NOT NULL DEFAULT false;

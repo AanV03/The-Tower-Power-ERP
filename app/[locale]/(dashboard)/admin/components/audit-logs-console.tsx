@@ -30,7 +30,7 @@ const INITIAL_LOGS: LogEntry[] = [
   {
     id: "3",
     timestamp: "17:21:02",
-    tenant: "gerpy-hq",
+    tenant: "tower-power-hq",
     level: "WARN",
     message: "SaasPlan limit warning: CPU consumption at 82%",
   },
@@ -53,10 +53,10 @@ const INITIAL_LOGS: LogEntry[] = [
 const LOG_MESSAGES = [
   { level: "INFO", tenant: "fitlab-pro", message: "OutboxEvent processed: invoice.created (ID: inv_87a19c)" },
   { level: "INFO", tenant: "urban-gym", message: "AccessTelemetry: Member entrance validated (ID: mem_00192)" },
-  { level: "WARN", tenant: "gerpy-hq", message: "Database connection pool reached 85% capacity" },
+  { level: "WARN", tenant: "tower-power-hq", message: "Database connection pool reached 85% capacity" },
   { level: "INFO", tenant: "fitlab-pro", message: "OutboxEvent dispatched to webhook endpoint: https://api.fitlab.pro/webhooks" },
   { level: "ERROR", tenant: "urban-gym", message: "AccessTelemetry: Hardware device disconnected (Turnstile 2)" },
-  { level: "INFO", tenant: "gerpy-hq", message: "Cleaned up 12 expired user sessions from Redis cache" },
+  { level: "INFO", tenant: "tower-power-hq", message: "Cleaned up 12 expired user sessions from Redis cache" },
   { level: "INFO", tenant: "fitlab-pro", message: "TenantBrandingConfig re-hydrated from MongoDB" },
   { level: "WARN", tenant: "urban-gym", message: "Slow query detected on MembershipPlan updates: 124ms" },
 ];

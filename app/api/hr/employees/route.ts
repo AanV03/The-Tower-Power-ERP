@@ -36,7 +36,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "hr" });
+    const context = await requireApiContext({ moduleId: "hr", permission: "hr.read" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = {
@@ -44,16 +44,27 @@ export async function GET(request: Request) {
       ...(searchParams.get("status") ? { status: searchParams.get("status") as BranchStatus } : {}),
     };
 
-    const [items, total] = await Promise.all([
+    const [employees, total] = await Promise.all([
       prisma.employee.findMany({
         where,
-        include: { branch: true, position: true, user: true, contracts: true },
+        include: {
+          branch: true,
+          position: true,
+          membership: {
+            select: { user: true },
+          },
+          contracts: true,
+        },
         orderBy: { createdAt: "desc" },
         skip: pagination.skip,
         take: pagination.take,
       }),
       prisma.employee.count({ where }),
     ]);
+    const items = employees.map(({ membership, ...employee }) => ({
+      ...employee,
+      user: membership?.user ?? null,
+    }));
 
     return ok({ items, total, pagination });
   } catch (error) {
@@ -63,7 +74,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "hr" });
+    const context = await requireApiContext({ moduleId: "hr", permission: "hr.employee.write" });
     const data = CreateEmployeeSchema.parse(await request.json());
     const branchId = await resolveWritableBranchId(context, data.branchId);
 

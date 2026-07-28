@@ -37,12 +37,14 @@ export function EmployeeFormDialog({
   trigger,
   open,
   onOpenChange,
+  positionOptions = [],
 }: {
   employee?: HrEmployeeRow
   mode?: "create" | "edit"
   trigger?: React.ReactElement
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  positionOptions?: string[]
 }) {
   const isEditing = mode === "edit"
   const formId = useId()
@@ -50,6 +52,8 @@ export function EmployeeFormDialog({
   const [internalOpen, setInternalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const resolvedOpen = open ?? internalOpen
+  const currentPosition = employee?.position === "Sin puesto" ? "" : employee?.position ?? ""
+  const selectablePositions = Array.from(new Set([currentPosition, ...positionOptions].filter(Boolean)))
 
   function handleOpenChange(nextOpen: boolean) {
     if (onOpenChange) {
@@ -133,18 +137,41 @@ export function EmployeeFormDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-email`}>
               Correo
-              <Input id={`${formId}-email`} name="email" type="email" defaultValue={employee?.email === "Sin correo" ? "" : employee?.email} placeholder="empleado@gerpy.mx" disabled={isSubmitting} />
+              <Input id={`${formId}-email`} name="email" type="email" defaultValue={employee?.email === "Sin correo" ? "" : employee?.email} placeholder="empleado@towerpower.mx" disabled={isSubmitting} />
             </label>
             <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-phone`}>
               Telefono
-              <Input id={`${formId}-phone`} name="phone" type="tel" placeholder="+52 55 0000 0000" disabled={isSubmitting} />
+              <Input
+                id={`${formId}-phone`}
+                name="phone"
+                type="tel"
+                defaultValue={employee?.phone === "Sin telefono" ? "" : employee?.phone}
+                placeholder="+52 55 0000 0000"
+                disabled={isSubmitting}
+              />
             </label>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
             <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-position`}>
               Puesto
-              <Input id={`${formId}-position`} name="positionName" defaultValue={employee?.position === "Sin puesto" ? "" : employee?.position} placeholder="Puesto" disabled={isSubmitting} />
+              <Select
+                id={`${formId}-position`}
+                name="positionName"
+                defaultValue={currentPosition || undefined}
+                disabled={isSubmitting || selectablePositions.length === 0}
+              >
+                <StandardSelectTrigger id={`${formId}-position`}>
+                  <StandardSelectValue placeholder={selectablePositions.length > 0 ? "Selecciona puesto" : "Sin puestos disponibles"} />
+                </StandardSelectTrigger>
+                <StandardSelectContent>
+                  {selectablePositions.map((position) => (
+                    <SelectItem key={position} value={position}>
+                      {position}
+                    </SelectItem>
+                  ))}
+                </StandardSelectContent>
+              </Select>
             </label>
             <label className="grid gap-2 text-sm font-medium" htmlFor={`${formId}-contract-type`}>
               Contrato

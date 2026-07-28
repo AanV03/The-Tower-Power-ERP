@@ -1,27 +1,39 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn, headerPrimaryActionClass } from "@/lib/utils";
+import { analyticsLabels } from "./config";
 import { ExportReportModal } from "./ExportReportModal";
-import { getDictionary, type Locale } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n";
 
 export function ExportReportSection({ locale }: { locale: Locale }) {
   const [isOpen, setIsOpen] = useState(false);
-  const dictionary = getDictionary(locale);
 
   return (
     <>
-      <Button 
+      <Button
         onClick={() => setIsOpen(true)}
         className={cn(headerPrimaryActionClass, "flex h-9 items-center gap-2 rounded-md px-4 text-sm")}
       >
-        <FileDown className="w-4 h-4" aria-hidden="true" />
-        <span>{dictionary.analytics.export.button}</span>
+        <FileDown className="size-4" aria-hidden="true" />
+        <span>{analyticsLabels.actions.export}</span>
       </Button>
-      
-      <ExportReportModal locale={locale} isOpen={isOpen} onClose={() => setIsOpen(false)} />
+
+      <ExportReportModal
+        labels={analyticsLabels}
+        isOpen={isOpen}
+        status="idle"
+        onClose={() => setIsOpen(false)}
+        onSubmit={(draft) => {
+          setIsOpen(false);
+          toast.success(analyticsLabels.export.success, {
+            description: `${draft.format.toUpperCase()} / ${locale}`,
+          });
+        }}
+      />
     </>
   );
 }

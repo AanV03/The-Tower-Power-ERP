@@ -4,28 +4,34 @@ import { useEffect, useState } from "react";
 
 import { defaultBrand } from "@/lib/branding";
 
-export const BRAND_IDENTITY_STORAGE_KEY = "gerpy-brand-identity";
+export const BRAND_IDENTITY_STORAGE_KEY = "tower-power-brand-identity";
 
 export type BrandIdentity = {
   name: string;
   subtitle: string;
   logoText: string;
   logoDataUrl?: string;
+  adminOnboardingCompleted?: boolean;
 };
 
 export const DEFAULT_BRAND_IDENTITY: BrandIdentity = {
   name: defaultBrand.name,
   subtitle: "Gimnasio ERP",
   logoText: defaultBrand.logoText,
+  logoDataUrl: "/logo.png",
 };
 
 export function normalizeBrandIdentity(
   identity: Partial<BrandIdentity> | null | undefined,
 ): BrandIdentity {
-  return {
+  const base = {
     ...DEFAULT_BRAND_IDENTITY,
     ...(identity ?? {}),
   };
+  if (!base.logoDataUrl) {
+    base.logoDataUrl = "/logo.png";
+  }
+  return base;
 }
 
 export function loadBrandIdentity(): BrandIdentity {
@@ -58,13 +64,15 @@ export function resetBrandIdentity() {
 }
 
 export function useBrandIdentity(serverIdentity?: BrandIdentity | null) {
-  const [identity, setIdentity] = useState<BrandIdentity>(serverIdentity || DEFAULT_BRAND_IDENTITY);
+  const [identity, setIdentity] = useState<BrandIdentity>(normalizeBrandIdentity(serverIdentity));
 
   useEffect(() => {
     // Only load from local storage if there's no server identity provided,
     // or if we want to sync. But server is source of truth.
     if (!serverIdentity) {
       setIdentity(loadBrandIdentity());
+    } else {
+      setIdentity(normalizeBrandIdentity(serverIdentity));
     }
 
     const onUpdate = (event: Event) => {
@@ -81,7 +89,7 @@ export function useBrandIdentity(serverIdentity?: BrandIdentity | null) {
       document.removeEventListener("brand:identity:update", onUpdate);
       document.removeEventListener("brand:identity:reset", onReset);
     };
-  }, []);
+  }, [serverIdentity]);
 
   return identity;
 }

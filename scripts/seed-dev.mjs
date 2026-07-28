@@ -6,8 +6,10 @@ import mongoose, { Schema } from "mongoose";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Prisma, PrismaClient } from "@prisma/client";
 
-export const DEFAULT_SUPERADMIN_EMAIL = "superadmin@gerpy.local";
-export const DEFAULT_SUPERADMIN_PASSWORD = "GerpyDemo!2026";
+export const DEFAULT_SUPERADMIN_EMAIL = "superadmin@towerpower.local";
+export const DEFAULT_SUPERADMIN_PASSWORD = "The Tower PowerDemo!2026";
+export const DEFAULT_EMPLOYEE_EMAIL = "empleado@towerpower.local";
+export const DEFAULT_EMPLOYEE_PASSWORD = "The Tower PowerEmployee!2026";
 
 const MODULES = [
   "DASHBOARD",
@@ -30,37 +32,47 @@ const MODULES = [
   "MAINTENANCE",
 ];
 
-const PERMISSIONS = [
+const PERMISSION_LEVELS = ["read", "write", "approve", "admin"];
+const PERMISSIONS = Array.from(new Set([
   "dashboard.read",
-  "memberships.manage",
-  "pos.manage",
-  "access.manage",
-  "catalog.manage",
-  "purchases.manage",
-  "warehouse.manage",
-  "inventory.manage",
-  "finance.manage",
-  "accounting.manage",
-  "hr.manage",
-  "payroll.manage",
-  "specialists.manage",
-  "marketing.manage",
-  "analytics.manage",
-  "admin.manage",
-  "integrations.manage",
-  "maintenance.manage",
+  ...MODULES.flatMap((moduleKey) =>
+    PERMISSION_LEVELS.map(
+      (level) => `${moduleKey.toLowerCase()}.${level}`,
+    ),
+  ),
+  ...MODULES.filter((moduleKey) => moduleKey !== "DASHBOARD").map(
+    (moduleKey) => `${moduleKey.toLowerCase()}.manage`,
+  ),
+  "hr.employee.write",
+  "hr.contract.write",
+  "hr.attendance.write",
+  "payroll.period.write",
+  "payroll.receipt.write",
+  "payroll.preview",
+  "payroll.approve",
+  "payroll.pay",
+  "accounting.account.write",
+  "accounting.journal.write",
+  "accounting.post",
+  "accounting.void",
+]));
+
+const EMPLOYEE_PERMISSIONS = [
+  "dashboard.read",
+  "memberships.read",
+  "access.read",
+  "pos.read",
+  "catalog.read",
+  "inventory.read",
+  "hr.read",
+  "payroll.read",
 ];
 
 export function buildSeedConfig(env = process.env) {
-  return {
-    superadmin: {
-      name: "Gerpy Superadmin",
-      email: DEFAULT_SUPERADMIN_EMAIL,
-      password: env.SEED_SUPERADMIN_PASSWORD || DEFAULT_SUPERADMIN_PASSWORD,
-    },
+  const primaryTenant = {
     tenant: {
-      name: "Gerpy Demo Gym",
-      legalName: "Gerpy Demo Gym S.A. de C.V.",
+      name: "The Tower Power Demo Gym",
+      legalName: "The Tower Power Demo Gym S.A. de C.V.",
       taxId: "GDE260101DEMO",
     },
     branch: {
@@ -73,6 +85,41 @@ export function buildSeedConfig(env = process.env) {
         line1: "Av. Demo 123",
       },
     },
+  };
+  const secondaryTenant = {
+    tenant: {
+      name: "The Tower Power Norte",
+      legalName: "The Tower Power Norte S.A. de C.V.",
+      taxId: "GNO260101DEMO",
+    },
+    branch: {
+      name: "Sucursal Norte",
+      code: "NORTE",
+      timezone: "America/Mexico_City",
+      address: {
+        city: "Monterrey",
+        country: "MX",
+        line1: "Av. Industria 500",
+      },
+    },
+  };
+  const admin = {
+    name: "Admin",
+    email: DEFAULT_SUPERADMIN_EMAIL,
+    password: env.SEED_SUPERADMIN_PASSWORD || DEFAULT_SUPERADMIN_PASSWORD,
+  };
+
+  return {
+    admin,
+    superadmin: admin,
+    employee: {
+      name: "Empleado",
+      email: DEFAULT_EMPLOYEE_EMAIL,
+      password: env.SEED_EMPLOYEE_PASSWORD || DEFAULT_EMPLOYEE_PASSWORD,
+    },
+    tenants: [primaryTenant, secondaryTenant],
+    tenant: primaryTenant.tenant,
+    branch: primaryTenant.branch,
     modules: MODULES,
     permissions: PERMISSIONS,
   };
@@ -153,49 +200,65 @@ async function upsertSaasPlan(tx) {
   });
 }
 
-async function upsertTenantCore(tx, config) {
+async function upsertTenantCore(tx, config, workspace) {
   const plan = await upsertSaasPlan(tx);
 
   const existingTenant = await tx.tenant.findFirst({
-    where: { name: config.tenant.name },
-    select: { id: true },
+    where: { name: workspace.tenant.name },
+    select: { id: true, brandIdentity: true },
   });
+  const brandIdentity =
+    existingTenant?.brandIdentity &&
+    typeof existingTenant.brandIdentity === "object" &&
+    !Array.isArray(existingTenant.brandIdentity)
+      ? existingTenant.brandIdentity
+      : {};
 
   const tenant = existingTenant
     ? await tx.tenant.update({
         where: { id: existingTenant.id },
         data: {
-          legalName: config.tenant.legalName,
-          taxId: config.tenant.taxId,
+          legalName: workspace.tenant.legalName,
+          taxId: workspace.tenant.taxId,
           status: "ACTIVE",
           planId: plan.id,
+          brandIdentity: {
+            ...brandIdentity,
+            adminOnboardingCompleted: true,
+          },
         },
       })
     : await tx.tenant.create({
         data: {
-          name: config.tenant.name,
-          legalName: config.tenant.legalName,
-          taxId: config.tenant.taxId,
+          name: workspace.tenant.name,
+          legalName: workspace.tenant.legalName,
+          taxId: workspace.tenant.taxId,
           status: "ACTIVE",
           planId: plan.id,
+          brandIdentity: { adminOnboardingCompleted: true },
         },
       });
 
   const branch = await tx.branch.upsert({
-    where: { tenantId_code: { tenantId: tenant.id, code: config.branch.code } },
+    where: {
+      tenantId_code: {
+        tenantId: tenant.id,
+        code: workspace.branch.code,
+      },
+    },
     update: {
-      name: config.branch.name,
-      timezone: config.branch.timezone,
+      name: workspace.branch.name,
+      timezone: workspace.branch.timezone,
       status: "ACTIVE",
-      address: config.branch.address,
+      address: workspace.branch.address,
     },
     create: {
       tenantId: tenant.id,
-      name: config.branch.name,
-      code: config.branch.code,
-      timezone: config.branch.timezone,
+      name: workspace.branch.name,
+      code: workspace.branch.code,
+      timezone: workspace.branch.timezone,
       status: "ACTIVE",
-      address: config.branch.address,
+      address: workspace.branch.address,
     },
   });
 
@@ -220,50 +283,53 @@ async function upsertTenantCore(tx, config) {
   return { tenant, branch };
 }
 
-async function upsertSuperAdmin(tx, config, tenantId, branchId) {
-  const passwordHash = await bcrypt.hash(config.superadmin.password, 12);
+function permissionData(key) {
+  const [moduleId, ...segments] = key.split(".");
+  const action = segments.pop();
+  const moduleKey = moduleId?.toUpperCase();
 
-  const user = await tx.user.upsert({
-    where: { email: config.superadmin.email },
-    update: {
-      tenantId,
-      branchId,
-      name: config.superadmin.name,
-      passwordHash,
-      status: "ACTIVE",
-    },
-    create: {
-      tenantId,
-      branchId,
-      name: config.superadmin.name,
-      email: config.superadmin.email,
-      passwordHash,
-      status: "ACTIVE",
-    },
-  });
+  if (!moduleId || !action || !MODULES.includes(moduleKey)) {
+    throw new Error(`INVALID_PERMISSION_KEY:${key}`);
+  }
 
+  return {
+    key,
+    moduleKey,
+    resource: segments.join(".") || moduleId,
+    action,
+    description: `Allows ${key}.`,
+  };
+}
+
+async function upsertRole(tx, input) {
   const role = await tx.role.upsert({
-    where: { tenantId_name: { tenantId, name: "Super Admin" } },
+    where: {
+      tenantId_name: {
+        tenantId: input.tenantId,
+        name: input.name,
+      },
+    },
     update: {
-      scope: "TENANT",
-      description: "Full access role for development seed.",
+      scope: input.scope,
+      description: input.description,
     },
     create: {
-      tenantId,
-      name: "Super Admin",
-      scope: "TENANT",
-      description: "Full access role for development seed.",
+      tenantId: input.tenantId,
+      name: input.name,
+      scope: input.scope,
+      description: input.description,
     },
   });
 
   const permissions = await Promise.all(
-    config.permissions.map((key) =>
-      tx.permission.upsert({
+    input.permissions.map((key) => {
+      const data = permissionData(key);
+      return tx.permission.upsert({
         where: { key },
-        update: { description: `Allows ${key}.` },
-        create: { key, description: `Allows ${key}.` },
-      }),
-    ),
+        update: data,
+        create: data,
+      });
+    }),
   );
 
   await tx.rolePermission.createMany({
@@ -274,13 +340,150 @@ async function upsertSuperAdmin(tx, config, tenantId, branchId) {
     skipDuplicates: true,
   });
 
-  await tx.userRole.upsert({
-    where: { userId_roleId: { userId: user.id, roleId: role.id } },
-    update: { branchId },
-    create: { userId: user.id, roleId: role.id, branchId },
+  return role;
+}
+
+async function upsertRoleAssignment(tx, input) {
+  const assignment = await tx.roleAssignment.findFirst({
+    where: {
+      tenantId: input.tenantId,
+      membershipId: input.membershipId,
+      roleId: input.roleId,
+      branchId: input.branchId,
+    },
+    select: { id: true },
   });
 
-  return user;
+  if (assignment) {
+    return tx.roleAssignment.update({
+      where: { id: assignment.id },
+      data: {
+        validUntil: null,
+        revokedAt: null,
+      },
+    });
+  }
+
+  return tx.roleAssignment.create({
+    data: input,
+  });
+}
+
+async function upsertTenantIdentity(tx, input) {
+  const passwordHash = await bcrypt.hash(input.password, 12);
+  const user = await tx.user.upsert({
+    where: { email: input.email },
+    update: {
+      name: input.name,
+      passwordHash,
+      status: "ACTIVE",
+    },
+    create: {
+      name: input.name,
+      email: input.email,
+      passwordHash,
+      status: "ACTIVE",
+    },
+  });
+
+  const membership = await tx.tenantMembership.upsert({
+    where: {
+      tenantId_userId: {
+        tenantId: input.tenantId,
+        userId: user.id,
+      },
+    },
+    update: {
+      defaultBranchId: input.branchId,
+      employeeId: input.employeeId ?? null,
+      status: "ACTIVE",
+    },
+    create: {
+      tenantId: input.tenantId,
+      userId: user.id,
+      defaultBranchId: input.branchId,
+      employeeId: input.employeeId ?? null,
+      status: "ACTIVE",
+      joinedAt: new Date(),
+    },
+  });
+
+  await tx.branchMembership.upsert({
+    where: {
+      tenantId_membershipId_branchId: {
+        tenantId: input.tenantId,
+        membershipId: membership.id,
+        branchId: input.branchId,
+      },
+    },
+    update: {
+      validUntil: null,
+      revokedAt: null,
+    },
+    create: {
+      tenantId: input.tenantId,
+      membershipId: membership.id,
+      branchId: input.branchId,
+    },
+  });
+
+  const assignment = await upsertRoleAssignment(tx, {
+    tenantId: input.tenantId,
+    membershipId: membership.id,
+    roleId: input.roleId,
+    branchId: input.roleScope === "BRANCH" ? input.branchId : null,
+  });
+
+  await tx.roleAssignment.updateMany({
+    where: {
+      tenantId: input.tenantId,
+      membershipId: membership.id,
+      id: { not: assignment.id },
+      revokedAt: null,
+    },
+    data: { revokedAt: new Date() },
+  });
+
+  return { user, membership };
+}
+
+async function upsertTenantUsers(tx, config, tenantId, branchId, employeeId) {
+  const adminRole = await upsertRole(tx, {
+    tenantId,
+    name: "Admin",
+    scope: "TENANT",
+    description: "Tenant administrator for development testing.",
+    permissions: config.permissions,
+  });
+  const employeeRole = await upsertRole(tx, {
+    tenantId,
+    name: "Empleado",
+    scope: "BRANCH",
+    description: "Regular branch employee for development testing.",
+    permissions: EMPLOYEE_PERMISSIONS,
+  });
+
+  const admin = await upsertTenantIdentity(tx, {
+    ...config.admin,
+    tenantId,
+    branchId,
+    roleId: adminRole.id,
+    roleScope: adminRole.scope,
+  });
+  const employee = await upsertTenantIdentity(tx, {
+    ...config.employee,
+    tenantId,
+    branchId,
+    employeeId,
+    roleId: employeeRole.id,
+    roleScope: employeeRole.scope,
+  });
+
+  await tx.mfaCredential.deleteMany({
+    where: { userId: admin.user.id },
+  });
+
+  return { admin, employee };
 }
 
 async function seedCatalog(tx, tenantId, branchId) {
@@ -321,7 +524,7 @@ async function seedCatalog(tx, tenantId, branchId) {
   const towel = await tx.product.upsert({
     where: { tenantId_sku: { tenantId, sku: "TOWEL-PRO" } },
     update: {
-      name: "Toalla Premium Gerpy",
+      name: "Toalla Premium The Tower Power",
       categoryId: apparel.id,
       price: decimal(249),
       cost: decimal(95),
@@ -331,7 +534,7 @@ async function seedCatalog(tx, tenantId, branchId) {
     create: {
       tenantId,
       sku: "TOWEL-PRO",
-      name: "Toalla Premium Gerpy",
+      name: "Toalla Premium The Tower Power",
       categoryId: apparel.id,
       price: decimal(249),
       cost: decimal(95),
@@ -378,9 +581,15 @@ async function seedCatalog(tx, tenantId, branchId) {
   return { whey, towel, warehouse };
 }
 
-async function seedOperations(tx, tenantId, branchId, products) {
+async function seedOperations(
+  tx,
+  tenantId,
+  branchId,
+  products,
+  openingUserId,
+) {
   const member = await tx.member.upsert({
-    where: { tenantId_email: { tenantId, email: "miembro.demo@gerpy.local" } },
+    where: { tenantId_email: { tenantId, email: "miembro.demo@towerpower.local" } },
     update: {
       branchId,
       firstName: "Alex",
@@ -392,7 +601,7 @@ async function seedOperations(tx, tenantId, branchId, products) {
       branchId,
       firstName: "Alex",
       lastName: "Demo",
-      email: "miembro.demo@gerpy.local",
+      email: "miembro.demo@towerpower.local",
       phone: "+52 55 0000 0000",
       status: "ACTIVE",
     },
@@ -456,7 +665,6 @@ async function seedOperations(tx, tenantId, branchId, products) {
     create: { tenantId, branchId, name: "Caja Principal", status: "ACTIVE" },
   });
 
-  const openingUser = await tx.user.findFirstOrThrow({ where: { tenantId } });
   const existingCashSession = await tx.cashSession.findFirst({
     where: { tenantId, registerId: register.id, status: "OPEN" },
     orderBy: { openedAt: "asc" },
@@ -467,7 +675,7 @@ async function seedOperations(tx, tenantId, branchId, products) {
       data: {
         tenantId,
         registerId: register.id,
-        openedByUserId: openingUser.id,
+        openedByUserId: openingUserId,
         openingAmount: decimal(1500),
         status: "OPEN",
       },
@@ -527,7 +735,12 @@ async function seedOperations(tx, tenantId, branchId, products) {
   return { member };
 }
 
-async function seedFinanceAndPeople(tx, tenantId, branchId) {
+async function seedFinanceAndPeople(
+  tx,
+  tenantId,
+  branchId,
+  employeeIdentity,
+) {
   const existingSupplier = await tx.supplier.findFirst({
     where: { tenantId, name: "Proveedor Demo Suplementos" },
   });
@@ -536,7 +749,7 @@ async function seedFinanceAndPeople(tx, tenantId, branchId) {
         where: { id: existingSupplier.id },
         data: {
           taxId: "SUP260101DEMO",
-          email: "proveedor.demo@gerpy.local",
+          email: "proveedor.demo@towerpower.local",
           status: "ACTIVE",
         },
       })
@@ -545,7 +758,7 @@ async function seedFinanceAndPeople(tx, tenantId, branchId) {
       tenantId,
       name: "Proveedor Demo Suplementos",
       taxId: "SUP260101DEMO",
-      email: "proveedor.demo@gerpy.local",
+      email: "proveedor.demo@towerpower.local",
       status: "ACTIVE",
     },
   });
@@ -586,6 +799,7 @@ async function seedFinanceAndPeople(tx, tenantId, branchId) {
     ["1000", "Bancos", "ASSET"],
     ["4000", "Ingresos por ventas", "INCOME"],
     ["5000", "Costo de ventas", "EXPENSE"],
+    ["5100", "Gasto de nomina", "EXPENSE"],
   ];
 
   for (const [code, name, type] of accounts) {
@@ -597,26 +811,31 @@ async function seedFinanceAndPeople(tx, tenantId, branchId) {
   }
 
   const position = await tx.position.upsert({
-    where: { tenantId_name: { tenantId, name: "Gerente de Sucursal" } },
+    where: { tenantId_name: { tenantId, name: "Auxiliar Operativo" } },
     update: { department: "Operacion" },
-    create: { tenantId, name: "Gerente de Sucursal", department: "Operacion" },
+    create: { tenantId, name: "Auxiliar Operativo", department: "Operacion" },
   });
 
   const employee = await tx.employee.upsert({
-    where: { tenantId_email: { tenantId, email: "gerente.demo@gerpy.local" } },
+    where: {
+      tenantId_email: {
+        tenantId,
+        email: employeeIdentity.email,
+      },
+    },
     update: {
       branchId,
-      firstName: "Mariana",
-      lastName: "Gerente",
+      firstName: "Empleado",
+      lastName: "Demo",
       positionId: position.id,
       status: "ACTIVE",
     },
     create: {
       tenantId,
       branchId,
-      firstName: "Mariana",
-      lastName: "Gerente",
-      email: "gerente.demo@gerpy.local",
+      firstName: "Empleado",
+      lastName: "Demo",
+      email: employeeIdentity.email,
       phone: "+52 55 1111 1111",
       positionId: position.id,
       status: "ACTIVE",
@@ -653,12 +872,20 @@ async function seedFinanceAndPeople(tx, tenantId, branchId) {
         endDate: new Date("2026-05-15T00:00:00.000Z"),
       },
     },
-    update: { status: "DRAFT" },
+    update: { status: "APPROVED" },
     create: {
       tenantId,
       startDate: new Date("2026-05-01T00:00:00.000Z"),
       endDate: new Date("2026-05-15T00:00:00.000Z"),
-      status: "DRAFT",
+      status: "APPROVED",
+    },
+  });
+
+  await tx.journalEntry.deleteMany({
+    where: {
+      tenantId,
+      sourceType: "PAYROLL",
+      sourceId: payrollPeriod.id,
     },
   });
 
@@ -688,6 +915,8 @@ async function seedFinanceAndPeople(tx, tenantId, branchId) {
       netAmount: decimal(14400),
     },
   });
+
+  return { employee, payrollPeriod };
 }
 
 async function seedMongo(config, tenantId, branchId, userId) {
@@ -797,23 +1026,70 @@ export async function runSeed() {
   try {
     const result = await prisma.$transaction(
       async (tx) => {
-        const { tenant, branch } = await upsertTenantCore(tx, config);
-        const user = await upsertSuperAdmin(tx, config, tenant.id, branch.id);
-        const products = await seedCatalog(tx, tenant.id, branch.id);
-        await seedOperations(tx, tenant.id, branch.id, products);
-        await seedFinanceAndPeople(tx, tenant.id, branch.id);
-        return { tenant, branch, user };
+        const workspaces = [];
+        for (const workspace of config.tenants) {
+          workspaces.push(
+            await upsertTenantCore(tx, config, workspace),
+          );
+        }
+
+        const primary = workspaces[0];
+        const products = await seedCatalog(
+          tx,
+          primary.tenant.id,
+          primary.branch.id,
+        );
+        const people = await seedFinanceAndPeople(
+          tx,
+          primary.tenant.id,
+          primary.branch.id,
+          config.employee,
+        );
+        const identities = await upsertTenantUsers(
+          tx,
+          config,
+          primary.tenant.id,
+          primary.branch.id,
+          people.employee.id,
+        );
+        await seedOperations(
+          tx,
+          primary.tenant.id,
+          primary.branch.id,
+          products,
+          identities.admin.user.id,
+        );
+
+        return {
+          workspaces,
+          tenant: primary.tenant,
+          branch: primary.branch,
+          admin: identities.admin.user,
+          employee: identities.employee.user,
+          payrollPeriod: people.payrollPeriod,
+        };
       },
       { timeout: 30_000 },
     );
 
-    await seedMongo(config, result.tenant.id, result.branch.id, result.user.id);
+    await seedMongo(
+      config,
+      result.tenant.id,
+      result.branch.id,
+      result.admin.id,
+    );
 
     return {
-      email: config.superadmin.email,
-      password: config.superadmin.password,
+      email: config.admin.email,
+      password: config.admin.password,
+      employeeEmail: config.employee.email,
+      employeePassword: config.employee.password,
       tenant: result.tenant.name,
       branch: result.branch.name,
+      tenants: result.workspaces.map(({ tenant }) => tenant.name),
+      tenantIds: result.workspaces.map(({ tenant }) => tenant.id),
+      payrollPeriodId: result.payrollPeriod.id,
+      payrollStatus: result.payrollPeriod.status,
       modules: config.modules.length,
     };
   } finally {
@@ -825,10 +1101,14 @@ async function runCli() {
   const result = await runSeed();
   console.log("Development seed complete.");
   console.log(`Tenant: ${result.tenant}`);
+  console.log(`Tenants: ${result.tenants.join(", ")}`);
   console.log(`Branch: ${result.branch}`);
   console.log(`Modules enabled: ${result.modules}`);
+  console.log(`Payroll status: ${result.payrollStatus}`);
   console.log(`Login email: ${result.email}`);
   console.log(`Login password: ${result.password}`);
+  console.log(`Employee email: ${result.employeeEmail}`);
+  console.log(`Employee password: ${result.employeePassword}`);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {

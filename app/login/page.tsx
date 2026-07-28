@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AlertCircle, Dumbbell, Eye, EyeOff, KeyRound, LogIn } from "lucide-react";
 
 import { AuthShell } from "@/components/layout/auth-shell";
 import { OtpCodeInput } from "@/components/auth/otp-code-input";
 import { MultiStateBadge, type BadgeState } from "@/components/ui/multi-state-badge";
+import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { localizedPath } from "@/lib/localized-routing";
 import { cn } from "@/lib/utils";
 
 type LoginPayload = {
@@ -20,46 +22,16 @@ type LoginPayload = {
   qrCodeDataUrl?: string;
 };
 
-const copy = {
-  title: "Welcome back",
-  subtitle: "Sign in to your Gerpy ERP account",
-  twoFactorTitle: "Verify access",
-  twoFactorSubtitle: "Enter the 6-digit code from your authenticator app.",
-  setupTitle: "Secure your account",
-  setupSubtitle: "Scan the QR code and verify 2FA before entering Gerpy.",
-  email: "Email",
-  password: "Password",
-  code: "Authentication code",
-  emailPlaceholder: "you@gym.com",
-  passwordPlaceholder: "Password",
-  forgotPassword: "Forgot your password?",
-  submit: "Sign in",
-  loading: "Signing in...",
-  verify: "Verify code",
-  verifying: "Verifying...",
-  enableTwoFactor: "Enable 2FA and continue",
-  useAnotherAccount: "Use another account",
-  footerPrefix: "Do not have an account?",
-  footerAction: "Create account",
-  emailRequired: "Email is required.",
-  emailInvalid: "Enter a valid email address.",
-  passwordRequired: "Password is required.",
-  invalidCredentials: "Invalid credentials or suspended user.",
-  invalidCode: "Invalid authentication code.",
-  showPassword: "Show password",
-  hidePassword: "Hide password",
-};
-
 function validateEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function safeRedirect(value: string | null) {
+function safeRedirect(value: string | null, locale: Locale) {
   if (value && value.startsWith("/") && !value.startsWith("//")) {
     return value;
   }
 
-  return "/es/dashboard";
+  return localizedPath(locale, "dashboard");
 }
 
 function FieldError({ id, children }: { id?: string; children: ReactNode }) {
@@ -84,9 +56,48 @@ function wait(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
+function localeFromPathname(pathname: string | null): Locale {
+  const firstSegment = pathname?.split("/").filter(Boolean)[0];
+  return firstSegment && isLocale(firstSegment) ? firstSegment : "es";
+}
+
 export default function LoginPage() {
   const router = useRouter();
-  const [redirectTo, setRedirectTo] = useState("/es/dashboard");
+  const pathname = usePathname();
+  const locale = localeFromPathname(pathname);
+  const dictionary = getDictionary(locale);
+  const copy = {
+    title: dictionary.auth.signin.title,
+    subtitle: dictionary.auth.signin.subtitle,
+    twoFactorTitle: dictionary.auth.twoFactor.verifyTitle,
+    twoFactorSubtitle: dictionary.auth.twoFactor.verifySubtitle,
+    setupTitle: dictionary.auth.twoFactor.setupTitle,
+    setupSubtitle: dictionary.auth.twoFactor.setupSubtitle,
+    email: dictionary.auth.fields.email,
+    password: dictionary.auth.fields.password,
+    code: dictionary.auth.twoFactor.code,
+    emailPlaceholder: dictionary.auth.placeholders.email,
+    passwordPlaceholder: dictionary.auth.placeholders.password,
+    forgotPassword: dictionary.auth.signin.forgotPassword,
+    submit: dictionary.auth.signin.submit,
+    loading: dictionary.auth.signin.loading,
+    manualKey: dictionary.auth.twoFactor.manualKey,
+    verify: dictionary.auth.twoFactor.verify,
+    verifying: dictionary.auth.twoFactor.verifying,
+    enableTwoFactor: dictionary.auth.twoFactor.enable,
+    useAnotherAccount: dictionary.auth.twoFactor.useAnotherAccount,
+    footerPrefix: dictionary.auth.signin.footerPrefix,
+    footerAction: dictionary.auth.signin.footerAction,
+    emailRequired: dictionary.auth.errors.emailRequired,
+    emailInvalid: dictionary.auth.errors.emailInvalid,
+    passwordRequired: dictionary.auth.errors.passwordRequired,
+    invalidCredentials: dictionary.auth.errors.invalidCredentials,
+    invalidCode: dictionary.auth.twoFactor.invalidCode,
+    showPassword: dictionary.auth.actions.showPassword,
+    hidePassword: dictionary.auth.actions.hidePassword,
+    backToHome: dictionary.auth.backToHome,
+  };
+  const [redirectTo, setRedirectTo] = useState<string>(() => localizedPath(locale, "dashboard"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -100,8 +111,8 @@ export default function LoginPage() {
   const [submitBadgeState, setSubmitBadgeState] = useState<BadgeState>("idle");
 
   useEffect(() => {
-    setRedirectTo(safeRedirect(new URLSearchParams(window.location.search).get("next")));
-  }, []);
+    setRedirectTo(safeRedirect(new URLSearchParams(window.location.search).get("next"), locale));
+  }, [locale]);
 
   const handleBlur = useCallback((field: keyof typeof touched) => {
     setTouched((previous) => ({ ...previous, [field]: true }));
@@ -122,7 +133,7 @@ export default function LoginPage() {
     const payload = (await response.json().catch(() => null)) as LoginPayload | null;
 
     if (!response.ok || !payload?.ok || !payload.qrCodeDataUrl) {
-      throw new Error(payload?.message ?? "Could not generate 2FA setup.");
+      throw new Error(payload?.message ?? dictionary.auth.twoFactor.setupFailed);
     }
 
     setSetupQrCodeDataUrl(payload.qrCodeDataUrl);
@@ -243,7 +254,7 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthShell id="login-page">
+    <AuthShell id="login-page" locale={locale} backLabel={copy.backToHome}>
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <div
@@ -277,14 +288,15 @@ export default function LoginPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={setupQrCodeDataUrl}
-                    alt="Gerpy 2FA QR code"
+                    alt="The Tower Power 2FA QR code"
+                    data-testid="login-2fa-setup-qr"
                     className="mx-auto aspect-square w-full max-w-64 rounded-lg"
                   />
                 </div>
 
                 {setupSecret && (
                   <div className="auth-manual-key rounded-lg border p-3 text-xs">
-                    Manual key: <span className="font-mono">{setupSecret}</span>
+                    {copy.manualKey}: <span className="font-mono" data-testid="login-2fa-setup-secret">{setupSecret}</span>
                   </div>
                 )}
 
@@ -297,7 +309,11 @@ export default function LoginPage() {
                 />
 
                 {formError && (
-                  <p className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="alert">
+                  <p
+                    className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs"
+                    role="alert"
+                    data-testid="login-error"
+                  >
                     <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                     {formError}
                   </p>
@@ -305,6 +321,7 @@ export default function LoginPage() {
 
                 <button
                   type="submit"
+                  data-testid="login-2fa-setup-submit"
                   disabled={isLoading || twoFactorCode.length !== 6}
                   className="auth-primary-button relative h-10 w-full rounded-lg text-sm font-semibold outline-none transition-all duration-200 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 >
@@ -326,6 +343,7 @@ export default function LoginPage() {
                   </label>
                   <input
                     id="login-email"
+                    data-testid="login-email"
                     type="email"
                     autoComplete="email"
                     placeholder={copy.emailPlaceholder}
@@ -355,6 +373,7 @@ export default function LoginPage() {
                   <div className="relative">
                     <input
                       id="login-password"
+                      data-testid="login-password"
                       type={showPassword ? "text" : "password"}
                       autoComplete="current-password"
                       placeholder={copy.passwordPlaceholder}
@@ -386,7 +405,11 @@ export default function LoginPage() {
                 </div>
 
                 {formError && (
-                  <p className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="alert">
+                  <p
+                    className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs"
+                    role="alert"
+                    data-testid="login-error"
+                  >
                     <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                     {formError}
                   </p>
@@ -394,7 +417,7 @@ export default function LoginPage() {
 
                 <div className="flex justify-end">
                   <Link
-                    href="/password-recovery"
+                    href={localizedPath(locale, "password-recovery")}
                     className="auth-muted text-xs underline-offset-4 transition-colors hover:text-[var(--auth-foreground)] hover:underline"
                   >
                     {copy.forgotPassword}
@@ -404,6 +427,7 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <button
                     id="login-submit"
+                    data-testid="login-submit"
                     type="submit"
                     disabled={isLoading}
                     className={cn(
@@ -442,7 +466,11 @@ export default function LoginPage() {
                 />
 
                 {formError && (
-                  <p className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="alert">
+                  <p
+                    className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs"
+                    role="alert"
+                    data-testid="login-error"
+                  >
                     <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                     {formError}
                   </p>
@@ -450,6 +478,7 @@ export default function LoginPage() {
 
                 <button
                   type="submit"
+                  data-testid="login-2fa-submit"
                   disabled={isLoading || twoFactorCode.length !== 6}
                   className="auth-primary-button relative h-10 w-full rounded-lg text-sm font-semibold outline-none transition-all duration-200 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 >
@@ -483,7 +512,7 @@ export default function LoginPage() {
             <div className="auth-divider border-t px-8 py-5 text-center text-sm">
               {copy.footerPrefix}{" "}
               <Link
-                href="/register"
+                href={localizedPath(locale, "register")}
                 className="auth-link font-semibold underline-offset-4 transition-colors hover:underline"
               >
                 {copy.footerAction}

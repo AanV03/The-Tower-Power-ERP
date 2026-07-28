@@ -81,35 +81,54 @@ function buildServerDynamicCss(colors?: Partial<BrandColors> | null) {
   if (!colors) return null;
   let css = "";
   
-  if (colors.sidebarBg && colors.sidebarBg.startsWith("#")) {
-    css += `--sidebar-bg: ${colors.sidebarBg};\n`;
-    css += `.glass-sidebar { background: ${colors.sidebarBg} !important; }\n`;
-    css += `.dark .glass-sidebar { background: ${colors.sidebarBg} !important; }\n`;
-    const isLight = isLightColor(colors.sidebarBg);
-    css += `--sidebar-text-primary: ${isLight ? "#0f172a" : "#f8fafc"};\n`;
-    css += `--sidebar-text-secondary: ${isLight ? "rgba(15, 23, 42, 0.7)" : "rgba(248, 250, 252, 0.7)"};\n`;
-    css += `--sidebar-border-color: ${isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)"};\n`;
+  if (colors.brandBg && colors.brandBg.startsWith("#")) {
+    css += `--sidebar-bg: ${colors.brandBg};\n`;
+    css += `--topbar-bg: ${colors.brandBg};\n`;
+    css += `.glass-sidebar { background: ${colors.brandBg} !important; }\n`;
+    css += `.dark .glass-sidebar { background: ${colors.brandBg} !important; }\n`;
+    css += `.glass-topbar { background: ${colors.brandBg} !important; }\n`;
+    css += `.dark .glass-topbar { background: ${colors.brandBg} !important; }\n`;
+    
+    const isLight = isLightColor(colors.brandBg);
+    const borderColor = isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)";
+    
+    css += `--sidebar-border-color: ${borderColor};\n`;
+    css += `--shell-sidebar-border-color: ${borderColor};\n`;
+    css += `--topbar-border-color: ${borderColor};\n`;
+    css += `--shell-topbar-border-color: ${borderColor};\n`;
   }
-  if (colors.topbarBg && colors.topbarBg.startsWith("#")) {
-    css += `--topbar-bg: ${colors.topbarBg};\n`;
-    css += `.glass-topbar { background: ${colors.topbarBg} !important; }\n`;
-    css += `.dark .glass-topbar { background: ${colors.topbarBg} !important; }\n`;
-    const isLight = isLightColor(colors.topbarBg);
-    css += `--topbar-foreground: ${isLight ? "#0f172a" : "#f8fafc"};\n`;
-    css += `--topbar-foreground-secondary: ${isLight ? "rgba(15, 23, 42, 0.68)" : "rgba(248, 250, 252, 0.65)"};\n`;
-    css += `--topbar-border-color: ${isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)"};\n`;
+  if (colors.brandText && colors.brandText.startsWith("#")) {
+    css += `--sidebar-text-primary: ${colors.brandText};\n`;
+    css += `--shell-sidebar-foreground: ${colors.brandText};\n`;
+    css += `--topbar-foreground: ${colors.brandText};\n`;
+    css += `--shell-topbar-foreground: ${colors.brandText};\n`;
+    
+    const isLightText = isLightColor(colors.brandText);
+    const secondaryColor = isLightText ? "rgba(255, 255, 255, 0.7)" : "rgba(15, 23, 42, 0.7)";
+    
+    css += `--sidebar-text-secondary: ${secondaryColor};\n`;
+    css += `--shell-sidebar-foreground-secondary: ${secondaryColor};\n`;
+    css += `--topbar-foreground-secondary: ${secondaryColor};\n`;
+    css += `--shell-topbar-foreground-secondary: ${secondaryColor};\n`;
   }
   if (colors.radius) {
     css += `--radius: ${colors.radius};\n`;
   }
-  if (colors.accentColor && colors.accentColor.startsWith("#")) {
-    css += `--brand-yellow: ${colors.accentColor};\n`;
-  }
-  if (colors.primaryColor && colors.primaryColor.startsWith("#")) {
-    const hsl = hexToHslTriplet(colors.primaryColor);
-    css += `--brand-orange: ${colors.primaryColor};\n`;
-    css += `--sidebar-accent-active: ${colors.primaryColor};\n`;
+  if (colors.brandAccent && colors.brandAccent.startsWith("#")) {
+    const hsl = hexToHslTriplet(colors.brandAccent);
+    const isLight = isLightColor(colors.brandAccent);
+    const primaryForegroundHex = isLight ? "#0f172a" : "#ffffff";
+    const primaryForegroundHsl = hexToHslTriplet(primaryForegroundHex);
+    const hoverColor = isLight ? "rgba(15, 23, 42, 0.06)" : "rgba(255, 255, 255, 0.08)";
+    
+    css += `--brand-orange: ${colors.brandAccent};\n`;
+    css += `--brand-yellow: ${colors.brandAccent};\n`;
+    css += `--sidebar-accent-active: ${colors.brandAccent};\n`;
+    css += `--sidebar-accent-active-foreground: ${primaryForegroundHex};\n`;
+    css += `--sidebar-accent-hover: ${hoverColor};\n`;
+    css += `--sidebar-accent: ${hoverColor};\n`;
     css += `--primary: ${hsl};\n`;
+    css += `--primary-foreground: ${primaryForegroundHsl};\n`;
     css += `--ring: ${hsl};\n`;
   }
   if (colors.font) {

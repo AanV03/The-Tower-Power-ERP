@@ -1,11 +1,11 @@
-# Gerpy ERP - Workplan 2.0 Implementation Guide
+# The Tower Power - Workplan 2.0 Implementation Guide
 
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Complete the missing Gerpy ERP implementation work against `workplan2.0.pdf`, using the current software state as the baseline.
+**Goal:** Complete the missing The Tower Power implementation work against `workplan2.0.pdf`, using the current software state as the baseline.
 
-**Architecture:** Gerpy will continue evolving in the existing Next.js 15 application. PostgreSQL/Supabase via Prisma remains the transactional source of truth, MongoDB/Mongoose remains the flexible/event/document store, and all modules must stay tenant-scoped through Auth.js session context, RBAC, module guards, and branch guards.
+**Architecture:** The Tower Power will continue evolving in the existing Next.js 15 application. PostgreSQL/Supabase via Prisma remains the transactional source of truth, MongoDB/Mongoose remains the flexible/event/document store, and all modules must stay tenant-scoped through Auth.js session context, RBAC, module guards, and branch guards.
 
 **Tech Stack:** Next.js 15 App Router, React 19, TypeScript, Prisma 7, PostgreSQL/Supabase, Mongoose/MongoDB, Auth.js, Zod, Tailwind CSS, shadcn/Radix-style UI, Recharts, Pa11y, Lighthouse CI, Node test runner, pnpm.
 
@@ -15,7 +15,7 @@
 
 Date: 2026-05-29  
 Reference plan: `C:\Users\aaron\Desktop\workplan2.0.pdf`  
-Repository: `C:\Dev\School\Gerpy`
+Repository: `C:\Dev\School\The Tower Power`
 
 The current codebase already includes:
 

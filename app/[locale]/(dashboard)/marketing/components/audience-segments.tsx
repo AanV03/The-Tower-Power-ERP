@@ -1,114 +1,85 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Send, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
-import { Users, TrendingUp, TrendingDown, Send } from "lucide-react";
-
-type Segment = {
-  key: "churn" | "spenders" | "inactive" | "newSignups";
-  name: string;
-  count: number;
-  growth: string;
-  positive: boolean;
-};
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { AudienceSegment, MarketingLabels, MarketingUiStatus } from "./types";
 
 export function AudienceSegments({
-  translations,
+  segments,
+  status,
+  labels,
   onSendToSegment,
 }: {
-  translations: {
-    title: string;
-    description: string;
-    members: string;
-    actions: {
-      send: string;
-    };
-    names: {
-      churn: string;
-      spenders: string;
-      inactive: string;
-      newSignups: string;
-    };
-  };
+  segments: AudienceSegment[];
+  status: MarketingUiStatus;
+  labels: MarketingLabels;
   onSendToSegment: (segmentName: string) => void;
 }) {
-  const segments: Segment[] = [
-    {
-      key: "churn",
-      name: translations.names.churn,
-      count: 312,
-      growth: "+1.2%",
-      positive: false,
-    },
-    {
-      key: "spenders",
-      name: translations.names.spenders,
-      count: 1420,
-      growth: "+8.4%",
-      positive: true,
-    },
-    {
-      key: "inactive",
-      name: translations.names.inactive,
-      count: 580,
-      growth: "-3.1%",
-      positive: true, // Decreasing inactive is positive
-    },
-    {
-      key: "newSignups",
-      name: translations.names.newSignups,
-      count: 890,
-      growth: "+14.8%",
-      positive: true,
-    },
-  ];
-
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>{translations.title}</CardTitle>
-        <CardDescription>{translations.description}</CardDescription>
+        <CardTitle>{labels.segmentsTitle}</CardTitle>
+        <CardDescription>{labels.segmentsDescription}</CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-3">
-        {segments.map((segment) => (
-          <div
-            key={segment.key}
-            className="flex items-center justify-between p-3 rounded-xl border border-foreground/10 bg-[rgba(var(--glass-bg),0.01)] hover:bg-[rgba(var(--glass-bg),0.03)] transition-all shadow-xs"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
-                <Users className="w-4 h-4" aria-hidden="true" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm text-foreground">{segment.name}</h4>
-                <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
-                  <span className="font-mono font-medium text-foreground">{segment.count}</span>
-                  <span>{translations.members}</span>
-                  <span className="flex items-center gap-0.5 font-semibold">
-                    {segment.positive ? (
-                      <TrendingUp className="w-3 h-3 text-[var(--color-success)]" aria-hidden="true" />
-                    ) : (
-                      <TrendingDown className="w-3 h-3 text-[var(--color-danger)]" aria-hidden="true" />
-                    )}
-                    <span className={segment.positive ? "text-[var(--color-success)]" : "text-[var(--color-danger)]"}>
-                      {segment.growth}
+      <CardContent className="grid gap-3 lg:grid-cols-2">
+        {status === "loading" ? (
+          <>
+            <Skeleton className="h-20 rounded-xl" />
+            <Skeleton className="h-20 rounded-xl" />
+          </>
+        ) : null}
+        {status === "error" ? (
+          <EmptyState variant="error" title={labels.errorTitle} description={labels.errorDescription} className="lg:col-span-2" />
+        ) : null}
+        {status !== "loading" && status !== "error" && segments.length === 0 ? (
+          <EmptyState
+            title={labels.emptyAudiencesTitle}
+            description={labels.emptyAudiencesDescription}
+            className="lg:col-span-2"
+          />
+        ) : null}
+        {status !== "loading" &&
+          status !== "error" &&
+          segments.map((segment) => (
+            <article
+              key={segment.key}
+              className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-card/50 p-3 shadow-xs transition-colors hover:bg-card"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                  <Users className="size-4" aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="truncate text-sm font-semibold text-foreground">{segment.name}</h4>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span className="font-mono font-medium text-foreground">{segment.count.toLocaleString()}</span>
+                    <span>{labels.members}</span>
+                    <span className="flex items-center gap-0.5 font-semibold">
+                      {segment.positive ? (
+                        <TrendingUp className="size-3 text-success" aria-hidden="true" />
+                      ) : (
+                        <TrendingDown className="size-3 text-destructive" aria-hidden="true" />
+                      )}
+                      <span className={segment.positive ? "text-success" : "text-destructive"}>{segment.growth}</span>
                     </span>
-                  </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <Button
-              variant="outline"
-              size="xs"
-              onClick={() => onSendToSegment(segment.name)}
-              className="h-7 text-xs gap-1 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-            >
-              <Send className="w-3 h-3" aria-hidden="true" />
-              <span className="hidden sm:inline">{translations.actions.send}</span>
-            </Button>
-          </div>
-        ))}
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() => onSendToSegment(segment.name)}
+                className="h-7 gap-1 hover:border-primary hover:text-primary"
+              >
+                <Send className="size-3" aria-hidden="true" />
+                <span className="hidden sm:inline">{labels.sendIntervention}</span>
+              </Button>
+            </article>
+          ))}
       </CardContent>
     </Card>
   );

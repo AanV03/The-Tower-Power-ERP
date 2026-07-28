@@ -34,7 +34,7 @@ export async function PATCH(
   { params }: { params: Promise<{ employeeId: string }> },
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "hr" });
+    const context = await requireApiContext({ moduleId: "hr", permission: "hr.employee.write" });
     const { employeeId } = await params;
     const data = UpdateEmployeeSchema.parse(await request.json());
 

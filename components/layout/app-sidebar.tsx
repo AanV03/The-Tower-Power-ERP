@@ -73,20 +73,20 @@ export function AppSidebar({ locale, serverIdentity }: { locale: Locale, serverI
       <style
         dangerouslySetInnerHTML={{
           __html: `
-          .gerpy-sidebar *::-webkit-scrollbar { width: 8px; height: 8px }
-          .gerpy-sidebar *::-webkit-scrollbar-thumb { background: var(--glass-opacity-light); border-radius: 0 }
-          .gerpy-sidebar * { scrollbar-width: thin; scrollbar-color: var(--glass-opacity-light) transparent }
-          .gerpy-sidebar::-webkit-scrollbar { width: 10px }
-          .gerpy-sidebar::-webkit-scrollbar-track { background: transparent }
-          .gerpy-sidebar::-webkit-scrollbar-thumb { background: rgba(var(--nav-section-rgb), 0.5); border: 3px solid transparent; border-radius: 999px; background-clip: content-box }
+          .tower-power-sidebar *::-webkit-scrollbar { width: 8px; height: 8px }
+          .tower-power-sidebar *::-webkit-scrollbar-thumb { background: var(--glass-opacity-light); border-radius: 0 }
+          .tower-power-sidebar * { scrollbar-width: thin; scrollbar-color: var(--glass-opacity-light) transparent }
+          .tower-power-sidebar::-webkit-scrollbar { width: 10px }
+          .tower-power-sidebar::-webkit-scrollbar-track { background: transparent }
+          .tower-power-sidebar::-webkit-scrollbar-thumb { background: rgba(var(--nav-section-rgb), 0.5); border: 3px solid transparent; border-radius: 999px; background-clip: content-box }
         `,
         }}
       />
 
       <aside
         className={cn(
-          "glass-panel glass-sidebar hidden h-full shrink-0 overflow-hidden border-y-0 border-l-0 text-[var(--shell-sidebar-foreground)] shadow-2xl shadow-black/15 transition-[width] duration-300 ease-out lg:flex lg:flex-col gerpy-sidebar",
-          collapsed ? "w-[5.25rem]" : "w-72",
+          "glass-panel glass-sidebar hidden h-full shrink-0 overflow-hidden border-y-0 border-l-0 text-[var(--shell-sidebar-foreground)] shadow-2xl shadow-black/15 transition-[width] duration-300 ease-out lg:flex lg:flex-col tower-power-sidebar",
+          collapsed ? "w-[5.25rem]" : "w-60",
         )}
         aria-label={dictionary.common.primaryNavigation}
       >
@@ -115,7 +115,7 @@ export function AppSidebar({ locale, serverIdentity }: { locale: Locale, serverI
           )}
         </div>
 
-        <div className={cn("flex min-h-0 flex-1 flex-col overflow-hidden gerpy-sidebar-branded", collapsed ? "items-center" : "")}>
+        <div className={cn("flex min-h-0 flex-1 flex-col overflow-hidden tower-power-sidebar-branded", collapsed ? "items-center" : "")}>
           <nav
             className={cn("sidebar-content min-h-0 w-full flex-1 space-y-1 overflow-y-auto overscroll-contain py-5", collapsed ? "px-0" : "px-3")}
             aria-label={dictionary.common.moduleNavigation}
@@ -190,20 +190,16 @@ export function AppSidebar({ locale, serverIdentity }: { locale: Locale, serverI
             ))}
           </nav>
 
-          <div className={cn("mt-auto w-full flex-none border-t border-[var(--shell-sidebar-border-color)]", collapsed ? "p-0 py-3" : "p-3")}>
-            <div className={cn("flex items-center rounded-lg border border-[var(--shell-sidebar-border-color)] bg-white/30 dark:bg-white/[0.035]", collapsed ? "mx-auto size-11 justify-center p-0" : "gap-3 p-3")}>
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--sidebar-accent-hover)] text-[var(--brand-yellow)]">
-                <Sparkles className="size-4" aria-hidden="true" />
-              </div>
-              {!collapsed && (
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-bold">White-label ready</p>
-                  <p className="truncate text-[11px]" style={{ color: "var(--shell-sidebar-foreground-secondary)" }}>
-                    {new Date().getFullYear()} Gerpy
-                  </p>
-                </div>
-              )}
-            </div>
+          <div className={cn("mt-auto w-full flex-none border-t border-[var(--shell-sidebar-border-color)] text-center", collapsed ? "py-3" : "py-4")}>
+            {!collapsed ? (
+              <p className="truncate text-[11px] font-medium opacity-60" style={{ color: "var(--shell-sidebar-foreground)" }}>
+                The Tower Power ERP (c)
+              </p>
+            ) : (
+              <span className="text-[11px] font-bold opacity-60" style={{ color: "var(--shell-sidebar-foreground)" }}>
+                (c)
+              </span>
+            )}
           </div>
         </div>
       </aside>

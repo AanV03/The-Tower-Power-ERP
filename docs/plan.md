@@ -1,4 +1,4 @@
-# Gerpy ERP SaaS - Implementation Plan
+# The Tower Power SaaS - Implementation Plan
 
 ## Current Phase
 
@@ -85,7 +85,7 @@ Recommended branch:
   - `STRIPE_SECRET_KEY`
   - `STRIPE_WEBHOOK_SECRET`
   - `STRIPE_PRICE_*` only if plans are fixed in Stripe.
-- Map Stripe customers to Gerpy users, members, tenants, or subscriptions through SQL references.
+- Map Stripe customers to The Tower Power users, members, tenants, or subscriptions through SQL references.
 - Create checkout/session endpoints for:
   - SaaS tenant billing.
   - Membership payments.

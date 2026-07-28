@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 /** localStorage key for persisting tenant brand colors */
-export const BRAND_STORAGE_KEY = "gerpy-brand-colors";
+export const BRAND_STORAGE_KEY = "tower-power-brand-colors";
 
 /**
  * Brand color tokens exposed to the admin panel.
@@ -12,11 +12,9 @@ export const BRAND_STORAGE_KEY = "gerpy-brand-colors";
  * intentionally excluded from the UI panel (not standard color pickers).
  */
 export type BrandColors = {
-  sidebarBg: string;
-  topbarBg: string;
-  primaryColor: string; // --brand-orange, --primary (HSL), --sidebar-accent-active, charts
-  accentColor: string;  // --brand-yellow — warning badges, secondary highlights
-  sidebarText: string;  // rgba — kept for future UI
+  brandBg: string;      // Unified background for Navbar & Sidebar
+  brandText: string;    // Color for texts and logos
+  brandAccent: string;  // Color for hovers, contrast elements, and primary buttons
   radius: string;       // rem  — kept for future UI
   contrast?: "normal" | "medium" | "high";
   font?: "default" | "serif" | "mono" | "elegant";
@@ -24,19 +22,59 @@ export type BrandColors = {
 };
 
 export const DEFAULT_BRAND_COLORS: BrandColors = {
-  sidebarBg: "#023047",
-  topbarBg: "#ffffff",
-  primaryColor: "#fb8500",
-  accentColor: "#edc531",
-  sidebarText: "rgba(255,255,255,0.8)",
+  brandBg: "#264653",
+  brandText: "#FFFFFF",
+  brandAccent: "#2a9d8f",
   radius: "0.625rem",
   contrast: "normal",
   font: "default",
-  logoUrl: "",
+  logoUrl: "/logo.png",
 };
 
-export function normalizeBrandColors(colors: Partial<BrandColors> | null | undefined): BrandColors {
-  return { ...DEFAULT_BRAND_COLORS, ...(colors ?? {}) };
+export const DEFAULT_DARK_BRAND_COLORS: BrandColors = {
+  brandBg: "#264653",
+  brandText: "#FFFFFF",
+  brandAccent: "#2a9d8f",
+  radius: "0.625rem",
+  contrast: "normal",
+  font: "default",
+  logoUrl: "/logo.png",
+};
+
+export function getDefaultBrandColors(isDark: boolean): BrandColors {
+  return isDark ? DEFAULT_DARK_BRAND_COLORS : DEFAULT_BRAND_COLORS;
+}
+
+export function normalizeBrandColors(
+  colors: Partial<BrandColors> | null | undefined,
+  isDark: boolean = false
+): BrandColors {
+  const defaults = getDefaultBrandColors(isDark);
+  const normalized = { ...defaults, ...(colors ?? {}) };
+  if (!normalized.logoUrl) {
+    normalized.logoUrl = "/logo.png";
+  }
+  // Fallbacks for older data structure
+  if (!colors?.brandBg) {
+    if ((colors as any)?.sidebarBg) {
+      normalized.brandBg = (colors as any).sidebarBg;
+    } else if ((colors as any)?.topbarBg) {
+      normalized.brandBg = (colors as any).topbarBg;
+    }
+  }
+  if (!colors?.brandText) {
+    if ((colors as any)?.sidebarText) {
+      normalized.brandText = (colors as any).sidebarText;
+    }
+  }
+  if (!colors?.brandAccent) {
+    if ((colors as any)?.primaryColor) {
+      normalized.brandAccent = (colors as any).primaryColor;
+    } else if ((colors as any)?.accentColor) {
+      normalized.brandAccent = (colors as any).accentColor;
+    }
+  }
+  return normalized;
 }
 
 // ─── Internal hex → HSL triplet (mirrors branding.ts, runs client-side) ──────
@@ -121,62 +159,58 @@ export function applyBrandColors(colors: Partial<BrandColors>) {
     isDarkMode = document.documentElement.classList.contains("dark");
   }
 
-  if (colors.sidebarBg !== undefined && colors.sidebarBg.startsWith("#")) {
-    setBrandProperty("--sidebar-bg", colors.sidebarBg);
-    const isLight = isLightColor(colors.sidebarBg, isDarkMode);
-    const textPrimary = isLight ? "#0f172a" : "#f8fafc";
-    const textSecondary = isLight ? "rgba(15, 23, 42, 0.7)" : "rgba(248, 250, 252, 0.7)";
+  if (colors.brandBg !== undefined && colors.brandBg.startsWith("#")) {
+    setBrandProperty("--sidebar-bg", colors.brandBg);
+    setBrandProperty("--topbar-bg", colors.brandBg);
+
+    const isLight = isLightColor(colors.brandBg, isDarkMode);
     const borderColor = isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)";
-    
-    setBrandProperty("--sidebar-text-primary", textPrimary);
-    setBrandProperty("--sidebar-text-secondary", textSecondary);
+
     setBrandProperty("--sidebar-border-color", borderColor);
-    
-    // Also update shell variables
-    setBrandProperty("--shell-sidebar-foreground", textPrimary);
-    setBrandProperty("--shell-sidebar-foreground-secondary", textSecondary);
     setBrandProperty("--shell-sidebar-border-color", borderColor);
+    setBrandProperty("--topbar-border-color", borderColor);
+    setBrandProperty("--shell-topbar-border-color", borderColor);
   }
 
-  if (colors.topbarBg !== undefined && colors.topbarBg.startsWith("#")) {
-    setBrandProperty("--topbar-bg", colors.topbarBg);
-    const isLight = isLightColor(colors.topbarBg, isDarkMode);
-    const textPrimary = isLight ? "#0f172a" : "#f8fafc";
-    const textSecondary = isLight ? "rgba(15, 23, 42, 0.68)" : "rgba(248, 250, 252, 0.65)";
-    const borderColor = isLight ? "rgba(15, 23, 42, 0.08)" : "rgba(255, 255, 255, 0.09)";
-    
-    setBrandProperty("--topbar-foreground", textPrimary);
-    setBrandProperty("--topbar-foreground-secondary", textSecondary);
-    setBrandProperty("--topbar-border-color", borderColor);
-    
-    // Also update shell variables
-    setBrandProperty("--shell-topbar-foreground", textPrimary);
-    setBrandProperty("--shell-topbar-foreground-secondary", textSecondary);
-    setBrandProperty("--shell-topbar-border-color", borderColor);
+  if (colors.brandText !== undefined && colors.brandText.startsWith("#")) {
+    setBrandProperty("--sidebar-text-primary", colors.brandText);
+    setBrandProperty("--shell-sidebar-foreground", colors.brandText);
+    setBrandProperty("--topbar-foreground", colors.brandText);
+    setBrandProperty("--shell-topbar-foreground", colors.brandText);
+
+    const isLightText = isLightColor(colors.brandText, false);
+    const secondaryColor = isLightText ? "rgba(255, 255, 255, 0.7)" : "rgba(15, 23, 42, 0.7)";
+
+    setBrandProperty("--sidebar-text-secondary", secondaryColor);
+    setBrandProperty("--shell-sidebar-foreground-secondary", secondaryColor);
+    setBrandProperty("--topbar-foreground-secondary", secondaryColor);
+    setBrandProperty("--shell-topbar-foreground-secondary", secondaryColor);
   }
 
   if (colors.radius !== undefined)
     setBrandProperty("--radius", colors.radius);
 
-  if (colors.accentColor !== undefined && colors.accentColor.startsWith("#")) {
-    setBrandProperty("--brand-yellow", colors.accentColor);
-  }
-
-  if (colors.primaryColor !== undefined && colors.primaryColor.startsWith("#")) {
-    const hex = colors.primaryColor;
+  if (colors.brandAccent !== undefined && colors.brandAccent.startsWith("#")) {
+    const hex = colors.brandAccent;
     const hsl = hexToHslTriplet(hex);
-    
+
     // Evaluate if the primary color is light to determine the appropriate foreground
     const isLight = isLightColor(hex, false);
     const primaryForegroundHex = isLight ? "#0f172a" : "#ffffff";
     const primaryForegroundHsl = hexToHslTriplet(primaryForegroundHex);
 
     setBrandProperty("--brand-orange", hex);
+    setBrandProperty("--brand-yellow", hex);
     setBrandProperty("--sidebar-accent-active", hex);
     setBrandProperty("--sidebar-accent-active-foreground", primaryForegroundHex);
     setBrandProperty("--primary", hsl);       // used by shadcn Button (hsl(var(--primary)))
     setBrandProperty("--primary-foreground", primaryForegroundHsl);
     setBrandProperty("--ring", hsl);           // focus ring matches primary
+
+    // Hover states for sidebar item or list item
+    const hoverColor = isLight ? "rgba(15, 23, 42, 0.06)" : "rgba(255, 255, 255, 0.08)";
+    setBrandProperty("--sidebar-accent-hover", hoverColor);
+    setBrandProperty("--sidebar-accent", hoverColor);
   }
 
   if (typeof document !== "undefined") {
@@ -221,6 +255,8 @@ export function resetBrandColors() {
     "--brand-orange",
     "--sidebar-accent-active",
     "--sidebar-accent-active-foreground",
+    "--sidebar-accent-hover",
+    "--sidebar-accent",
     "--primary",
     "--primary-foreground",
     "--ring",
@@ -248,9 +284,10 @@ export function BrandColorApplier() {
     document.body.style.height = "100%";
 
     try {
+      const isDark = document.documentElement.classList.contains("dark");
       const raw = localStorage.getItem(BRAND_STORAGE_KEY);
       if (raw) {
-        applyBrandColors(normalizeBrandColors(JSON.parse(raw) as Partial<BrandColors>));
+        applyBrandColors(normalizeBrandColors(JSON.parse(raw) as Partial<BrandColors>, isDark));
       }
     } catch { /* ignore corrupt data */ }
 
@@ -264,11 +301,12 @@ export function BrandColorApplier() {
       for (const mutation of mutations) {
         if (mutation.attributeName === "class") {
           try {
+            const isDark = document.documentElement.classList.contains("dark");
             const currentRaw = localStorage.getItem(BRAND_STORAGE_KEY);
             if (currentRaw) {
-               applyBrandColors(normalizeBrandColors(JSON.parse(currentRaw) as Partial<BrandColors>));
+              applyBrandColors(normalizeBrandColors(JSON.parse(currentRaw) as Partial<BrandColors>, isDark));
             } else {
-               applyBrandColors(DEFAULT_BRAND_COLORS);
+              applyBrandColors(getDefaultBrandColors(isDark));
             }
           } catch { /* ignore */ }
         }

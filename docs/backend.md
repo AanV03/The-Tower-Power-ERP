@@ -1,12 +1,12 @@
-# Analisis de Backend - ERP Gerpy
+# Analisis de Backend - ERP The Tower Power
 
 Fecha de analisis: 2026-05-29  
 Documento base: `C:\Users\aaron\Desktop\workplan.pdf`  
-Repositorio: `C:\Dev\School\Gerpy`
+Repositorio: `C:\Dev\School\The Tower Power`
 
 ## Resumen ejecutivo
 
-El backend de Gerpy ya supera el alcance tecnico esperado para el Sprint 1 del workplan y contiene bases adelantadas para los Sprints 2 a 5. La aplicacion usa Next.js App Router con rutas API server-side, Auth.js/NextAuth, Prisma sobre PostgreSQL, Mongoose sobre MongoDB, validacion con Zod y guardas multi-tenant por modulo, permiso y sucursal.
+El backend de The Tower Power ya supera el alcance tecnico esperado para el Sprint 1 del workplan y contiene bases adelantadas para los Sprints 2 a 5. La aplicacion usa Next.js App Router con rutas API server-side, Auth.js/NextAuth, Prisma sobre PostgreSQL, Mongoose sobre MongoDB, validacion con Zod y guardas multi-tenant por modulo, permiso y sucursal.
 
 El estado actual es una base SaaS ERP robusta pero todavia no es un ERP operacional completo. Hay endpoints GET/POST para muchos recursos, autenticacion funcional, bootstrap de tenant, resumenes por modulo y una estructura de seguridad consistente. Sin embargo, faltan operaciones de actualizacion/eliminacion en la mayoria de recursos, reglas de negocio profundas, procesamiento transaccional completo entre modulos, workers reales, integraciones externas, CI visible en el repo y flujos frontend CRUD completos.
 

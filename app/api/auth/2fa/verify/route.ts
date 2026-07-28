@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import {
-  createAuthToken,
-  GERPY_SESSION_COOKIE,
-  GERPY_TWO_FACTOR_COOKIE,
-  GERPY_TWO_FACTOR_SETUP_COOKIE,
+  createPersistedSession,
+  getSessionRequestMetadata,
+  recordMfaChallengeFailure,
+  TOWER_POWER_SESSION_COOKIE,
+  TOWER_POWER_TWO_FACTOR_COOKIE,
+  TOWER_POWER_TWO_FACTOR_SETUP_COOKIE,
   SESSION_MAX_AGE_SECONDS,
   type TwoFactorChallengePayload,
   type TwoFactorSetupPayload,
@@ -17,11 +19,14 @@ import { AuthService } from '@/modules/auth/services/auth.service';
 const secureCookie = process.env.NODE_ENV === 'production';
 
 export async function POST(req: NextRequest) {
+  const metadata = getSessionRequestMetadata(req);
+  let challengeForAudit: TwoFactorChallengePayload | null = null;
+
   try {
     const body = await req.json();
     const { code } = twoFactorVerifySchema.parse(body);
-    const challengeToken = req.cookies.get(GERPY_TWO_FACTOR_COOKIE)?.value;
-    const setupToken = req.cookies.get(GERPY_TWO_FACTOR_SETUP_COOKIE)?.value;
+    const challengeToken = req.cookies.get(TOWER_POWER_TWO_FACTOR_COOKIE)?.value;
+    const setupToken = req.cookies.get(TOWER_POWER_TWO_FACTOR_SETUP_COOKIE)?.value;
 
     if (challengeToken) {
       const challenge = await verifyAuthToken<TwoFactorChallengePayload>(
@@ -36,8 +41,12 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      challengeForAudit = challenge;
       const result = await AuthService.verifyTwoFactorLogin(challenge, code);
-      const sessionToken = await createAuthToken(result.payload, SESSION_MAX_AGE_SECONDS);
+      const { token: sessionToken } = await createPersistedSession(
+        result.payload,
+        metadata,
+      );
       const response = NextResponse.json(
         {
           ok: true,
@@ -51,9 +60,9 @@ export async function POST(req: NextRequest) {
         { status: 200 },
       );
 
-      response.cookies.delete(GERPY_TWO_FACTOR_COOKIE);
-      response.cookies.delete(GERPY_TWO_FACTOR_SETUP_COOKIE);
-      response.cookies.set(GERPY_SESSION_COOKIE, sessionToken, {
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_COOKIE);
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_SETUP_COOKIE);
+      response.cookies.set(TOWER_POWER_SESSION_COOKIE, sessionToken, {
         httpOnly: true,
         secure: secureCookie,
         sameSite: 'lax',
@@ -79,7 +88,10 @@ export async function POST(req: NextRequest) {
 
       await AuthService.enableTwoFactor(setup.userId, code);
       const result = await AuthService.createAuthenticatedResult(setup.userId);
-      const sessionToken = await createAuthToken(result.payload, SESSION_MAX_AGE_SECONDS);
+      const { token: sessionToken } = await createPersistedSession(
+        result.payload,
+        metadata,
+      );
       const response = NextResponse.json(
         {
           ok: true,
@@ -93,9 +105,9 @@ export async function POST(req: NextRequest) {
         { status: 200 },
       );
 
-      response.cookies.delete(GERPY_TWO_FACTOR_SETUP_COOKIE);
-      response.cookies.delete(GERPY_TWO_FACTOR_COOKIE);
-      response.cookies.set(GERPY_SESSION_COOKIE, sessionToken, {
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_SETUP_COOKIE);
+      response.cookies.delete(TOWER_POWER_TWO_FACTOR_COOKIE);
+      response.cookies.set(TOWER_POWER_SESSION_COOKIE, sessionToken, {
         httpOnly: true,
         secure: secureCookie,
         sameSite: 'lax',
@@ -128,6 +140,14 @@ export async function POST(req: NextRequest) {
       error.message === 'INVALID_TWO_FACTOR_CODE' ||
       error.message === 'TWO_FACTOR_NOT_CONFIGURED'
     ) {
+      if (challengeForAudit) {
+        await recordMfaChallengeFailure({
+          userId: challengeForAudit.userId,
+          tenantId: challengeForAudit.tenantId,
+          metadata,
+          reason: error.message,
+        });
+      }
       return NextResponse.json(
         { ok: false, error: error.message, message: 'Codigo 2FA invalido.' },
         { status: 401 },

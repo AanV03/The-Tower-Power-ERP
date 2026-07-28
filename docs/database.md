@@ -1,12 +1,12 @@
-# Analisis de Database - ERP Gerpy
+# Analisis de Database - ERP The Tower Power
 
 Fecha de analisis: 2026-05-29  
 Documento base: `C:\Users\aaron\Desktop\workplan.pdf`  
-Repositorio: `C:\Dev\School\Gerpy`
+Repositorio: `C:\Dev\School\The Tower Power`
 
 ## Resumen ejecutivo
 
-La capa de base de datos es la parte mas avanzada del ERP Gerpy. El schema Prisma contiene 48 modelos y 29 enums, cubriendo multi-tenancy, sucursales, usuarios, roles/permisos, membresias, accesos, finanzas, pagos, facturacion, POS, inventario, compras, almacenes, contabilidad, RH, nomina, especialistas, integraciones y outbox.
+La capa de base de datos es la parte mas avanzada del ERP The Tower Power. El schema Prisma contiene 48 modelos y 29 enums, cubriendo multi-tenancy, sucursales, usuarios, roles/permisos, membresias, accesos, finanzas, pagos, facturacion, POS, inventario, compras, almacenes, contabilidad, RH, nomina, especialistas, integraciones y outbox.
 
 Ademas, existe una capa MongoDB/Mongoose para datos flexibles o de alto volumen: auditoria, branding, CRM, telemetria de acceso, snapshots analiticos, logs de integracion y tickets de mantenimiento.
 

@@ -19,27 +19,38 @@ export async function GET() {
   try {
     const context = await requireApiContext({ moduleId: "admin" });
 
-    const tenant = await prisma.tenant.findUniqueOrThrow({
+    const tenantRecord = await prisma.tenant.findUniqueOrThrow({
       where: { id: context.tenantId },
       include: {
         plan: true,
         branches: { orderBy: { createdAt: "asc" } },
         modules: { orderBy: { moduleKey: "asc" } },
-        users: {
+        memberships: {
           select: {
-            id: true,
-            name: true,
-            email: true,
-            status: true,
-            branchId: true,
-            createdAt: true,
+            defaultBranchId: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                status: true,
+                createdAt: true,
+              },
+            },
           },
           orderBy: { createdAt: "desc" },
         },
       },
     });
+    const { memberships, ...tenant } = tenantRecord;
 
-    return ok(tenant);
+    return ok({
+      ...tenant,
+      users: memberships.map(({ defaultBranchId, user }) => ({
+        ...user,
+        branchId: defaultBranchId,
+      })),
+    });
   } catch (error) {
     return fail(error);
   }

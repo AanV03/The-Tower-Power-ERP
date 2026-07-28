@@ -1,9 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { X, Key, Check, Loader2, Webhook, ChevronRight, ChevronLeft } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Loader2,
+  ShieldCheck,
+  X,
+} from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { Integration } from "./integration-card";
 
@@ -32,13 +41,27 @@ interface SetupStepperDialogProps {
   };
 }
 
-const AVAILABLE_EVENTS = [
-  { id: "member.created", desc: "Miembro registrado" },
-  { id: "member.updated", desc: "Miembro modificado" },
-  { id: "payment.succeeded", desc: "Pago exitoso" },
-  { id: "payment.failed", desc: "Pago fallido" },
-  { id: "membership.paused", desc: "Membresía pausada" },
-  { id: "attendance.registered", desc: "Acceso validado" },
+const AUTOMATIONS = [
+  {
+    id: "sync-payments",
+    title: "Sincronizar pagos",
+    description: "Actualiza pagos y membresias cuando se cobre una transaccion.",
+  },
+  {
+    id: "notify-new-members",
+    title: "Notificar nuevos miembros",
+    description: "Envia mensajes de bienvenida cuando alguien se registra.",
+  },
+  {
+    id: "failed-payment-alerts",
+    title: "Avisar pagos fallidos",
+    description: "Crea alertas para seguimiento de cobranza sin trabajo manual.",
+  },
+  {
+    id: "send-receipts",
+    title: "Enviar comprobantes",
+    description: "Entrega recibos y confirmaciones despues de cada pago.",
+  },
 ];
 
 export function SetupStepperDialog({
@@ -49,56 +72,52 @@ export function SetupStepperDialog({
   labels,
 }: SetupStepperDialogProps) {
   const [step, setStep] = React.useState(1);
-  const [apiKey, setApiKey] = React.useState("");
-  const [selectedEvents, setSelectedEvents] = React.useState<string[]>([
-    "member.created",
-    "payment.succeeded",
+  const [connectionState, setConnectionState] = React.useState<
+    "idle" | "connecting" | "connected" | "error"
+  >("idle");
+  const [enabledAutomations, setEnabledAutomations] = React.useState<string[]>([
+    "sync-payments",
+    "failed-payment-alerts",
   ]);
-  const [testState, setTestState] = React.useState<"idle" | "loading" | "success" | "error">("idle");
   const dialogRef = React.useRef<HTMLDivElement>(null);
 
-  // Esc keys listener and focus trapping
   React.useEffect(() => {
     if (!isOpen) return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
         onClose();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    
-    // Reset stepper state on open
     setStep(1);
-    setApiKey("");
-    setTestState("idle");
-    
-    // Focus container
+    setConnectionState("idle");
     dialogRef.current?.focus();
 
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
   if (!isOpen || !integration) return null;
 
-  const toggleEvent = (id: string) => {
-    setSelectedEvents((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+  const formattedTitle = labels.title.replace("{name}", integration.name);
+  const isWebhook = integration.authType === "webhook";
+  const providerName = integration.name.split(" ")[0];
+  const canContinueFromConnection = connectionState === "connected" || isWebhook;
+
+  const handleConnect = () => {
+    setConnectionState("connecting");
+    window.setTimeout(() => {
+      setConnectionState("connected");
+    }, 900);
   };
 
-  const handleTestConnection = () => {
-    setTestState("loading");
-    setTimeout(() => {
-      if (apiKey.trim().length < 5) {
-        setTestState("error");
-      } else {
-        setTestState("success");
-      }
-    }, 1500);
+  const toggleAutomation = (id: string) => {
+    setEnabledAutomations((previous) =>
+      previous.includes(id)
+        ? previous.filter((item) => item !== id)
+        : [...previous, id],
+    );
   };
 
   const handleFinish = () => {
@@ -106,12 +125,9 @@ export function SetupStepperDialog({
     onClose();
   };
 
-  const formattedTitle = labels.title.replace("{name}", integration.name);
-  const formattedPlaceholder = labels.apiKeyPlaceholder.replace("{name}", integration.name);
-
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="dialog-title"
@@ -119,162 +135,176 @@ export function SetupStepperDialog({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className="relative w-full max-w-lg overflow-hidden rounded-xl border border-[var(--sidebar-border-color)] bg-card text-card-foreground shadow-[var(--glass-shadow)] glass-panel focus-visible:outline-none"
+        className="relative w-full max-w-xl overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl ring-1 ring-border/60 focus-visible:outline-none"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--sidebar-border-color)]">
-          <h2 id="dialog-title" className="text-lg font-semibold tracking-tight">
-            {formattedTitle}
-          </h2>
+        <div className="flex items-center justify-between border-b border-border bg-card px-6 py-4">
+          <div className="space-y-1">
+            <h2 id="dialog-title" className="text-lg font-semibold tracking-tight">
+              {formattedTitle}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Conecta tu cuenta y elige que tareas quieres automatizar.
+            </p>
+          </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="w-8 h-8 p-0 rounded-full border border-transparent hover:bg-[var(--glass-control-hover)]"
+            className="size-8 rounded-full border border-transparent p-0 hover:bg-muted"
             aria-label="Cerrar modal"
           >
-            <X className="w-4 h-4" />
+            <X className="size-4" />
           </Button>
         </div>
 
-        {/* Stepper Progress bar */}
-        <div className="px-6 pt-5 pb-2">
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+        <div className="border-b border-border bg-background px-6 pb-3 pt-5">
+          <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
             <span>{labels.step.replace("{current}", String(step)).replace("{total}", "3")}</span>
             <span className="font-semibold text-foreground">
-              {step === 1 ? labels.auth : step === 2 ? labels.events : labels.test}
+              {step === 1 ? "Conexion" : step === 2 ? "Validacion" : "Automatizaciones"}
             </span>
           </div>
-          <div className="flex gap-2 h-1.5 w-full bg-muted rounded-full overflow-hidden">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
-              className="bg-primary rounded-full transition-all duration-300"
+              className="h-full rounded-full bg-primary transition-all duration-300"
               style={{ width: `${(step / 3) * 100}%` }}
             />
           </div>
         </div>
 
-        {/* Step Contents */}
-        <div className="p-6 min-h-[200px] flex flex-col justify-center">
+        <div className="min-h-[320px] bg-card p-6">
           {step === 1 && (
-            <div className="space-y-4">
-              <label htmlFor="api-key" className="text-sm font-medium block">
-                {labels.apiKeyLabel}
-              </label>
-              <div className="relative">
-                <Key className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                <Input
-                  id="api-key"
-                  type="password"
-                  placeholder={formattedPlaceholder}
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  className="pl-9"
-                />
+            <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
+              <div className="flex size-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+                <ExternalLink className="size-7" aria-hidden="true" />
               </div>
-              <p className="text-xs text-muted-foreground">
-                El token se almacena de forma encriptada en la base de datos de Gerpy ERP.
+              <h3 className="mt-5 text-xl font-semibold text-foreground">
+                Conecta tu cuenta de {providerName}
+              </h3>
+              <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+                Te llevaremos a {integration.name} para confirmar el acceso. Al terminar, volveras automaticamente a Gerpy.
               </p>
+
+              {connectionState === "error" ? (
+                <div className="mt-5 flex max-w-md items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-left">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
+                  <p className="text-xs font-medium leading-5 text-foreground">
+                    Hubo un problema al conectar. Asegurate de tener permisos de administrador en {providerName}.
+                  </p>
+                </div>
+              ) : null}
+
+              <Button
+                type="button"
+                onClick={isWebhook ? () => setConnectionState("connected") : handleConnect}
+                disabled={connectionState === "connecting"}
+                className="mt-6 min-w-56"
+              >
+                {connectionState === "connecting" ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                    Conectando...
+                  </>
+                ) : connectionState === "connected" ? (
+                  <>
+                    <Check className="size-4" aria-hidden="true" />
+                    Cuenta conectada
+                  </>
+                ) : (
+                  <>
+                    <ExternalLink className="size-4" aria-hidden="true" />
+                    Conectar con {providerName}
+                  </>
+                )}
+              </Button>
             </div>
           )}
 
           {step === 2 && (
-            <div className="space-y-3">
-              <span className="text-sm font-medium block">{labels.selectEventsLabel}</span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[180px] overflow-y-auto pr-1">
-                {AVAILABLE_EVENTS.map((ev) => {
-                  const isChecked = selectedEvents.includes(ev.id);
-                  return (
-                    <button
-                      key={ev.id}
-                      onClick={() => toggleEvent(ev.id)}
-                      className={cn(
-                        "flex items-center gap-2 p-2 rounded-lg text-left text-xs transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        isChecked
-                          ? "bg-[var(--glass-control-hover)] border-[var(--color-primary)] text-foreground"
-                          : "bg-transparent border-[var(--sidebar-border-color)] text-muted-foreground hover:bg-[var(--glass-control-bg)]"
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "w-4 h-4 rounded flex items-center justify-center border shrink-0",
-                          isChecked
-                            ? "bg-primary border-primary text-primary-foreground"
-                            : "border-muted"
-                        )}
-                      >
-                        {isChecked && <Check className="w-3 h-3" />}
-                      </div>
-                      <span>{ev.desc}</span>
-                    </button>
-                  );
-                })}
+            <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
+              <div className="flex size-16 items-center justify-center rounded-2xl border border-[var(--brand-green)]/30 bg-[var(--brand-green)]/10 text-[var(--brand-green)]">
+                <Check className="size-8" aria-hidden="true" />
+              </div>
+              <h3 className="mt-5 text-xl font-semibold text-foreground">¡Conectado!</h3>
+              <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+                Gerpy ya puede trabajar con {integration.name}. Puedes ajustar las automatizaciones en el siguiente paso.
+              </p>
+
+              <div className="mt-6 flex max-w-md items-start gap-3 rounded-lg border border-border bg-background p-4 text-left shadow-sm">
+                <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Tu conexion esta cifrada y segura</p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    Protegemos la conexion para que no tengas que iniciar sesion cada vez.
+                  </p>
+                </div>
               </div>
             </div>
           )}
 
           {step === 3 && (
             <div className="space-y-4">
-              <div className="space-y-2">
-                <span className="text-sm font-medium block">{labels.webhookLabel}</span>
-                <div className="flex items-center gap-2 p-2.5 rounded-lg border border-[var(--sidebar-border-color)] bg-[var(--glass-control-bg)]">
-                  <Webhook className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                  <span className="text-xs font-mono select-all overflow-hidden text-ellipsis whitespace-nowrap text-muted-foreground">
-                    https://api.gerpy.com/v1/webhooks/{integration.id}
-                  </span>
-                </div>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">
+                  ¿Que automatizaciones deseas activar?
+                </h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Puedes cambiar estas opciones despues desde esta misma pantalla.
+                </p>
               </div>
 
-              <div className="pt-2 flex flex-col items-center justify-center text-center">
-                {testState === "idle" && (
-                  <Button
-                    onClick={handleTestConnection}
-                    variant="outline"
-                    className="border-[var(--sidebar-border-color)] hover:bg-[var(--glass-control-hover)]"
-                  >
-                    {labels.testButton}
-                  </Button>
-                )}
+              <div className="space-y-3">
+                {AUTOMATIONS.map((automation) => {
+                  const enabled = enabledAutomations.includes(automation.id);
 
-                {testState === "loading" && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                    <span>{labels.testing}</span>
-                  </div>
-                )}
-
-                {testState === "success" && (
-                  <div className="flex items-center gap-2 text-sm text-[var(--brand-green)] font-medium">
-                    <Check className="w-5 h-5" />
-                    <span>{labels.success}</span>
-                  </div>
-                )}
-
-                {testState === "error" && (
-                  <div className="text-center space-y-2">
-                    <p className="text-sm text-[var(--brand-red)] font-medium">
-                      Error: Credenciales inválidas
-                    </p>
-                    <Button
-                      onClick={handleTestConnection}
-                      variant="outline"
-                      size="sm"
-                      className="border-[var(--sidebar-border-color)] hover:bg-[var(--glass-control-hover)]"
+                  return (
+                    <button
+                      key={automation.id}
+                      type="button"
+                      onClick={() => toggleAutomation(automation.id)}
+                      className={cn(
+                        "flex w-full items-center justify-between gap-4 rounded-lg border bg-background p-4 text-left shadow-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        enabled ? "border-success/45 bg-success/5 ring-1 ring-success/15" : "border-border",
+                      )}
                     >
-                      {labels.testButton}
-                    </Button>
-                  </div>
-                )}
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-foreground">
+                          {automation.title}
+                        </span>
+                        <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                          {automation.description}
+                        </span>
+                      </span>
+                      <span
+                        className={cn(
+                          "relative h-6 w-11 shrink-0 rounded-full border transition-colors",
+                          enabled
+                            ? "border-success bg-success ring-2 ring-success/20"
+                            : "border-border bg-muted",
+                        )}
+                        aria-hidden="true"
+                      >
+                        <span
+                          className={cn(
+                            "absolute top-0.5 size-5 rounded-full shadow-sm transition-transform",
+                            enabled ? "bg-success-foreground" : "bg-background",
+                            enabled ? "translate-x-5" : "translate-x-0.5",
+                          )}
+                        />
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-[var(--sidebar-border-color)] bg-[var(--header-glass-bg)]/20">
+        <div className="flex items-center justify-between border-t border-border bg-background px-6 py-4">
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={onClose}
-            className="text-xs border border-[var(--sidebar-border-color)] hover:bg-[var(--glass-control-hover)]"
+            className="text-xs hover:bg-muted"
           >
             {labels.cancel}
           </Button>
@@ -283,30 +313,29 @@ export function SetupStepperDialog({
             {step > 1 && (
               <Button
                 variant="outline"
-                onClick={() => setStep((s) => s - 1)}
-                className="text-xs border border-[var(--sidebar-border-color)] hover:bg-[var(--glass-control-hover)] flex items-center gap-1"
+                onClick={() => setStep((current) => current - 1)}
+                className="flex items-center gap-1 text-xs hover:bg-muted"
               >
-                <ChevronLeft className="w-3 h-3" />
+                <ChevronLeft className="size-3" />
                 {labels.back}
               </Button>
             )}
 
             {step < 3 ? (
               <Button
-                disabled={step === 1 && apiKey.trim().length === 0}
-                onClick={() => setStep((s) => s + 1)}
-                className="text-xs flex items-center gap-1"
+                disabled={step === 1 && !canContinueFromConnection}
+                onClick={() => setStep((current) => current + 1)}
+                className="flex items-center gap-1 text-xs"
               >
                 {labels.next}
-                <ChevronRight className="w-3 h-3" />
+                <ChevronRight className="size-3" />
               </Button>
             ) : (
               <Button
-                disabled={testState !== "success"}
                 onClick={handleFinish}
-                className="text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                className="bg-primary text-xs text-primary-foreground hover:bg-primary/90"
               >
-                {labels.finish}
+                Guardar configuracion
               </Button>
             )}
           </div>

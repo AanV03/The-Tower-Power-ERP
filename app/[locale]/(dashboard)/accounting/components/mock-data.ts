@@ -1,0 +1,141 @@
+import type { AccountingDashboardData, AccountingDashboardState } from "./types";
+import type { Dictionary } from "@/lib/i18n";
+
+export function getMockAccountingData(dictionary: Dictionary): AccountingDashboardData {
+ const t = dictionary.accounting;
+ return {
+  title: t.title,
+  subtitle: t.subtitle,
+  periodLabel: t.periodLabel,
+  branchLabel: t.branchLabel,
+  metrics: [
+    { id: "accounts", label: t.metrics.accounts[0], value: "84", helper: t.metrics.accounts[1], tone: "default" },
+    { id: "drafts", label: t.metrics.drafts[0], value: "6", helper: t.metrics.drafts[1], tone: "warning" },
+    { id: "posted", label: t.metrics.posted[0], value: "128", helper: t.metrics.posted[1], tone: "success" },
+    { id: "difference", label: t.metrics.difference[0], value: "$0.00", helper: t.metrics.difference[1], tone: "success" },
+  ],
+  accounts: [
+    {
+      id: "acc-bank",
+      code: "1100-01",
+      name: "Bancos nacionales",
+      type: "asset",
+      normalBalance: "debit",
+      status: "active",
+      branchScope: "Consolidado",
+    },
+    {
+      id: "acc-ar",
+      code: "1200-05",
+      name: "Cuentas por cobrar",
+      type: "asset",
+      normalBalance: "debit",
+      status: "active",
+      branchScope: "Consolidado",
+    },
+    {
+      id: "acc-revenue",
+      code: "4100-01",
+      name: "Ingresos por membresias",
+      type: "income",
+      normalBalance: "credit",
+      status: "active",
+      branchScope: "Todas",
+    },
+    {
+      id: "acc-payroll",
+      code: "5100-03",
+      name: "Gasto de nomina",
+      type: "expense",
+      normalBalance: "debit",
+      status: "active",
+      branchScope: "Centro",
+    },
+    {
+      id: "acc-tax",
+      code: "2100-02",
+      name: "Impuestos por pagar",
+      type: "liability",
+      normalBalance: "credit",
+      status: "locked",
+      branchScope: "Fiscal",
+    },
+  ],
+  recentEntries: [
+    {
+      id: "je-124",
+      entryNumber: "POL-00124",
+      dateLabel: "Hoy, 10:30",
+      concept: "Nomina quincenal",
+      type: "expense",
+      amount: "$142,500.00",
+      status: "posted",
+    },
+    {
+      id: "je-123",
+      entryNumber: "POL-00123",
+      dateLabel: "Hoy, 09:15",
+      concept: "Cobro factura 4920",
+      type: "income",
+      amount: "$15,000.00",
+      status: "balanced",
+    },
+    {
+      id: "je-122",
+      entryNumber: "POL-00122",
+      dateLabel: "Ayer",
+      concept: "Depreciacion de equipo",
+      type: "daily",
+      amount: "$4,200.00",
+      status: "posted",
+    },
+    {
+      id: "je-121",
+      entryNumber: "POL-00121",
+      dateLabel: "Ayer",
+      concept: "Pago servicio electrico",
+      type: "expense",
+      amount: "$1,850.00",
+      status: "draft",
+    },
+  ],
+  draftEntry: {
+    id: "draft-001",
+    entryNumber: "POL-BORRADOR",
+    date: "2026-07-10",
+    type: "income",
+    concept: "Cobro de factura de membresias",
+    reference: "FAC-4920",
+    currency: "MXN",
+    status: "balanced",
+    lines: [
+      {
+        id: "line-1",
+        accountId: "acc-bank",
+        accountCode: "1100-01",
+        accountName: "Bancos nacionales",
+        description: "Entrada bancaria",
+        debit: 15000,
+        credit: 0,
+      },
+      {
+        id: "line-2",
+        accountId: "acc-ar",
+        accountCode: "1200-05",
+        accountName: "Cuentas por cobrar",
+        description: "Cancelacion de saldo",
+        debit: 0,
+        credit: 15000,
+      },
+    ],
+    totals: { debit: 15000, credit: 15000, difference: 0, isBalanced: true },
+  },
+ };
+}
+
+export const mockAccountingState: AccountingDashboardState = {
+  page: "idle",
+  accounts: "idle",
+  entries: "idle",
+  editor: "idle",
+};

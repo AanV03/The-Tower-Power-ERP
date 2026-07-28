@@ -1,7 +1,7 @@
-# Gerpy Project Handoff
+# The Tower Power Project Handoff
 
 Last updated: 2026-06-29
-Workspace: `C:\Dev\Gerpy`
+Workspace: `C:\Dev\The Tower Power`
 Current branch: `Mejora-UI/UX`
 Current objective: merge `origin/main` into `Mejora-UI/UX` while preserving the UI/UX redesign and keeping all new business logic from `main` functional.
 
@@ -9,7 +9,7 @@ Current objective: merge `origin/main` into `Mejora-UI/UX` while preserving the 
 
 ### Purpose And Goals
 
-Gerpy is a gym ERP / club operations platform built with Next.js. Its goal is to centralize operational workflows for gyms and multi-branch fitness businesses, including:
+The Tower Power is a gym ERP / club operations platform built with Next.js. Its goal is to centralize operational workflows for gyms and multi-branch fitness businesses, including:
 
 - Authentication and tenant-aware access.
 - Dashboard and module navigation.
@@ -43,7 +43,7 @@ As of this handoff:
 
 ### High-Level Architecture
 
-Gerpy uses:
+The Tower Power uses:
 
 - Next.js App Router under `app/`.
 - Server Components for route pages and dashboard data loading.
@@ -223,7 +223,7 @@ Untracked files:
   - Auth.js/NextAuth integration.
 
 - `lib/auth/session.ts`
-  - Custom Gerpy session cookie/token helpers.
+  - Custom The Tower Power session cookie/token helpers.
 
 - `lib/api/context.ts`
   - Reads request context and tenant/module/branch scope.
@@ -359,7 +359,7 @@ Recent `origin/main` commits integrated:
 - `a30289b Traer lo de Hero/Index`
 - `8c52278 fix(sprint4): refactorizacion estricta de HR, Especialistas y Nominas`
 - `dbc9da7 fix: redireccion del landind a register`
-- `40f7019 feat(pos): Rediseño de la interfaz del Punto de Venta, cálculo de cambio y mejoras de contraste`
+- `40f7019 feat(pos): Rediseï¿½o de la interfaz del Punto de Venta, cï¿½lculo de cambio y mejoras de contraste`
 - `23ba725 fix: merge conflicts resueltos integrando logica del Sprint 4 y UI`
 
 ### Files Modified During This Session

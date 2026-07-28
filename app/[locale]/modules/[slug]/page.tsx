@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ModulePageTemplate } from "@/components/landing/module-page-template";
-import { getModuleBySlug, modules } from "@/lib/modules";
+import { getModuleBySlug, moduleSlugs } from "@/lib/modules";
 import { isLocale, locales } from "@/lib/i18n";
 
 type ModuleRouteParams = {
@@ -12,9 +12,9 @@ type ModuleRouteParams = {
 
 export function generateStaticParams() {
   return locales.flatMap((locale) =>
-    modules.map((module) => ({
+    moduleSlugs.map((slug) => ({
       locale,
-      slug: module.slug,
+      slug,
     }))
   );
 }
@@ -24,17 +24,24 @@ export async function generateMetadata({
 }: {
   params: Promise<ModuleRouteParams>;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  const moduleItem = getModuleBySlug(slug);
+  const { locale, slug } = await params;
+
+  if (!isLocale(locale)) {
+    return {
+      title: "Module not found | The Tower Power",
+    };
+  }
+
+  const moduleItem = getModuleBySlug(slug, locale);
 
   if (!moduleItem) {
     return {
-      title: "Module not found | Gerpy ERP",
+      title: "Module not found | The Tower Power",
     };
   }
 
   return {
-    title: `${moduleItem.label} | Gerpy ERP`,
+    title: `${moduleItem.label} | The Tower Power`,
     description: moduleItem.description,
   };
 }
@@ -50,11 +57,11 @@ export default async function PublicModulePage({
     notFound();
   }
 
-  const moduleItem = getModuleBySlug(slug);
+  const moduleItem = getModuleBySlug(slug, locale);
 
   if (!moduleItem) {
     notFound();
   }
 
-  return <ModulePageTemplate module={moduleItem} />;
+  return <ModulePageTemplate module={moduleItem} locale={locale} />;
 }

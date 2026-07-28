@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Edit, MoreHorizontal, Search } from "lucide-react";
+import { Edit, MoreHorizontal, Phone, Search } from "lucide-react";
 
 import { EmployeeFormDialog } from "@/components/modules/hr/employee-form-dialog";
 import {
@@ -30,6 +30,7 @@ export type HrEmployeeRow = {
   id: string;
   name: string;
   email: string;
+  phone: string;
   position: string;
   branch: string;
   contract: string;
@@ -42,13 +43,32 @@ const statusLabel = {
   INACTIVE: "Inactivo",
 };
 
+export const employeeTableColumns = [
+  { key: "employee", label: "Empleado" },
+  { key: "phone", label: "Telefono" },
+  { key: "position", label: "Puesto" },
+  { key: "branch", label: "Sucursal" },
+  { key: "contract", label: "Contrato" },
+  { key: "status", label: "Estado" },
+  { key: "lastAttendance", label: "Ultimo registro" },
+] as const;
+
+export type EmployeeTableColumn = (typeof employeeTableColumns)[number];
 type StatusFilter = "ALL" | HrEmployeeRow["status"];
 
 function isStatusFilter(value: string): value is StatusFilter {
   return value === "ALL" || value === "ACTIVE" || value === "INACTIVE";
 }
 
-export function EmployeeTable({ employees }: { employees: HrEmployeeRow[] }) {
+export function EmployeeTable({
+  employees,
+  positionOptions = [],
+  columns = employeeTableColumns,
+}: {
+  employees: HrEmployeeRow[];
+  positionOptions?: string[];
+  columns?: readonly EmployeeTableColumn[];
+}) {
   const [editingEmployee, setEditingEmployee] = useState<HrEmployeeRow | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
@@ -60,7 +80,7 @@ export function EmployeeTable({ employees }: { employees: HrEmployeeRow[] }) {
       const matchesStatus = statusFilter === "ALL" || employee.status === statusFilter;
       const matchesSearch =
         normalizedQuery.length === 0 ||
-        [employee.name, employee.email, employee.position, employee.branch]
+        [employee.name, employee.email, employee.phone, employee.position, employee.branch]
           .filter(Boolean)
           .some((value) => value.toLowerCase().includes(normalizedQuery));
 
@@ -71,6 +91,41 @@ export function EmployeeTable({ employees }: { employees: HrEmployeeRow[] }) {
   function handleEmployeeAction(action: string | null, employee: HrEmployeeRow) {
     if (action === "edit") {
       setEditingEmployee(employee);
+    }
+  }
+
+  function renderEmployeeCell(employee: HrEmployeeRow, column: EmployeeTableColumn) {
+    switch (column.key) {
+      case "employee":
+        return (
+          <div>
+            <p className="font-medium text-foreground">{employee.name}</p>
+            <p className="text-xs text-muted-foreground">{employee.email}</p>
+          </div>
+        );
+      case "phone":
+        return (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Phone className="size-3.5 shrink-0" aria-hidden="true" />
+            <span>{employee.phone}</span>
+          </div>
+        );
+      case "position":
+        return employee.position;
+      case "branch":
+        return employee.branch;
+      case "contract":
+        return employee.contract;
+      case "status":
+        return (
+          <Badge variant={employee.status === "ACTIVE" ? "secondary" : "outline"}>
+            {statusLabel[employee.status]}
+          </Badge>
+        );
+      case "lastAttendance":
+        return employee.lastAttendance;
+      default:
+        return null;
     }
   }
 
@@ -134,33 +189,20 @@ export function EmployeeTable({ employees }: { employees: HrEmployeeRow[] }) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Empleado</TableHead>
-                    <TableHead>Puesto</TableHead>
-                    <TableHead>Sucursal</TableHead>
-                    <TableHead>Contrato</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Ultimo registro</TableHead>
+                    {columns.map((column) => (
+                      <TableHead key={column.key}>{column.label}</TableHead>
+                    ))}
                     <TableHead className="w-10" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredEmployees.map((employee) => (
                     <TableRow key={employee.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-foreground">{employee.name}</p>
-                          <p className="text-xs text-muted-foreground">{employee.email}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>{employee.position}</TableCell>
-                      <TableCell>{employee.branch}</TableCell>
-                      <TableCell>{employee.contract}</TableCell>
-                      <TableCell>
-                        <Badge variant={employee.status === "ACTIVE" ? "secondary" : "outline"}>
-                          {statusLabel[employee.status]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{employee.lastAttendance}</TableCell>
+                      {columns.map((column) => (
+                        <TableCell key={`${employee.id}-${column.key}`}>
+                          {renderEmployeeCell(employee, column)}
+                        </TableCell>
+                      ))}
                       <TableCell>
                         <Select value={null} onValueChange={(action) => handleEmployeeAction(action, employee)}>
                           <StandardSelectTrigger className="h-8 w-32" aria-label={`Opciones de ${employee.name}`}>
@@ -193,6 +235,10 @@ export function EmployeeTable({ employees }: { employees: HrEmployeeRow[] }) {
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
+                      <p className="text-xs text-muted-foreground">Telefono</p>
+                      <p className="truncate">{employee.phone}</p>
+                    </div>
+                    <div>
                       <p className="text-xs text-muted-foreground">Sucursal</p>
                       <p className="truncate">{employee.branch}</p>
                     </div>
@@ -209,6 +255,7 @@ export function EmployeeTable({ employees }: { employees: HrEmployeeRow[] }) {
                     <EmployeeFormDialog
                       employee={employee}
                       mode="edit"
+                      positionOptions={positionOptions}
                       trigger={
                         <Button variant="outline" size="sm">
                           <Edit />
@@ -227,6 +274,7 @@ export function EmployeeTable({ employees }: { employees: HrEmployeeRow[] }) {
     <EmployeeFormDialog
       employee={editingEmployee ?? undefined}
       mode="edit"
+      positionOptions={positionOptions}
       open={Boolean(editingEmployee)}
       onOpenChange={(open) => {
         if (!open) setEditingEmployee(null);

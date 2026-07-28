@@ -20,7 +20,13 @@ export async function PUT(request: Request) {
 
     const user = await prisma.user.findUnique({
       where: { id: context.userId },
-      include: { employee: true },
+      include: {
+        memberships: {
+          where: { tenantId: context.tenantId },
+          select: { employeeId: true },
+          take: 1,
+        },
+      },
     });
 
     if (!user) {
@@ -29,6 +35,7 @@ export async function PUT(request: Request) {
 
     // Automatically compute full display name from first and last name
     const computedFullName = `${data.firstName} ${data.lastName}`.trim();
+    const employeeId = user.memberships[0]?.employeeId;
 
     const updatedUser = await prisma.$transaction(async (tx) => {
       // 1. Update user model
@@ -46,9 +53,12 @@ export async function PUT(request: Request) {
       });
 
       // 2. Synchronize with Employee model if linked
-      if (user.employeeId) {
-        await tx.employee.update({
-          where: { id: user.employeeId },
+      if (employeeId) {
+        await tx.employee.updateMany({
+          where: {
+            id: employeeId,
+            tenantId: context.tenantId,
+          },
           data: {
             firstName: data.firstName,
             lastName: data.lastName,

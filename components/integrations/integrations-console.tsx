@@ -39,6 +39,7 @@ const INITIAL_INTEGRATIONS = [
     category: "Pagos",
     status: "connected" as IntegrationStatus,
     icon: CreditCard,
+    authType: "oauth2" as const,
   },
   {
     id: "twilio",
@@ -47,6 +48,7 @@ const INITIAL_INTEGRATIONS = [
     category: "Mensajería",
     status: "inactive" as IntegrationStatus,
     icon: Megaphone,
+    authType: "oauth2" as const,
   },
   {
     id: "whatsapp",
@@ -55,6 +57,7 @@ const INITIAL_INTEGRATIONS = [
     category: "Notificaciones",
     status: "error" as IntegrationStatus,
     icon: MessageCircle,
+    authType: "oauth2" as const,
   },
   {
     id: "activecampaign",
@@ -63,6 +66,7 @@ const INITIAL_INTEGRATIONS = [
     category: "Marketing",
     status: "inactive" as IntegrationStatus,
     icon: Users,
+    authType: "oauth2" as const,
   },
   {
     id: "custom_webhook",
@@ -71,6 +75,7 @@ const INITIAL_INTEGRATIONS = [
     category: "Desarrollador",
     status: "connected" as IntegrationStatus,
     icon: Webhook,
+    authType: "webhook" as const,
   },
 ];
 

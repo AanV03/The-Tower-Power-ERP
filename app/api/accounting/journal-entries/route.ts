@@ -3,7 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
-import { created, fail, ok } from "@/lib/api/response";
+import { ApiError, created, fail, ok } from "@/lib/api/response";
+import { isBalancedJournal } from "@/lib/accounting/payroll-posting";
 
 const JournalLineSchema = z.object({
   accountId: z.string(),
@@ -24,7 +25,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "accounting" });
+    const context = await requireApiContext({ moduleId: "accounting", permission: "accounting.read" });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = {
@@ -51,8 +52,23 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "accounting" });
     const data = CreateJournalEntrySchema.parse(await request.json());
+    const context = await requireApiContext({
+      moduleId: "accounting",
+      permission: data.status === "POSTED" ? "accounting.post" : "accounting.journal.write",
+    });
+
+    if (data.sourceType.toUpperCase() === "PAYROLL") {
+      throw new ApiError(
+        "PAYROLL journal entries must be created by the payroll payment workflow.",
+        409,
+        "RESERVED_JOURNAL_SOURCE",
+      );
+    }
+
+    if (!isBalancedJournal(data.lines)) {
+      throw new ApiError("Journal entry must be balanced before it can be saved.", 400, "JOURNAL_NOT_BALANCED");
+    }
 
     const entry = await prisma.journalEntry.create({
       data: {

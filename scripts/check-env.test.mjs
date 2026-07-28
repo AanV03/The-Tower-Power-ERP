@@ -14,8 +14,8 @@ test("reports missing database environment variables without connecting", () => 
 
 test("accepts PostgreSQL and MongoDB connection string shapes", () => {
   const result = checkDatabaseEnv({
-    DATABASE_URL: "postgresql://user:pass@localhost:5432/gerpy",
-    MONGODB_URI: "mongodb://localhost:27017/gerpy",
+    DATABASE_URL: "postgresql://user:pass@localhost:5432/tower_power",
+    MONGODB_URI: "mongodb://localhost:27017/tower_power",
   });
 
   assert.equal(result.ok, true);
@@ -25,7 +25,7 @@ test("accepts PostgreSQL and MongoDB connection string shapes", () => {
 
 test("reports invalid database environment variable formats", () => {
   const result = checkDatabaseEnv({
-    DATABASE_URL: "mysql://user:pass@localhost:3306/gerpy",
+    DATABASE_URL: "mysql://user:pass@localhost:3306/tower_power",
     MONGODB_URI: "https://example.com",
   });
 
@@ -36,13 +36,13 @@ test("reports invalid database environment variable formats", () => {
 
 test("parses quoted env file values without exposing credentials", () => {
   const env = parseEnvText(`
-DATABASE_URL="postgresql://user:pass@localhost:5432/gerpy"
-MONGODB_URI='mongodb://localhost:27017/gerpy'
+DATABASE_URL="postgresql://user:pass@localhost:5432/tower_power"
+MONGODB_URI='mongodb://localhost:27017/tower_power'
 DIRECT_URL=""
 `);
 
-  assert.equal(env.DATABASE_URL, "postgresql://user:pass@localhost:5432/gerpy");
-  assert.equal(env.MONGODB_URI, "mongodb://localhost:27017/gerpy");
+  assert.equal(env.DATABASE_URL, "postgresql://user:pass@localhost:5432/tower_power");
+  assert.equal(env.MONGODB_URI, "mongodb://localhost:27017/tower_power");
   assert.equal(env.DIRECT_URL, "");
 });
 

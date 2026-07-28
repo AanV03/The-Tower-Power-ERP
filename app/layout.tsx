@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { Providers } from "@/app/providers";
 import { LandingRouteTransitionProvider } from "@/components/landing/landing-route-transition";
@@ -6,7 +7,7 @@ import { LandingRouteTransitionProvider } from "@/components/landing/landing-rou
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Gerpy ERP | Gym Operations Platform",
+  title: "The Tower Power | Gym Operations Platform",
   description:
     "ERP software for gym memberships, billing, access, inventory, payroll, and analytics.",
 };
@@ -31,6 +32,7 @@ export default function RootLayout({
           <LandingRouteTransitionProvider>
             {children}
           </LandingRouteTransitionProvider>
+          <SpeedInsights />
         </Providers>
       </body>
     </html>

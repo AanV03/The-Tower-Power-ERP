@@ -1,144 +1,428 @@
--- Supabase RLS policies for Gerpy multi-tenant tables.
--- The application JWT must include a tenantId claim.
--- For server-side Prisma transactions, set app.current_tenant_id when using a
--- non-bypassing database role, or connect with a role whose JWT claims are
--- populated by Supabase/PostgREST.
+BEGIN;
 
 CREATE SCHEMA IF NOT EXISTS private;
-
-CREATE OR REPLACE FUNCTION private.jwt_claims()
-RETURNS jsonb
-LANGUAGE sql
-STABLE
-AS $$
-  SELECT COALESCE(
-    NULLIF(current_setting('request.jwt.claims', true), '')::jsonb,
-    '{}'::jsonb
-  );
-$$;
 
 CREATE OR REPLACE FUNCTION private.current_tenant_id()
 RETURNS text
 LANGUAGE sql
 STABLE
+SECURITY INVOKER
+SET search_path = pg_catalog
 AS $$
-  SELECT COALESCE(
-    NULLIF(private.jwt_claims() ->> 'tenantId', ''),
-    NULLIF(private.jwt_claims() ->> 'tenant_id', ''),
-    NULLIF(current_setting('app.current_tenant_id', true), '')
-  );
+  SELECT NULLIF(current_setting('app.current_tenant_id', true), '');
 $$;
 
-ALTER TABLE "tenants" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "users" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "branches" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "sales" ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON FUNCTION private.current_tenant_id() FROM PUBLIC;
 
-ALTER TABLE "tenants" FORCE ROW LEVEL SECURITY;
-ALTER TABLE "users" FORCE ROW LEVEL SECURITY;
-ALTER TABLE "branches" FORCE ROW LEVEL SECURITY;
-ALTER TABLE "sales" FORCE ROW LEVEL SECURITY;
+GRANT USAGE ON SCHEMA public, private TO authenticated;
+GRANT EXECUTE ON FUNCTION private.current_tenant_id() TO authenticated;
 
-DROP POLICY IF EXISTS tenants_tenant_isolation_select ON "tenants";
-DROP POLICY IF EXISTS tenants_tenant_isolation_insert ON "tenants";
-DROP POLICY IF EXISTS tenants_tenant_isolation_update ON "tenants";
-DROP POLICY IF EXISTS tenants_tenant_isolation_delete ON "tenants";
+DO $$
+DECLARE
+  tenant_table text;
+  existing_policy text;
+BEGIN
+  FOR tenant_table IN
+    SELECT columns.table_name
+    FROM information_schema.columns AS columns
+    WHERE columns.table_schema = 'public'
+      AND columns.column_name = 'tenantId'
+      AND columns.table_name NOT IN ('audit_logs', 'security_events')
+    ORDER BY columns.table_name
+  LOOP
+    EXECUTE format(
+      'ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY',
+      tenant_table
+    );
+    EXECUTE format(
+      'ALTER TABLE public.%I FORCE ROW LEVEL SECURITY',
+      tenant_table
+    );
 
-CREATE POLICY tenants_tenant_isolation_select
-  ON "tenants"
+    FOR existing_policy IN
+      SELECT policyname
+      FROM pg_policies
+      WHERE schemaname = 'public'
+        AND tablename = tenant_table
+    LOOP
+      EXECUTE format(
+        'DROP POLICY %I ON public.%I',
+        existing_policy,
+        tenant_table
+      );
+    END LOOP;
+
+    EXECUTE format(
+      'CREATE POLICY tenant_isolation_select ON public.%I
+       FOR SELECT TO authenticated
+       USING (%I = private.current_tenant_id())',
+      tenant_table,
+      'tenantId'
+    );
+    EXECUTE format(
+      'CREATE POLICY tenant_isolation_insert ON public.%I
+       FOR INSERT TO authenticated
+       WITH CHECK (%I = private.current_tenant_id())',
+      tenant_table,
+      'tenantId'
+    );
+    EXECUTE format(
+      'CREATE POLICY tenant_isolation_update ON public.%I
+       FOR UPDATE TO authenticated
+       USING (%I = private.current_tenant_id())
+       WITH CHECK (%I = private.current_tenant_id())',
+      tenant_table,
+      'tenantId',
+      'tenantId'
+    );
+    EXECUTE format(
+      'CREATE POLICY tenant_isolation_delete ON public.%I
+       FOR DELETE TO authenticated
+       USING (%I = private.current_tenant_id())',
+      tenant_table,
+      'tenantId'
+    );
+    EXECUTE format(
+      'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.%I TO authenticated',
+      tenant_table
+    );
+  END LOOP;
+END;
+$$;
+
+ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tenants FORCE ROW LEVEL SECURITY;
+
+DO $$
+DECLARE
+  existing_policy text;
+BEGIN
+  FOR existing_policy IN
+    SELECT policyname
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'tenants'
+  LOOP
+    EXECUTE format(
+      'DROP POLICY %I ON public.tenants',
+      existing_policy
+    );
+  END LOOP;
+END;
+$$;
+
+CREATE POLICY tenant_isolation_select
+  ON public.tenants
   FOR SELECT
-  USING ("id" = private.current_tenant_id());
+  TO authenticated
+  USING (id = private.current_tenant_id());
 
-CREATE POLICY tenants_tenant_isolation_insert
-  ON "tenants"
+CREATE POLICY tenant_isolation_insert
+  ON public.tenants
   FOR INSERT
-  WITH CHECK ("id" = private.current_tenant_id());
+  TO authenticated
+  WITH CHECK (id = private.current_tenant_id());
 
-CREATE POLICY tenants_tenant_isolation_update
-  ON "tenants"
+CREATE POLICY tenant_isolation_update
+  ON public.tenants
   FOR UPDATE
-  USING ("id" = private.current_tenant_id())
-  WITH CHECK ("id" = private.current_tenant_id());
+  TO authenticated
+  USING (id = private.current_tenant_id())
+  WITH CHECK (id = private.current_tenant_id());
 
-CREATE POLICY tenants_tenant_isolation_delete
-  ON "tenants"
+CREATE POLICY tenant_isolation_delete
+  ON public.tenants
   FOR DELETE
-  USING ("id" = private.current_tenant_id());
+  TO authenticated
+  USING (id = private.current_tenant_id());
 
-DROP POLICY IF EXISTS users_tenant_isolation_select ON "users";
-DROP POLICY IF EXISTS users_tenant_isolation_insert ON "users";
-DROP POLICY IF EXISTS users_tenant_isolation_update ON "users";
-DROP POLICY IF EXISTS users_tenant_isolation_delete ON "users";
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.tenants TO authenticated;
 
-CREATE POLICY users_tenant_isolation_select
-  ON "users"
+DO $$
+DECLARE
+  append_only_table text;
+  existing_policy text;
+BEGIN
+  FOREACH append_only_table IN ARRAY ARRAY[
+    'audit_logs',
+    'security_events'
+  ]
+  LOOP
+    EXECUTE format(
+      'ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY',
+      append_only_table
+    );
+    EXECUTE format(
+      'ALTER TABLE public.%I FORCE ROW LEVEL SECURITY',
+      append_only_table
+    );
+
+    FOR existing_policy IN
+      SELECT policyname
+      FROM pg_policies
+      WHERE schemaname = 'public'
+        AND tablename = append_only_table
+    LOOP
+      EXECUTE format(
+        'DROP POLICY %I ON public.%I',
+        existing_policy,
+        append_only_table
+      );
+    END LOOP;
+
+    EXECUTE format(
+      'CREATE POLICY tenant_isolation_select ON public.%I
+       FOR SELECT TO authenticated
+       USING (%I = private.current_tenant_id())',
+      append_only_table,
+      'tenantId'
+    );
+    EXECUTE format(
+      'CREATE POLICY tenant_isolation_insert ON public.%I
+       FOR INSERT TO authenticated
+       WITH CHECK (%I = private.current_tenant_id())',
+      append_only_table,
+      'tenantId'
+    );
+    EXECUTE format(
+      'GRANT SELECT, INSERT ON TABLE public.%I TO authenticated',
+      append_only_table
+    );
+    EXECUTE format(
+      'REVOKE UPDATE, DELETE ON TABLE public.%I FROM authenticated',
+      append_only_table
+    );
+  END LOOP;
+END;
+$$;
+
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users FORCE ROW LEVEL SECURITY;
+
+DO $$
+DECLARE
+  existing_policy text;
+BEGIN
+  FOR existing_policy IN
+    SELECT policyname
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'users'
+  LOOP
+    EXECUTE format(
+      'DROP POLICY %I ON public.users',
+      existing_policy
+    );
+  END LOOP;
+END;
+$$;
+
+CREATE POLICY users_via_membership_select
+  ON public.users
   FOR SELECT
-  USING ("tenantId" = private.current_tenant_id());
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.tenant_memberships AS membership
+      WHERE membership."userId" = users.id
+        AND membership."tenantId" = private.current_tenant_id()
+    )
+  );
 
-CREATE POLICY users_tenant_isolation_insert
-  ON "users"
-  FOR INSERT
-  WITH CHECK ("tenantId" = private.current_tenant_id());
-
-CREATE POLICY users_tenant_isolation_update
-  ON "users"
+CREATE POLICY users_via_membership_update
+  ON public.users
   FOR UPDATE
-  USING ("tenantId" = private.current_tenant_id())
-  WITH CHECK ("tenantId" = private.current_tenant_id());
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.tenant_memberships AS membership
+      WHERE membership."userId" = users.id
+        AND membership."tenantId" = private.current_tenant_id()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1
+      FROM public.tenant_memberships AS membership
+      WHERE membership."userId" = users.id
+        AND membership."tenantId" = private.current_tenant_id()
+    )
+  );
 
-CREATE POLICY users_tenant_isolation_delete
-  ON "users"
-  FOR DELETE
-  USING ("tenantId" = private.current_tenant_id());
+GRANT SELECT, UPDATE ON TABLE public.users TO authenticated;
+REVOKE INSERT, DELETE ON TABLE public.users FROM authenticated;
 
-DROP POLICY IF EXISTS branches_tenant_isolation_select ON "branches";
-DROP POLICY IF EXISTS branches_tenant_isolation_insert ON "branches";
-DROP POLICY IF EXISTS branches_tenant_isolation_update ON "branches";
-DROP POLICY IF EXISTS branches_tenant_isolation_delete ON "branches";
+DO $$
+DECLARE
+  identity_table text;
+  existing_policy text;
+BEGIN
+  FOREACH identity_table IN ARRAY ARRAY[
+    'accounts',
+    'mfa_credentials',
+    'recovery_codes'
+  ]
+  LOOP
+    EXECUTE format(
+      'ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY',
+      identity_table
+    );
+    EXECUTE format(
+      'ALTER TABLE public.%I FORCE ROW LEVEL SECURITY',
+      identity_table
+    );
 
-CREATE POLICY branches_tenant_isolation_select
-  ON "branches"
-  FOR SELECT
-  USING ("tenantId" = private.current_tenant_id());
+    FOR existing_policy IN
+      SELECT policyname
+      FROM pg_policies
+      WHERE schemaname = 'public'
+        AND tablename = identity_table
+    LOOP
+      EXECUTE format(
+        'DROP POLICY %I ON public.%I',
+        existing_policy,
+        identity_table
+      );
+    END LOOP;
 
-CREATE POLICY branches_tenant_isolation_insert
-  ON "branches"
-  FOR INSERT
-  WITH CHECK ("tenantId" = private.current_tenant_id());
+    EXECUTE format(
+      'CREATE POLICY identity_via_membership_select ON public.%I
+       FOR SELECT TO authenticated
+       USING (
+         EXISTS (
+           SELECT 1
+           FROM public.tenant_memberships AS membership
+           WHERE membership.%I = public.%I.%I
+             AND membership.%I = private.current_tenant_id()
+         )
+       )',
+      identity_table,
+      'userId',
+      identity_table,
+      'userId',
+      'tenantId'
+    );
+    EXECUTE format(
+      'CREATE POLICY identity_via_membership_insert ON public.%I
+       FOR INSERT TO authenticated
+       WITH CHECK (
+         EXISTS (
+           SELECT 1
+           FROM public.tenant_memberships AS membership
+           WHERE membership.%I = public.%I.%I
+             AND membership.%I = private.current_tenant_id()
+         )
+       )',
+      identity_table,
+      'userId',
+      identity_table,
+      'userId',
+      'tenantId'
+    );
+    EXECUTE format(
+      'CREATE POLICY identity_via_membership_update ON public.%I
+       FOR UPDATE TO authenticated
+       USING (
+         EXISTS (
+           SELECT 1
+           FROM public.tenant_memberships AS membership
+           WHERE membership.%I = public.%I.%I
+             AND membership.%I = private.current_tenant_id()
+         )
+       )
+       WITH CHECK (
+         EXISTS (
+           SELECT 1
+           FROM public.tenant_memberships AS membership
+           WHERE membership.%I = public.%I.%I
+             AND membership.%I = private.current_tenant_id()
+         )
+       )',
+      identity_table,
+      'userId',
+      identity_table,
+      'userId',
+      'tenantId',
+      'userId',
+      identity_table,
+      'userId',
+      'tenantId'
+    );
+    EXECUTE format(
+      'CREATE POLICY identity_via_membership_delete ON public.%I
+       FOR DELETE TO authenticated
+       USING (
+         EXISTS (
+           SELECT 1
+           FROM public.tenant_memberships AS membership
+           WHERE membership.%I = public.%I.%I
+             AND membership.%I = private.current_tenant_id()
+         )
+       )',
+      identity_table,
+      'userId',
+      identity_table,
+      'userId',
+      'tenantId'
+    );
+    EXECUTE format(
+      'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.%I TO authenticated',
+      identity_table
+    );
+  END LOOP;
+END;
+$$;
 
-CREATE POLICY branches_tenant_isolation_update
-  ON "branches"
-  FOR UPDATE
-  USING ("tenantId" = private.current_tenant_id())
-  WITH CHECK ("tenantId" = private.current_tenant_id());
+ALTER TABLE public.role_permissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.role_permissions FORCE ROW LEVEL SECURITY;
 
-CREATE POLICY branches_tenant_isolation_delete
-  ON "branches"
-  FOR DELETE
-  USING ("tenantId" = private.current_tenant_id());
+DO $$
+DECLARE
+  existing_policy text;
+BEGIN
+  FOR existing_policy IN
+    SELECT policyname
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'role_permissions'
+  LOOP
+    EXECUTE format(
+      'DROP POLICY %I ON public.role_permissions',
+      existing_policy
+    );
+  END LOOP;
+END;
+$$;
 
-DROP POLICY IF EXISTS sales_tenant_isolation_select ON "sales";
-DROP POLICY IF EXISTS sales_tenant_isolation_insert ON "sales";
-DROP POLICY IF EXISTS sales_tenant_isolation_update ON "sales";
-DROP POLICY IF EXISTS sales_tenant_isolation_delete ON "sales";
+CREATE POLICY role_permissions_tenant_access
+  ON public.role_permissions
+  FOR ALL
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.roles AS role
+      WHERE role.id = role_permissions."roleId"
+        AND role."tenantId" = private.current_tenant_id()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1
+      FROM public.roles AS role
+      WHERE role.id = role_permissions."roleId"
+        AND role."tenantId" = private.current_tenant_id()
+    )
+  );
 
-CREATE POLICY sales_tenant_isolation_select
-  ON "sales"
-  FOR SELECT
-  USING ("tenantId" = private.current_tenant_id());
+GRANT SELECT, INSERT, UPDATE, DELETE
+  ON TABLE public.role_permissions
+  TO authenticated;
 
-CREATE POLICY sales_tenant_isolation_insert
-  ON "sales"
-  FOR INSERT
-  WITH CHECK ("tenantId" = private.current_tenant_id());
+GRANT SELECT ON TABLE public.permissions, public.saas_plans TO authenticated;
 
-CREATE POLICY sales_tenant_isolation_update
-  ON "sales"
-  FOR UPDATE
-  USING ("tenantId" = private.current_tenant_id())
-  WITH CHECK ("tenantId" = private.current_tenant_id());
+DROP FUNCTION IF EXISTS private.jwt_claims();
 
-CREATE POLICY sales_tenant_isolation_delete
-  ON "sales"
-  FOR DELETE
-  USING ("tenantId" = private.current_tenant_id());
+COMMIT;
