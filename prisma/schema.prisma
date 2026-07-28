@@ -23,6 +23,7 @@ model Tenant {
   branchMemberships         BranchMembership[]
   branchBudgets             BranchBudget[]
   branches                  Branch[]
+  billingProfile            TenantBillingProfile?
   cashSessions              CashSession[]
   chartAccounts             ChartAccount[]
   employeeContracts         EmployeeContract[]
@@ -84,6 +85,17 @@ model SaasPlan {
   tenants     Tenant[]
 
   @@map("saas_plans")
+}
+
+model TenantBillingProfile {
+  id                 String   @id @default(cuid())
+  tenantId           String   @unique
+  paymentMethodToken String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_billing_profiles")
 }
 
 model TenantModule {

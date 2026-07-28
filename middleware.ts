@@ -19,6 +19,7 @@ const PUBLIC_PAGES = new Set([
   "/register",
   "/password-recovery",
   "/email-validation",
+  "/invite/accept",
 ]);
 const PUBLIC_AUTH_API_PREFIXES = [
   "/api/auth/login",
@@ -34,6 +35,7 @@ const PUBLIC_AUTH_API_PREFIXES = [
   "/api/auth/session",
   "/api/auth/signin",
   "/api/auth/signout",
+  "/api/auth/invite/accept",
 ];
 
 const PROTECTED_PAGE_PREFIXES = [
@@ -279,7 +281,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const isPublicPage = PUBLIC_PAGES.has(pathname);
+  const isPublicPage = PUBLIC_PAGES.has(stripLocale(pathname));
 
   if (pathname === "/" || (!pathname.startsWith("/api") && !isPublicPage && !hasLocale(pathname))) {
     const url = request.nextUrl.clone();
