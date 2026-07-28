@@ -37,6 +37,8 @@ model Tenant {
   members                   Member[]
   memberships               TenantMembership[]
   membershipPlans           MembershipPlan[]
+  notificationRecipients    NotificationRecipient[]
+  notifications             Notification[]
   outboxEvents              OutboxEvent[]
   paymentGatewayEvents      PaymentGatewayEvent[]
   payments                  Payment[]
@@ -132,6 +134,7 @@ model Branch {
   employees          Employee[]
   invoices           Invoice[]
   members            Member[]
+  notifications      Notification[]
   payments           Payment[]
   posRegisters       PosRegister[]
   roleAssignments    RoleAssignment[]
@@ -166,6 +169,7 @@ model User {
   closedCashSessions         CashSession[]              @relation("CashSessionClosedBy")
   openedCashSessions         CashSession[]              @relation("CashSessionOpenedBy")
   memberships                TenantMembership[]
+  notificationRecipients     NotificationRecipient[]
   sessions                   Session[]
   cancelledSubscriptions     SubscriptionCancellation[] @relation("SubscriptionCancellationActor")
   approvedSubscriptionPauses SubscriptionPause[]        @relation("SubscriptionPauseApprover")
@@ -288,16 +292,17 @@ model VerificationToken {
 }
 
 model Role {
-  id          String           @id @default(cuid())
-  tenantId    String?
-  name        String
-  scope       RoleScope        @default(TENANT)
-  description String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  assignments RoleAssignment[]
-  permissions RolePermission[]
-  tenant      Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id                    String           @id @default(cuid())
+  tenantId              String?
+  name                  String
+  scope                 RoleScope        @default(TENANT)
+  description           String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  assignments           RoleAssignment[]
+  permissions           RolePermission[]
+  targetedNotifications Notification[]
+  tenant                Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, id])
   @@unique([tenantId, name])
@@ -363,6 +368,49 @@ model BranchMembership {
   @@index([tenantId, branchId])
   @@index([tenantId, membershipId, validFrom, validUntil])
   @@map("branch_memberships")
+}
+
+model Notification {
+  id           String                  @id @default(cuid())
+  tenantId     String
+  branchId     String?
+  title        String
+  description  String
+  category     NotificationCategory    @default(SYSTEM)
+  priority     NotificationPriority    @default(INFO)
+  targetRoleId String?
+  resourceType String?
+  resourceId   String?
+  createdAt    DateTime                @default(now())
+  branch       Branch?                 @relation(fields: [tenantId, branchId], references: [tenantId, id], onDelete: Restrict)
+  recipients   NotificationRecipient[]
+  targetRole   Role?                   @relation(fields: [tenantId, targetRoleId], references: [tenantId, id], onDelete: Restrict)
+  tenant       Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, id])
+  @@index([tenantId])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, branchId, createdAt])
+  @@index([tenantId, targetRoleId])
+  @@map("notifications")
+}
+
+model NotificationRecipient {
+  id             String       @id @default(cuid())
+  tenantId       String
+  notificationId String
+  userId         String
+  read           Boolean      @default(false)
+  readAt         DateTime?
+  deleted        Boolean      @default(false)
+  notification   Notification @relation(fields: [tenantId, notificationId], references: [tenantId, id], onDelete: Cascade)
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, userId])
+  @@index([tenantId, userId, deleted, read])
+  @@index([userId, read])
+  @@map("notification_recipients")
 }
 
 model AuditLog {
@@ -1285,6 +1333,21 @@ enum MembershipStatus {
   ACTIVE
   INVITED
   SUSPENDED
+}
+
+enum NotificationPriority {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum NotificationCategory {
+  FINANCE
+  ACCESS
+  MEMBERSHIPS
+  SYSTEM
+  HR
+  ADMIN
 }
 
 enum MfaCredentialType {
