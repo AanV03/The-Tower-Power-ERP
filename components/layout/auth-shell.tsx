@@ -38,6 +38,7 @@ export function AuthShell({
   return (
     <main
       id={id}
+      data-testid={id}
       className={cn(
         "relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--auth-background)] px-4 py-10 text-[var(--auth-foreground)] sm:px-6 sm:py-12",
         className,

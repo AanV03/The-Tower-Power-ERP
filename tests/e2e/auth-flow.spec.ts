@@ -1,24 +1,33 @@
 import { expect, test } from "@playwright/test";
 
-const demoEmail = process.env.E2E_USER_EMAIL ?? "owner@gerpy.com";
-const demoPassword = process.env.E2E_USER_PASSWORD ?? "Password123!";
+const demoEmail =
+  process.env.E2E_USER_EMAIL ??
+  process.env.E2E_EMPLOYEE_EMAIL ??
+  "empleado@towerpower.local";
+const demoPassword =
+  process.env.E2E_USER_PASSWORD ??
+  process.env.E2E_EMPLOYEE_PASSWORD ??
+  "The Tower PowerEmployee!2026";
 const foreignTenantId =
-  process.env.E2E_FOREIGN_TENANT_ID ?? "e2e-foreign-tenant";
+  process.env.E2E_FOREIGN_TENANT_ID ??
+  process.env.E2E_TENANT_B_ID ??
+  "e2e-foreign-tenant";
 
 test("autentica y protege el contexto multi-tenant", async ({ page }) => {
   test.setTimeout(120_000);
 
   await test.step("inicia sesion con el usuario del seed", async () => {
-    await page.goto("/login");
+    await page.setExtraHTTPHeaders({ "x-forwarded-for": "203.0.113.21" });
+    await page.goto("/login", { waitUntil: "networkidle" });
 
-    await page.locator("#login-email").fill(demoEmail);
-    await page.locator("#login-password").fill(demoPassword);
+    await page.getByTestId("login-email").fill(demoEmail);
+    await page.getByTestId("login-password").fill(demoPassword);
     const loginResponsePromise = page.waitForResponse(
       (response) =>
         response.url().endsWith("/api/auth/login") &&
         response.request().method() === "POST",
     );
-    await page.locator("#login-submit").click();
+    await page.getByTestId("login-submit").click();
     const loginResponse = await loginResponsePromise;
 
     expect(loginResponse.status()).toBe(200);
@@ -57,9 +66,9 @@ test("autentica y protege el contexto multi-tenant", async ({ page }) => {
     await expect(
       page.getByRole("heading", { name: "Perfil", exact: true }),
     ).toBeVisible();
-    await expect(page.locator("#email")).toHaveValue(demoEmail);
+    await expect(page.getByLabel("Correo electrónico")).toHaveValue(demoEmail);
     await expect(
-      page.getByText("Sucursal Matriz", { exact: true }).first(),
+      page.getByText("Sucursal Centro", { exact: true }).first(),
     ).toBeVisible();
 
     const employmentTab = page.getByRole("tab", { name: "Ficha Laboral" });
@@ -70,7 +79,7 @@ test("autentica y protege el contexto multi-tenant", async ({ page }) => {
       });
     }).toPass({ timeout: 20_000 });
     await expect(
-      page.getByText("Gimnasio Gerpy Matriz", { exact: true }).first(),
+      page.getByText("The Tower Power Demo Gym", { exact: true }).first(),
     ).toBeVisible();
   });
 
@@ -83,7 +92,7 @@ test("autentica y protege el contexto multi-tenant", async ({ page }) => {
     await expect(
       page.getByRole("heading", { name: "Configuración", exact: true }),
     ).toBeVisible();
-    await expect(page.locator('input[type="checkbox"]')).not.toBeChecked();
+    await expect(page.getByTestId("mfa-toggle")).not.toBeChecked();
   });
 
   await test.step("bloquea una ruta protegida de otro tenant", async () => {

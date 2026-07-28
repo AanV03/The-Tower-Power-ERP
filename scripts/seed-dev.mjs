@@ -205,8 +205,14 @@ async function upsertTenantCore(tx, config, workspace) {
 
   const existingTenant = await tx.tenant.findFirst({
     where: { name: workspace.tenant.name },
-    select: { id: true },
+    select: { id: true, brandIdentity: true },
   });
+  const brandIdentity =
+    existingTenant?.brandIdentity &&
+    typeof existingTenant.brandIdentity === "object" &&
+    !Array.isArray(existingTenant.brandIdentity)
+      ? existingTenant.brandIdentity
+      : {};
 
   const tenant = existingTenant
     ? await tx.tenant.update({
@@ -216,6 +222,10 @@ async function upsertTenantCore(tx, config, workspace) {
           taxId: workspace.tenant.taxId,
           status: "ACTIVE",
           planId: plan.id,
+          brandIdentity: {
+            ...brandIdentity,
+            adminOnboardingCompleted: true,
+          },
         },
       })
     : await tx.tenant.create({
@@ -225,6 +235,7 @@ async function upsertTenantCore(tx, config, workspace) {
           taxId: workspace.tenant.taxId,
           status: "ACTIVE",
           planId: plan.id,
+          brandIdentity: { adminOnboardingCompleted: true },
         },
       });
 
@@ -1076,6 +1087,8 @@ export async function runSeed() {
       tenant: result.tenant.name,
       branch: result.branch.name,
       tenants: result.workspaces.map(({ tenant }) => tenant.name),
+      tenantIds: result.workspaces.map(({ tenant }) => tenant.id),
+      payrollPeriodId: result.payrollPeriod.id,
       payrollStatus: result.payrollPeriod.status,
       modules: config.modules.length,
     };

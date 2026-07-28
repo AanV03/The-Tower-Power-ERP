@@ -6,6 +6,8 @@ const baseURL = configuredBaseUrl ?? `http://127.0.0.1:${port}`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
+  timeout: 180_000,
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
@@ -24,10 +26,10 @@ export default defineConfig({
   webServer: configuredBaseUrl
     ? undefined
     : {
-        command: `npm run dev -- --hostname 127.0.0.1 --port ${port}`,
+        command: `npm run dev -- --turbopack --hostname=127.0.0.1 --port=${port}`,
         url: baseURL,
         reuseExistingServer: !process.env.CI,
-        timeout: 120_000,
+        timeout: 300_000,
       },
   projects: [
     {

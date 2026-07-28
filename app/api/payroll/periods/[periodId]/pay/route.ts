@@ -1,5 +1,5 @@
 import { requireApiContext } from "@/lib/api/context";
-import { fail, ok } from "@/lib/api/response";
+import { ApiError, fail, ok } from "@/lib/api/response";
 import { postPayrollToAccounting } from "@/lib/accounting/payroll-posting";
 
 export const runtime = "nodejs";
@@ -16,6 +16,14 @@ export async function POST(
       tenantId: context.tenantId,
       payrollPeriodId: periodId,
     });
+
+    if (!result.created) {
+      throw new ApiError(
+        "Payroll payment was already processed or is in progress.",
+        409,
+        "PAYROLL_ALREADY_PROCESSED",
+      );
+    }
 
     return ok(result);
   } catch (error) {

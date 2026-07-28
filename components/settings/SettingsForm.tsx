@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Lock,
@@ -40,11 +40,19 @@ interface SettingsFormProps {
   locale: string;
 }
 
+type TwoFactorSetup = {
+  qrCodeDataUrl: string;
+  secret: string;
+};
+
 export default function SettingsForm({ user, dict, locale }: SettingsFormProps) {
   const router = useRouter();
-  const pathname = usePathname();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(user.twoFactorEnabled);
+  const [twoFactorSetup, setTwoFactorSetup] = useState<TwoFactorSetup | null>(null);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [isTwoFactorLoading, setIsTwoFactorLoading] = useState(false);
   
   // Contrast State
   const [colors, setColors] = useState<BrandColors>(DEFAULT_BRAND_COLORS);
@@ -125,8 +133,94 @@ export default function SettingsForm({ user, dict, locale }: SettingsFormProps) 
     (e.target as HTMLFormElement).reset();
   };
 
-  const handle2FAToggle = async () => {
-    toast.info(locale === "es" ? "Configuración de 2FA actualizada" : "2FA configuration updated");
+  const handle2FAToggle = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.currentTarget.checked || twoFactorEnabled) return;
+
+    setIsTwoFactorLoading(true);
+    try {
+      const response = await fetch("/api/auth/2fa/generate", {
+        method: "POST",
+      });
+      const payload = await response.json().catch(() => null) as {
+        ok?: boolean;
+        message?: string;
+        qrCodeDataUrl?: string;
+        secret?: string;
+      } | null;
+
+      if (
+        !response.ok ||
+        !payload?.ok ||
+        !payload.qrCodeDataUrl ||
+        !payload.secret
+      ) {
+        throw new Error(
+          payload?.message ??
+          (locale === "es" ? "No se pudo iniciar la configuración de 2FA." : "Could not start 2FA setup."),
+        );
+      }
+
+      setTwoFactorSetup({
+        qrCodeDataUrl: payload.qrCodeDataUrl,
+        secret: payload.secret,
+      });
+      setTwoFactorCode("");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : locale === "es"
+            ? "No se pudo iniciar la configuración de 2FA."
+            : "Could not start 2FA setup.",
+      );
+    } finally {
+      setIsTwoFactorLoading(false);
+    }
+  };
+
+  const handle2FAVerify = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!/^\d{6}$/.test(twoFactorCode)) return;
+
+    setIsTwoFactorLoading(true);
+    try {
+      const response = await fetch("/api/auth/2fa/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: twoFactorCode }),
+      });
+      const payload = await response.json().catch(() => null) as {
+        ok?: boolean;
+        message?: string;
+      } | null;
+
+      if (!response.ok || !payload?.ok) {
+        throw new Error(
+          payload?.message ??
+          (locale === "es" ? "Código 2FA inválido." : "Invalid 2FA code."),
+        );
+      }
+
+      setTwoFactorEnabled(true);
+      setTwoFactorSetup(null);
+      setTwoFactorCode("");
+      toast.success(
+        locale === "es"
+          ? "Autenticación de 2 factores habilitada."
+          : "Two-factor authentication enabled.",
+      );
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : locale === "es"
+            ? "No se pudo habilitar 2FA."
+            : "Could not enable 2FA.",
+      );
+    } finally {
+      setIsTwoFactorLoading(false);
+    }
   };
 
   return (
@@ -290,22 +384,88 @@ export default function SettingsForm({ user, dict, locale }: SettingsFormProps) 
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6 space-y-6">
-                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-primary/20 bg-primary/5 shadow-sm shadow-primary/5">
+                  <div
+                    className="flex items-center justify-between p-3.5 rounded-xl border border-primary/20 bg-primary/5 shadow-sm shadow-primary/5"
+                    data-testid="mfa-status-panel"
+                  >
                     <div>
                       <p className="text-sm font-bold text-foreground">{locale === "es" ? "Estado de 2FA" : "2FA Status"}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {user.twoFactorEnabled 
+                      <p className="text-xs text-muted-foreground mt-0.5" data-testid="mfa-status">
+                        {twoFactorEnabled
                           ? (locale === "es" ? "Habilitado" : "Enabled") 
                           : (locale === "es" ? "Deshabilitado" : "Disabled")}
                       </p>
                     </div>
                     <input
                       type="checkbox"
-                      defaultChecked={user.twoFactorEnabled}
+                      checked={twoFactorEnabled || isTwoFactorLoading || Boolean(twoFactorSetup)}
                       onChange={handle2FAToggle}
+                      disabled={twoFactorEnabled || isTwoFactorLoading}
+                      data-testid="mfa-toggle"
+                      aria-label={locale === "es" ? "Habilitar 2FA" : "Enable 2FA"}
                       className="accent-primary size-5 rounded border-border cursor-pointer focus:ring-primary"
                     />
                   </div>
+
+                  {twoFactorSetup ? (
+                    <form
+                      onSubmit={handle2FAVerify}
+                      className="space-y-4"
+                      data-testid="mfa-setup-form"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={twoFactorSetup.qrCodeDataUrl}
+                        alt={locale === "es" ? "Código QR de 2FA" : "2FA QR code"}
+                        data-testid="mfa-qr-code"
+                        className="mx-auto aspect-square w-full max-w-48 rounded-lg border border-border bg-white p-2"
+                      />
+                      <div className="rounded-lg border border-border bg-background/60 p-3 text-xs">
+                        <span className="text-muted-foreground">
+                          {locale === "es" ? "Clave manual" : "Manual key"}:
+                        </span>{" "}
+                        <code className="break-all font-mono text-foreground" data-testid="mfa-secret">
+                          {twoFactorSetup.secret}
+                        </code>
+                      </div>
+                      <Input
+                        value={twoFactorCode}
+                        onChange={(event) =>
+                          setTwoFactorCode(
+                            event.target.value.replace(/\D/g, "").slice(0, 6),
+                          )
+                        }
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={6}
+                        placeholder="000000"
+                        aria-label={locale === "es" ? "Código 2FA" : "2FA code"}
+                        data-testid="mfa-code"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          type="submit"
+                          disabled={isTwoFactorLoading || twoFactorCode.length !== 6}
+                          data-testid="mfa-enable"
+                        >
+                          {isTwoFactorLoading
+                            ? locale === "es" ? "Verificando..." : "Verifying..."
+                            : locale === "es" ? "Activar 2FA" : "Enable 2FA"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={isTwoFactorLoading}
+                          onClick={() => {
+                            setTwoFactorSetup(null);
+                            setTwoFactorCode("");
+                          }}
+                        >
+                          {locale === "es" ? "Cancelar" : "Cancel"}
+                        </Button>
+                      </div>
+                    </form>
+                  ) : null}
 
                   <p className="text-xs leading-relaxed text-muted-foreground">
                     {locale === "es"

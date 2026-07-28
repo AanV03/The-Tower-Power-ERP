@@ -236,7 +236,7 @@ export async function PayrollDashboard({
   const activePeriodView = periodViews.find((period) => period.id === activePeriod?.id);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className="space-y-6 p-4 sm:p-6" data-testid="payroll-page">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">
@@ -259,7 +259,10 @@ export async function PayrollDashboard({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {activePeriodView ? (
-            <Badge variant={payrollStatusVariant[activePeriodView.status]}>
+            <Badge
+              variant={payrollStatusVariant[activePeriodView.status]}
+              data-testid="payroll-period-status"
+            >
               {payrollLabels.status[activePeriodView.status]}
             </Badge>
           ) : null}

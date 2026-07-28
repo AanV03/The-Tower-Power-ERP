@@ -55,7 +55,12 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
   };
 
   return (
-    <section className="erp-section space-y-6" role="main" aria-label={dict.common.settings}>
+    <section
+      className="erp-section space-y-6"
+      role="main"
+      aria-label={dict.common.settings}
+      data-testid="settings-page"
+    >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1">
           <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-foreground">

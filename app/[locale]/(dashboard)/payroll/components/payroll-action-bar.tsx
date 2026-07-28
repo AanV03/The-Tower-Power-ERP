@@ -71,7 +71,7 @@ function isPayrollPostingResult(value: unknown): value is PayrollPostingResult {
 
 function paymentErrorMessage(error: unknown) {
   if (error instanceof ApiRequestError && error.status === 409) {
-    return "Esta nómina ya fue procesada y contabilizada";
+    return "Pago ya procesado o en curso";
   }
 
   if (error instanceof ApiRequestError && error.status === 403) {
@@ -256,7 +256,7 @@ export function PayrollActionBar({
       if (result.created) {
         toast.success("Periodo marcado como pagado.");
       } else {
-        toast.info("Esta nómina ya fue procesada y contabilizada");
+        toast.info("Pago ya procesado o en curso");
       }
       navigateToPeriod(periodId);
       router.refresh();
@@ -368,6 +368,9 @@ export function PayrollActionBar({
           variant="outline"
           onClick={handlePay}
           disabled={isLoading || !actionPeriod || actionPeriod.status !== "APPROVED"}
+          data-testid="payroll-pay-button"
+          data-period-id={actionPeriod?.id ?? ""}
+          data-pending={loadingAction === "pay" ? "true" : "false"}
         >
           <Send className="size-4" aria-hidden="true" />
           {loadingAction === "pay" ? "Marcando..." : "Marcar pagado"}

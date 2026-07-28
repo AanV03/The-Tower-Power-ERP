@@ -289,13 +289,14 @@ export default function LoginPage() {
                   <img
                     src={setupQrCodeDataUrl}
                     alt="The Tower Power 2FA QR code"
+                    data-testid="login-2fa-setup-qr"
                     className="mx-auto aspect-square w-full max-w-64 rounded-lg"
                   />
                 </div>
 
                 {setupSecret && (
                   <div className="auth-manual-key rounded-lg border p-3 text-xs">
-                    {copy.manualKey}: <span className="font-mono">{setupSecret}</span>
+                    {copy.manualKey}: <span className="font-mono" data-testid="login-2fa-setup-secret">{setupSecret}</span>
                   </div>
                 )}
 
@@ -308,7 +309,11 @@ export default function LoginPage() {
                 />
 
                 {formError && (
-                  <p className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="alert">
+                  <p
+                    className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs"
+                    role="alert"
+                    data-testid="login-error"
+                  >
                     <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                     {formError}
                   </p>
@@ -316,6 +321,7 @@ export default function LoginPage() {
 
                 <button
                   type="submit"
+                  data-testid="login-2fa-setup-submit"
                   disabled={isLoading || twoFactorCode.length !== 6}
                   className="auth-primary-button relative h-10 w-full rounded-lg text-sm font-semibold outline-none transition-all duration-200 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 >
@@ -337,6 +343,7 @@ export default function LoginPage() {
                   </label>
                   <input
                     id="login-email"
+                    data-testid="login-email"
                     type="email"
                     autoComplete="email"
                     placeholder={copy.emailPlaceholder}
@@ -366,6 +373,7 @@ export default function LoginPage() {
                   <div className="relative">
                     <input
                       id="login-password"
+                      data-testid="login-password"
                       type={showPassword ? "text" : "password"}
                       autoComplete="current-password"
                       placeholder={copy.passwordPlaceholder}
@@ -397,7 +405,11 @@ export default function LoginPage() {
                 </div>
 
                 {formError && (
-                  <p className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="alert">
+                  <p
+                    className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs"
+                    role="alert"
+                    data-testid="login-error"
+                  >
                     <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                     {formError}
                   </p>
@@ -415,6 +427,7 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <button
                     id="login-submit"
+                    data-testid="login-submit"
                     type="submit"
                     disabled={isLoading}
                     className={cn(
@@ -453,7 +466,11 @@ export default function LoginPage() {
                 />
 
                 {formError && (
-                  <p className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" role="alert">
+                  <p
+                    className="auth-error-alert flex items-center gap-2 rounded-lg border px-3 py-2 text-xs"
+                    role="alert"
+                    data-testid="login-error"
+                  >
                     <AlertCircle className="size-3 shrink-0" aria-hidden="true" />
                     {formError}
                   </p>
@@ -461,6 +478,7 @@ export default function LoginPage() {
 
                 <button
                   type="submit"
+                  data-testid="login-2fa-submit"
                   disabled={isLoading || twoFactorCode.length !== 6}
                   className="auth-primary-button relative h-10 w-full rounded-lg text-sm font-semibold outline-none transition-all duration-200 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 >
