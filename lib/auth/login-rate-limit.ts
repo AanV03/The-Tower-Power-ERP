@@ -43,9 +43,26 @@ export function consumeLoginAttempt(
   ipAddress: string | null,
   now = Date.now(),
 ): LoginRateLimitResult {
+  return consumeAttempt(`login:${ipAddress?.trim() || "unknown"}`, now);
+}
+
+export function consumeTwoFactorAttempt(
+  userId: string,
+  ipAddress: string | null,
+  now = Date.now(),
+): LoginRateLimitResult {
+  return consumeAttempt(
+    `mfa:${userId.trim()}:${ipAddress?.trim() || "unknown"}`,
+    now,
+  );
+}
+
+function consumeAttempt(
+  key: string,
+  now: number,
+): LoginRateLimitResult {
   sweepExpiredBuckets(now);
 
-  const key = ipAddress?.trim() || "unknown";
   const current = state.buckets.get(key);
 
   if (!current || current.resetAt <= now) {

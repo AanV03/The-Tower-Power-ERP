@@ -8,6 +8,7 @@ datasource db {
 
 model Tenant {
   id                        String                     @id @default(cuid())
+  slug                      String                     @unique @default(cuid())
   name                      String
   legalName                 String?
   taxId                     String?
@@ -26,6 +27,8 @@ model Tenant {
   billingProfile            TenantBillingProfile?
   cashSessions              CashSession[]
   chartAccounts             ChartAccount[]
+  classBookings             ClassBooking[]
+  classSessions             ClassSession[]
   employeeContracts         EmployeeContract[]
   employees                 Employee[]
   inventoryItems            InventoryItem[]
@@ -37,6 +40,7 @@ model Tenant {
   members                   Member[]
   memberships               TenantMembership[]
   membershipPlans           MembershipPlan[]
+  memberPortalSettings      MemberPortalSetting[]
   notificationRecipients    NotificationRecipient[]
   notifications             Notification[]
   outboxEvents              OutboxEvent[]
@@ -69,6 +73,8 @@ model Tenant {
   timeClocks                TimeClock[]
   userInvitations           UserInvitation[]
   warehouses                Warehouse[]
+  workoutPlanExercises      WorkoutPlanExercise[]
+  workoutPlans              WorkoutPlan[]
 
   @@index([status])
   @@map("tenants")
@@ -129,6 +135,7 @@ model Branch {
   attendanceRecords  AttendanceRecord[]
   branchBudgets      BranchBudget[]
   branchMemberships  BranchMembership[]
+  classSessions      ClassSession[]
   defaultMemberships TenantMembership[]  @relation("TenantMembershipDefaultBranch")
   tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   employees          Employee[]
@@ -179,30 +186,34 @@ model User {
 }
 
 model TenantMembership {
-  id                      String             @id @default(cuid())
+  id                      String               @id @default(cuid())
   tenantId                String
   userId                  String
   defaultBranchId         String?
   employeeId              String?
-  status                  MembershipStatus   @default(INVITED)
+  memberId                String?
+  status                  MembershipStatus     @default(INVITED)
   joinedAt                DateTime?
-  createdAt               DateTime           @default(now())
-  updatedAt               DateTime           @updatedAt
-  assignedRoleAssignments RoleAssignment[]   @relation("RoleAssignmentActor")
-  auditLogs               AuditLog[]         @relation("AuditLogActor")
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  assignedRoleAssignments RoleAssignment[]     @relation("RoleAssignmentActor")
+  auditLogs               AuditLog[]           @relation("AuditLogActor")
   branchMemberships       BranchMembership[]
-  defaultBranch           Branch?            @relation("TenantMembershipDefaultBranch", fields: [tenantId, defaultBranchId], references: [tenantId, id])
-  employee                Employee?          @relation(fields: [tenantId, employeeId], references: [tenantId, id])
-  roleAssignments         RoleAssignment[]   @relation("RoleAssignmentMember")
+  defaultBranch           Branch?              @relation("TenantMembershipDefaultBranch", fields: [tenantId, defaultBranchId], references: [tenantId, id])
+  employee                Employee?            @relation(fields: [tenantId, employeeId], references: [tenantId, id])
+  member                  Member?              @relation(fields: [tenantId, memberId], references: [tenantId, id], onDelete: Restrict)
+  portalSetting           MemberPortalSetting?
+  roleAssignments         RoleAssignment[]     @relation("RoleAssignmentMember")
   securityEvents          SecurityEvent[]
   sessions                Session[]
-  sentInvitations         UserInvitation[]   @relation("InvitationActor")
-  tenant                  Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sentInvitations         UserInvitation[]     @relation("InvitationActor")
+  tenant                  Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user                    User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, id])
   @@unique([tenantId, userId])
   @@unique([tenantId, employeeId])
+  @@unique([tenantId, memberId])
   @@index([userId, status])
   @@index([tenantId, status])
   @@map("tenant_memberships")
@@ -500,17 +511,110 @@ model Member {
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   invoices           Invoice[]
-  branch             Branch              @relation(fields: [branchId], references: [id])
+  accountMembership  TenantMembership?
+  branch             Branch              @relation(fields: [tenantId, branchId], references: [tenantId, id])
+  classBookings      ClassBooking[]
   tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   payments           Payment[]
   sales              Sale[]
   specialistSessions SpecialistSession[]
   subscriptions      Subscription[]
+  workoutPlans       WorkoutPlan[]
 
+  @@unique([tenantId, id])
   @@unique([tenantId, email])
   @@index([tenantId, branchId])
   @@index([tenantId, status])
   @@map("members")
+}
+
+model WorkoutPlan {
+  id          String                @id @default(cuid())
+  tenantId    String
+  memberId    String
+  name        String
+  description String?
+  schedule    String?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  exercises   WorkoutPlanExercise[]
+  member      Member                @relation(fields: [tenantId, memberId], references: [tenantId, id], onDelete: Cascade)
+  tenant      Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, memberId])
+  @@map("workout_plans")
+}
+
+model WorkoutPlanExercise {
+  id            String      @id @default(cuid())
+  tenantId      String
+  workoutPlanId String
+  exerciseName  String
+  series        Int
+  reps          String
+  weight        String?
+  restSeconds   Int?
+  notes         String?
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workoutPlan   WorkoutPlan @relation(fields: [tenantId, workoutPlanId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, workoutPlanId])
+  @@map("workout_plan_exercises")
+}
+
+model ClassSession {
+  id        String         @id @default(cuid())
+  tenantId  String
+  branchId  String
+  name      String
+  trainer   String
+  startTime DateTime
+  endTime   DateTime
+  capacity  Int
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  bookings  ClassBooking[]
+  branch    Branch         @relation(fields: [tenantId, branchId], references: [tenantId, id], onDelete: Restrict)
+  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, branchId, startTime])
+  @@map("class_sessions")
+}
+
+model ClassBooking {
+  id             String             @id @default(cuid())
+  tenantId       String
+  classSessionId String
+  memberId       String
+  status         ClassBookingStatus @default(CONFIRMED)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  classSession   ClassSession       @relation(fields: [tenantId, classSessionId], references: [tenantId, id], onDelete: Cascade)
+  member         Member             @relation(fields: [tenantId, memberId], references: [tenantId, id], onDelete: Cascade)
+  tenant         Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, classSessionId, memberId])
+  @@index([tenantId, memberId, status])
+  @@map("class_bookings")
+}
+
+model MemberPortalSetting {
+  id                String           @id @default(cuid())
+  tenantId          String
+  membershipId      String
+  pushNotifications Boolean          @default(true)
+  reminders         Boolean          @default(true)
+  darkMode          Boolean          @default(true)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  membership        TenantMembership @relation(fields: [tenantId, membershipId], references: [tenantId, id], onDelete: Cascade)
+  tenant            Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, membershipId])
+  @@index([tenantId, membershipId])
+  @@map("member_portal_settings")
 }
 
 model MembershipPlan {
@@ -1400,6 +1504,13 @@ enum SubscriptionStatus {
   CANCELLED
   EXPIRED
   PAST_DUE
+}
+
+enum ClassBookingStatus {
+  PENDING
+  CONFIRMED
+  ATTENDED
+  CANCELLED
 }
 
 enum AccessDeviceType {

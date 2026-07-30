@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
 import { created, fail, ok } from "@/lib/api/response";
+import { assertTenantReferenceIds } from "@/lib/api/tenant-reference";
 
 const CreateInventoryItemSchema = z.object({
   warehouseId: z.string(),
@@ -17,12 +18,18 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "warehouse" });
+    const context = await requireApiContext({
+      moduleId: "warehouse",
+      permission: "warehouse.read",
+    });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = {
       tenantId: context.tenantId,
       ...(searchParams.get("warehouseId") ? { warehouseId: searchParams.get("warehouseId") ?? undefined } : {}),
+      ...(context.branchId
+        ? { warehouse: { branchId: context.branchId } }
+        : {}),
     };
 
     const [items, total] = await Promise.all([
@@ -44,18 +51,44 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "warehouse" });
+    const context = await requireApiContext({
+      moduleId: "warehouse",
+      permission: "warehouse.write",
+    });
     const data = CreateInventoryItemSchema.parse(await request.json());
 
-    const item = await prisma.inventoryItem.create({
-      data: {
-        tenantId: context.tenantId,
-        warehouseId: data.warehouseId,
-        productId: data.productId,
-        quantityOnHand: new Prisma.Decimal(data.quantityOnHand),
-        quantityReserved: new Prisma.Decimal(data.quantityReserved),
-        reorderPoint: new Prisma.Decimal(data.reorderPoint),
-      },
+    const item = await prisma.$transaction(async (tx) => {
+      await Promise.all([
+        assertTenantReferenceIds("Warehouse", [data.warehouseId], (ids) =>
+          tx.warehouse.findMany({
+            where: {
+              tenantId: context.tenantId,
+              id: { in: ids },
+              ...(context.branchId
+                ? { branchId: context.branchId }
+                : {}),
+            },
+            select: { id: true },
+          }),
+        ),
+        assertTenantReferenceIds("Product", [data.productId], (ids) =>
+          tx.product.findMany({
+            where: { tenantId: context.tenantId, id: { in: ids } },
+            select: { id: true },
+          }),
+        ),
+      ]);
+
+      return tx.inventoryItem.create({
+        data: {
+          tenantId: context.tenantId,
+          warehouseId: data.warehouseId,
+          productId: data.productId,
+          quantityOnHand: new Prisma.Decimal(data.quantityOnHand),
+          quantityReserved: new Prisma.Decimal(data.quantityReserved),
+          reorderPoint: new Prisma.Decimal(data.reorderPoint),
+        },
+      });
     });
 
     return created(item);

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
 import { created, fail, ok } from "@/lib/api/response";
+import { assertTenantReferenceIds } from "@/lib/api/tenant-reference";
 
 const CreateSubscriptionSchema = z.object({
   memberId: z.string().min(1),
@@ -36,7 +37,10 @@ function calculateEndDate(startDate: Date, period: BillingPeriod): Date {
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "memberships" });
+    const context = await requireApiContext({
+      moduleId: "memberships",
+      permission: "memberships.read",
+    });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const memberId = searchParams.get("memberId") || undefined;
@@ -44,6 +48,9 @@ export async function GET(request: Request) {
 
     const where = {
       tenantId: context.tenantId,
+      ...(context.branchId
+        ? { member: { branchId: context.branchId } }
+        : {}),
       ...(memberId ? { memberId } : {}),
       ...(status ? { status } : {}),
     };
@@ -67,7 +74,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "memberships" });
+    const context = await requireApiContext({
+      moduleId: "memberships",
+      permission: "memberships.write",
+    });
     const body = await request.json();
     const data = CreateSubscriptionSchema.parse(body);
 
@@ -85,6 +95,17 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
+
+    await assertTenantReferenceIds("Member", [data.memberId], (ids) =>
+      prisma.member.findMany({
+        where: {
+          tenantId: context.tenantId,
+          id: { in: ids },
+          ...(context.branchId ? { branchId: context.branchId } : {}),
+        },
+        select: { id: true },
+      }),
+    );
 
     const startDate = data.startDate ? new Date(data.startDate) : new Date();
     const endDate = calculateEndDate(startDate, plan.billingPeriod);
@@ -116,7 +137,10 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "memberships" });
+    const context = await requireApiContext({
+      moduleId: "memberships",
+      permission: "memberships.write",
+    });
     const body = await request.json();
     const data = UpdateSubscriptionSchema.parse(body);
 
@@ -124,6 +148,9 @@ export async function PATCH(request: Request) {
       where: {
         id: data.subscriptionId,
         tenantId: context.tenantId,
+        ...(context.branchId
+          ? { member: { branchId: context.branchId } }
+          : {}),
       },
     });
 
@@ -151,7 +178,7 @@ export async function PATCH(request: Request) {
         });
 
         return await tx.subscription.update({
-          where: { id: subscription.id },
+          where: { id: subscription.id, tenantId: context.tenantId },
           data: { status: "PAUSED" },
           include: { member: true, plan: true },
         });
@@ -169,7 +196,7 @@ export async function PATCH(request: Request) {
         });
 
         return await tx.subscription.update({
-          where: { id: subscription.id },
+          where: { id: subscription.id, tenantId: context.tenantId },
           data: { status: "CANCELLED" },
           include: { member: true, plan: true },
         });
@@ -177,7 +204,7 @@ export async function PATCH(request: Request) {
 
       if (data.action === "reactivate") {
         return await tx.subscription.update({
-          where: { id: subscription.id },
+          where: { id: subscription.id, tenantId: context.tenantId },
           data: { status: "ACTIVE" },
           include: { member: true, plan: true },
         });

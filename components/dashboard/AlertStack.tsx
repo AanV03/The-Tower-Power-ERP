@@ -1,3 +1,5 @@
+import type { Route } from "next";
+import Link from "next/link";
 import { BellOff, CircleAlert } from "lucide-react";
 
 type AlertItem = {
@@ -9,6 +11,7 @@ type AlertItem = {
 
 type Props = {
   items?: AlertItem[];
+  locale: string;
 };
 
 const severityClass = {
@@ -17,7 +20,7 @@ const severityClass = {
   info: "bg-sky-400",
 };
 
-export default function AlertStack({ items = [] }: Props) {
+export default function AlertStack({ items = [], locale }: Props) {
   return (
     <aside className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-sm">
       <div className="flex items-center justify-between">
@@ -25,9 +28,12 @@ export default function AlertStack({ items = [] }: Props) {
           <h4 className="text-sm font-bold text-foreground">Exception queue</h4>
           <p className="mt-1 text-xs text-muted-foreground">Critical items that need action</p>
         </div>
-        <button className="text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground" type="button">
+        <Link
+          href={`/${locale}/notifications` as Route}
+          className="text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+        >
           View all
-        </button>
+        </Link>
       </div>
 
       <div className="mt-4 space-y-2">

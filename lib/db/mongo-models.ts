@@ -192,6 +192,62 @@ maintenanceTicketSchema.index({ tenantId: 1, branchId: 1, status: 1, priority: 1
 maintenanceTicketSchema.index({ tenantId: 1, branchId: 1, createdAt: -1 });
 maintenanceTicketSchema.index({ tenantId: 1, assetId: 1, createdAt: -1 });
 
+const memberMeasurementSchema = new Schema(
+  {
+    measuredAt: { type: Date, required: true },
+    weight: { type: Number },
+    bodyFat: { type: Number },
+    muscleMass: { type: Number },
+  },
+  { _id: false },
+);
+
+const memberProgressSchema = new Schema(
+  {
+    tenantId: { type: String, required: true, index: true },
+    memberId: { type: String, required: true, index: true },
+    measurements: { type: [memberMeasurementSchema], default: [] },
+    updatedAt: { type: Date, default: Date.now },
+  },
+  { collection: "member_progress" },
+);
+
+memberProgressSchema.index({ tenantId: 1, memberId: 1 }, { unique: true });
+
+const memberPointsLedgerSchema = new Schema(
+  {
+    tenantId: { type: String, required: true, index: true },
+    memberId: { type: String, required: true, index: true },
+    sourceEventId: { type: String },
+    points: { type: Number, required: true, min: -10_000, max: 10_000 },
+    reason: { type: String, required: true },
+    occurredAt: { type: Date, default: Date.now, immutable: true },
+  },
+  { collection: "member_points_ledger" },
+);
+
+memberPointsLedgerSchema.index({ tenantId: 1, memberId: 1, occurredAt: -1 });
+memberPointsLedgerSchema.index(
+  { tenantId: 1, sourceEventId: 1 },
+  { unique: true, sparse: true },
+);
+
+const memberGroupSchema = new Schema(
+  {
+    tenantId: { type: String, required: true, index: true },
+    name: { type: String, required: true },
+    description: { type: String, default: "" },
+    memberIds: { type: [String], default: [] },
+    createdByMemberId: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now, immutable: true },
+    updatedAt: { type: Date, default: Date.now },
+  },
+  { collection: "member_groups" },
+);
+
+memberGroupSchema.index({ tenantId: 1, name: 1 }, { unique: true });
+memberGroupSchema.index({ tenantId: 1, memberIds: 1 });
+
 export const AuditEvent =
   mongoose.models.AuditEvent ?? mongoose.model("AuditEvent", auditEventSchema);
 
@@ -217,3 +273,15 @@ export const IntegrationEventLog =
 export const MaintenanceTicket =
   mongoose.models.MaintenanceTicket ??
   mongoose.model("MaintenanceTicket", maintenanceTicketSchema);
+
+export const MemberProgress =
+  mongoose.models.MemberProgress ??
+  mongoose.model("MemberProgress", memberProgressSchema);
+
+export const MemberPointsLedger =
+  mongoose.models.MemberPointsLedger ??
+  mongoose.model("MemberPointsLedger", memberPointsLedgerSchema);
+
+export const MemberGroup =
+  mongoose.models.MemberGroup ??
+  mongoose.model("MemberGroup", memberGroupSchema);

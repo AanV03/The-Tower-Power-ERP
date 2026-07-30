@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
 import { created, fail, ok } from "@/lib/api/response";
+import { assertTenantReferenceIds } from "@/lib/api/tenant-reference";
 
 const CreateAccountSchema = z.object({
   code: z.string().trim().min(1).max(40),
@@ -46,14 +47,23 @@ export async function POST(request: Request) {
     const context = await requireApiContext({ moduleId: "accounting", permission: "accounting.account.write" });
     const data = CreateAccountSchema.parse(await request.json());
 
-    const account = await prisma.chartAccount.create({
-      data: {
-        tenantId: context.tenantId,
-        code: data.code,
-        name: data.name,
-        type: data.type,
-        parentId: data.parentId,
-      },
+    const account = await prisma.$transaction(async (tx) => {
+      await assertTenantReferenceIds("Parent account", [data.parentId], (ids) =>
+        tx.chartAccount.findMany({
+          where: { tenantId: context.tenantId, id: { in: ids } },
+          select: { id: true },
+        }),
+      );
+
+      return tx.chartAccount.create({
+        data: {
+          tenantId: context.tenantId,
+          code: data.code,
+          name: data.name,
+          type: data.type,
+          parentId: data.parentId,
+        },
+      });
     });
 
     return created(account);

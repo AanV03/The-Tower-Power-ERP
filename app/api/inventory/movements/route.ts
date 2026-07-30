@@ -22,12 +22,18 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "inventory" });
+    const context = await requireApiContext({
+      moduleId: "inventory",
+      permission: "inventory.read",
+    });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = {
       tenantId: context.tenantId,
       ...(searchParams.get("type") ? { type: searchParams.get("type") as InventoryMovementType } : {}),
+      ...(context.branchId
+        ? { warehouse: { branchId: context.branchId } }
+        : {}),
     };
 
     const [items, total] = await Promise.all([
@@ -49,7 +55,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "inventory" });
+    const context = await requireApiContext({
+      moduleId: "inventory",
+      permission: "inventory.write",
+    });
     const data = CreateMovementSchema.parse(await request.json());
     const result = await createInventoryMovement(context, data);
 

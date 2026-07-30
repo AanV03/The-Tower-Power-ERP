@@ -69,6 +69,12 @@ export async function POST(request: Request) {
     const now = new Date();
 
     const clock = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`
+        SELECT pg_advisory_xact_lock(
+          hashtext(${`${context.tenantId}:${data.employeeId}:time-clock`})
+        )
+      `;
+
       const employee = await tx.employee.findFirst({
         where: {
           id: data.employeeId,

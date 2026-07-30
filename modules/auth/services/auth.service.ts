@@ -7,6 +7,7 @@ import {
 import { ModuleKey } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { generateSecret, generateURI, verify } from 'otplib';
+import type { VerifyResultValid as TotpVerifyResult } from '@otplib/totp';
 
 import { normalizeEmail, verifyPassword } from '@/lib/auth/password';
 import { getTenantContext } from '@/lib/auth/tenant-context';
@@ -103,10 +104,19 @@ function assertActiveTenantContext(context: Awaited<ReturnType<typeof getTenantC
   };
 }
 
-async function verifyTotp(code: string, secret: string | null | undefined) {
-  if (!secret) return false;
-  const result = await verify({ secret, token: code, epochTolerance: 30 });
-  return result.valid;
+async function verifyTotp(
+  code: string,
+  secret: string | null | undefined,
+  afterTimeStep?: number,
+) {
+  if (!secret) return null;
+  const result = await verify({
+    secret,
+    token: code,
+    epochTolerance: [30, 0],
+    afterTimeStep,
+  });
+  return result.valid ? (result as TotpVerifyResult) : null;
 }
 
 export class AuthService {
@@ -336,59 +346,78 @@ export class AuthService {
   }
 
   static async generateTwoFactorSetup(userId: string) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        memberships: {
-          where: { status: 'ACTIVE' },
-          select: {
-            tenant: {
-              select: { name: true },
+    return prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`
+        SELECT pg_advisory_xact_lock(
+          hashtext(${`${userId}:mfa-setup`})
+        )
+      `;
+
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          memberships: {
+            where: { status: 'ACTIVE' },
+            select: {
+              tenant: {
+                select: { name: true },
+              },
             },
+            take: 1,
           },
-          take: 1,
+          mfaCredentials: {
+            where: {
+              type: 'TOTP',
+              isEnabled: true,
+              revokedAt: null,
+            },
+            select: { id: true },
+            take: 1,
+          },
         },
-      },
-    });
+      });
 
-    const tenant = user?.memberships[0]?.tenant;
-    if (!user || !tenant) {
-      throw new Error('USER_NOT_FOUND');
-    }
+      const tenant = user?.memberships[0]?.tenant;
+      if (!user || !tenant) {
+        throw new Error('USER_NOT_FOUND');
+      }
 
-    const secret = generateSecret();
-    const label = user.email ?? user.id;
-    const issuer = `The Tower Power ${tenant.name}`;
-    const otpauthUrl = generateURI({ issuer, label, secret });
+      if (user.mfaCredentials.length > 0) {
+        throw new Error('TWO_FACTOR_ALREADY_ENABLED');
+      }
 
-    await prisma.$transaction([
-      prisma.mfaCredential.updateMany({
+      const secret = generateSecret();
+      const label = user.email ?? user.id;
+      const issuer = `The Tower Power ${tenant.name}`;
+      const otpauthUrl = generateURI({ issuer, label, secret });
+
+      await tx.mfaCredential.updateMany({
         where: {
           userId: user.id,
           type: 'TOTP',
+          isEnabled: false,
           revokedAt: null,
         },
         data: {
-          isEnabled: false,
           revokedAt: new Date(),
         },
-      }),
-      prisma.mfaCredential.create({
+      });
+      await tx.mfaCredential.create({
         data: {
           userId: user.id,
           type: 'TOTP',
           secretEncrypted: encryptMfaSecret(secret),
           isEnabled: false,
         },
-      }),
-    ]);
+      });
 
-    return {
-      secret,
-      otpauthUrl,
-    };
+      return {
+        secret,
+        otpauthUrl,
+      };
+    });
   }
 
   static async enableTwoFactor(userId: string, code: string) {
@@ -405,7 +434,11 @@ export class AuthService {
       throw new Error('TWO_FACTOR_NOT_CONFIGURED');
     }
 
-    if (!(await verifyTotp(code, decryptMfaSecret(credential.secretEncrypted)))) {
+    const verification = await verifyTotp(
+      code,
+      decryptMfaSecret(credential.secretEncrypted),
+    );
+    if (!verification) {
       throw new Error('INVALID_TWO_FACTOR_CODE');
     }
 
@@ -414,7 +447,7 @@ export class AuthService {
       data: {
         isEnabled: true,
         verifiedAt: new Date(),
-        lastUsedAt: new Date(),
+        lastUsedAt: new Date(verification.timeStep * 30_000),
       },
     });
 
@@ -449,6 +482,7 @@ export class AuthService {
           select: {
             id: true,
             secretEncrypted: true,
+            lastUsedAt: true,
           },
           take: 1,
         },
@@ -466,14 +500,34 @@ export class AuthService {
       throw new Error('INVALID_TWO_FACTOR_CHALLENGE');
     }
 
-    if (!(await verifyTotp(code, decryptMfaSecret(credential.secretEncrypted)))) {
+    const lastTimeStep = credential.lastUsedAt
+      ? Math.floor(credential.lastUsedAt.getTime() / 30_000)
+      : undefined;
+    const verification = await verifyTotp(
+      code,
+      decryptMfaSecret(credential.secretEncrypted),
+      lastTimeStep,
+    );
+    if (!verification) {
       throw new Error('INVALID_TWO_FACTOR_CODE');
     }
 
-    await prisma.mfaCredential.update({
-      where: { id: credential.id },
-      data: { lastUsedAt: new Date() },
+    const consumed = await prisma.mfaCredential.updateMany({
+      where: {
+        id: credential.id,
+        revokedAt: null,
+        isEnabled: true,
+        ...(credential.lastUsedAt
+          ? { lastUsedAt: credential.lastUsedAt }
+          : { lastUsedAt: null }),
+      },
+      data: {
+        lastUsedAt: new Date(verification.timeStep * 30_000),
+      },
     });
+    if (consumed.count !== 1) {
+      throw new Error('INVALID_TWO_FACTOR_CODE');
+    }
 
     return {
       status: 'AUTHENTICATED' as const,

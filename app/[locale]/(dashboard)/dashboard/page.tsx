@@ -96,7 +96,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
             {moduleConfigs.dashboard.subtitle[l]}
           </p>
         </div>
-        <FilterBar />
+        <FilterBar rows={summary.rows ?? []} />
       </div>
 
       <main className="grid grid-cols-1 items-stretch gap-6 xl:grid-cols-[1.35fr_0.65fr]">
@@ -167,7 +167,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
               ))}
             </div>
           </div>
-          <AlertStack items={[]} />
+          <AlertStack items={[]} locale={l} />
         </aside>
       </main>
 

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import { fail, ok } from "@/lib/api/response";
+import { requireBranchAccess } from "@/lib/auth/rbac";
 
 const AccessCheckSchema = z.object({
   memberId: z.string().min(1),
@@ -12,7 +13,10 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "access" });
+    const context = await requireApiContext({
+      moduleId: "access",
+      permission: "access.write",
+    });
     const body = await request.json();
     const data = AccessCheckSchema.parse(body);
 
@@ -39,12 +43,14 @@ export async function POST(request: Request) {
         message: "El dispositivo se encuentra fuera de línea.",
       });
     }
+    requireBranchAccess(context, device.branchId);
 
     // 2. Verify the member
     const member = await prisma.member.findFirst({
       where: {
         tenantId: context.tenantId,
         id: data.memberId,
+        branchId: device.branchId,
       },
     });
 

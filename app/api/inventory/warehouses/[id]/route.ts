@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { resolveWritableBranchId } from "@/lib/api/branch";
 import { requireApiContext } from "@/lib/api/context";
 import { fail, ok, ApiError } from "@/lib/api/response";
+import { requireBranchAccess } from "@/lib/auth/rbac";
 
 const UpdateWarehouseSchema = z.object({
   branchId: z.string().optional(),
@@ -16,7 +17,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "inventory" });
+    const context = await requireApiContext({
+      moduleId: "inventory",
+      permission: "inventory.write",
+    });
     const { id } = await params;
     const bodyJson = await request.json();
     const data = UpdateWarehouseSchema.parse(bodyJson);
@@ -33,8 +37,10 @@ export async function PUT(
       return fail(new ApiError("Almacén no encontrado", 404));
     }
 
+    requireBranchAccess(context, existing.branchId);
+
     const warehouse = await prisma.warehouse.update({
-      where: { id },
+      where: { id, tenantId: context.tenantId },
       data: {
         branchId,
         name: data.name,
@@ -52,7 +58,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "inventory" });
+    const context = await requireApiContext({
+      moduleId: "inventory",
+      permission: "inventory.admin",
+    });
     const { id } = await params;
 
     // Verify warehouse belongs to tenant
@@ -64,10 +73,12 @@ export async function DELETE(
       return fail(new ApiError("Almacén no encontrado", 404));
     }
 
+    requireBranchAccess(context, existing.branchId);
+
     // Check for existing items or movements to prevent database constraint crash
     const [itemCount, movementCount] = await Promise.all([
-      prisma.inventoryItem.count({ where: { warehouseId: id } }),
-      prisma.inventoryMovement.count({ where: { warehouseId: id } }),
+      prisma.inventoryItem.count({ where: { tenantId: context.tenantId, warehouseId: id } }),
+      prisma.inventoryMovement.count({ where: { tenantId: context.tenantId, warehouseId: id } }),
     ]);
 
     if (itemCount > 0 || movementCount > 0) {
@@ -80,7 +91,7 @@ export async function DELETE(
     }
 
     await prisma.warehouse.delete({
-      where: { id },
+      where: { id, tenantId: context.tenantId },
     });
 
     return ok({ success: true });

@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 
 import { formatCurrency, parsePagination } from "../lib/api/pagination.ts";
 import { resolveModuleAccess, resolveRoutePermission } from "../lib/api/module-access.ts";
+import { isPublicStaticAssetPath } from "../lib/api/request-path.ts";
+import { PortalTeamMembershipSchema } from "../lib/portal/schemas.ts";
 
 test("resolves module ids to Prisma module keys and permissions", () => {
   assert.deepEqual(resolveModuleAccess("memberships"), {
@@ -37,11 +39,13 @@ test("resolves premium ERP module ids to Prisma module keys and permissions", ()
   assert.deepEqual(resolveModuleAccess("accounting"), {
     moduleKey: "ACCOUNTING",
     permission: "accounting.read",
+    minimumScope: "TENANT",
   });
 
   assert.deepEqual(resolveModuleAccess("payroll"), {
     moduleKey: "PAYROLL",
     permission: "payroll.read",
+    minimumScope: "TENANT",
   });
 
   assert.deepEqual(resolveModuleAccess("analytics"), {
@@ -52,6 +56,7 @@ test("resolves premium ERP module ids to Prisma module keys and permissions", ()
   assert.deepEqual(resolveModuleAccess("integrations"), {
     moduleKey: "INTEGRATIONS",
     permission: "integrations.read",
+    minimumScope: "TENANT",
   });
 
   assert.deepEqual(resolveModuleAccess("maintenance"), {
@@ -114,4 +119,27 @@ test("resolves granular permissions for operational routes", () => {
 test("does not expose permissions for removed demonstration routes", () => {
   assert.equal(resolveRoutePermission("POST", "/api/memberships/demo-member"), null);
   assert.equal(resolveRoutePermission("GET", "/api/sentry-example-api"), null);
+});
+
+test("never treats API paths with file extensions as public assets", () => {
+  assert.equal(isPublicStaticAssetPath("/images/logo.png"), true);
+  assert.equal(isPublicStaticAssetPath("/api/catalog/products/item.json"), false);
+  assert.equal(isPublicStaticAssetPath("/api/access/devices/device.txt"), false);
+});
+
+test("accepts only canonical Mongo ObjectIds for portal teams", () => {
+  assert.equal(
+    PortalTeamMembershipSchema.safeParse({
+      teamId: "507f1f77bcf86cd799439011",
+      joined: true,
+    }).success,
+    true,
+  );
+  assert.equal(
+    PortalTeamMembershipSchema.safeParse({
+      teamId: "not-an-object-id",
+      joined: true,
+    }).success,
+    false,
+  );
 });

@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { CheckCircle2, type LucideIcon } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { localizedPath } from "@/lib/localized-routing";
 import { cn } from "@/lib/utils";
 
 type OnboardingStep = {
@@ -22,6 +24,7 @@ export function OnboardingLayout({
   children: ReactNode;
   steps?: OnboardingStep[];
 }) {
+  const { locale } = useParams<{ locale: string }>();
   const totalSteps = steps?.length ?? 0;
 
   return (
@@ -58,7 +61,7 @@ export function OnboardingLayout({
               return (
                 <Link
                   key={step.label}
-                  href={step.href as any}
+                  href={localizedPath(locale, step.href)}
                   aria-current={active ? "step" : undefined}
                   className={cn(
                     "group rounded-2xl border p-4 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",

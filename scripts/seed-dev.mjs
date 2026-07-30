@@ -10,6 +10,8 @@ export const DEFAULT_SUPERADMIN_EMAIL = "superadmin@towerpower.local";
 export const DEFAULT_SUPERADMIN_PASSWORD = "The Tower PowerDemo!2026";
 export const DEFAULT_EMPLOYEE_EMAIL = "empleado@towerpower.local";
 export const DEFAULT_EMPLOYEE_PASSWORD = "The Tower PowerEmployee!2026";
+export const DEFAULT_MEMBER_EMAIL = "miembro.demo@towerpower.local";
+export const DEFAULT_MEMBER_PASSWORD = "The Tower PowerMember!2026";
 
 const MODULES = [
   "DASHBOARD",
@@ -71,6 +73,7 @@ const EMPLOYEE_PERMISSIONS = [
 export function buildSeedConfig(env = process.env) {
   const primaryTenant = {
     tenant: {
+      slug: "tower-power-demo",
       name: "The Tower Power Demo Gym",
       legalName: "The Tower Power Demo Gym S.A. de C.V.",
       taxId: "GDE260101DEMO",
@@ -88,6 +91,7 @@ export function buildSeedConfig(env = process.env) {
   };
   const secondaryTenant = {
     tenant: {
+      slug: "tower-power-norte",
       name: "The Tower Power Norte",
       legalName: "The Tower Power Norte S.A. de C.V.",
       taxId: "GNO260101DEMO",
@@ -116,6 +120,11 @@ export function buildSeedConfig(env = process.env) {
       name: "Empleado",
       email: DEFAULT_EMPLOYEE_EMAIL,
       password: env.SEED_EMPLOYEE_PASSWORD || DEFAULT_EMPLOYEE_PASSWORD,
+    },
+    member: {
+      name: "Alex Demo",
+      email: DEFAULT_MEMBER_EMAIL,
+      password: env.SEED_MEMBER_PASSWORD || DEFAULT_MEMBER_PASSWORD,
     },
     tenants: [primaryTenant, secondaryTenant],
     tenant: primaryTenant.tenant,
@@ -219,6 +228,7 @@ async function upsertTenantCore(tx, config, workspace) {
         where: { id: existingTenant.id },
         data: {
           legalName: workspace.tenant.legalName,
+          slug: workspace.tenant.slug,
           taxId: workspace.tenant.taxId,
           status: "ACTIVE",
           planId: plan.id,
@@ -231,6 +241,7 @@ async function upsertTenantCore(tx, config, workspace) {
     : await tx.tenant.create({
         data: {
           name: workspace.tenant.name,
+          slug: workspace.tenant.slug,
           legalName: workspace.tenant.legalName,
           taxId: workspace.tenant.taxId,
           status: "ACTIVE",
@@ -396,6 +407,7 @@ async function upsertTenantIdentity(tx, input) {
     update: {
       defaultBranchId: input.branchId,
       employeeId: input.employeeId ?? null,
+      memberId: input.memberId ?? null,
       status: "ACTIVE",
     },
     create: {
@@ -403,6 +415,7 @@ async function upsertTenantIdentity(tx, input) {
       userId: user.id,
       defaultBranchId: input.branchId,
       employeeId: input.employeeId ?? null,
+      memberId: input.memberId ?? null,
       status: "ACTIVE",
       joinedAt: new Date(),
     },
@@ -735,6 +748,135 @@ async function seedOperations(
   return { member };
 }
 
+async function seedMemberPortal(
+  tx,
+  config,
+  tenantId,
+  branchId,
+  member,
+) {
+  const memberRole = await upsertRole(tx, {
+    tenantId,
+    name: "MEMBER",
+    scope: "BRANCH",
+    description: "Portal member for development testing.",
+    permissions: ["memberships.read"],
+  });
+  const identity = await upsertTenantIdentity(tx, {
+    ...config.member,
+    tenantId,
+    branchId,
+    memberId: member.id,
+    roleId: memberRole.id,
+    roleScope: memberRole.scope,
+  });
+
+  const workoutPlanId = `seed-member-workout-${member.id}`;
+  await tx.workoutPlan.upsert({
+    where: {
+      tenantId_id: {
+        tenantId,
+        id: workoutPlanId,
+      },
+    },
+    update: {
+      name: "Fuerza de cuerpo completo",
+      description: "Plan vigente asignado por el entrenador.",
+      schedule: "Lunes / Miercoles / Viernes",
+    },
+    create: {
+      id: workoutPlanId,
+      tenantId,
+      memberId: member.id,
+      name: "Fuerza de cuerpo completo",
+      description: "Plan vigente asignado por el entrenador.",
+      schedule: "Lunes / Miercoles / Viernes",
+    },
+  });
+  await tx.workoutPlanExercise.deleteMany({
+    where: { tenantId, workoutPlanId },
+  });
+  await tx.workoutPlanExercise.createMany({
+    data: [
+      {
+        tenantId,
+        workoutPlanId,
+        exerciseName: "Sentadilla",
+        series: 4,
+        reps: "8-10",
+        weight: "Carga progresiva",
+        restSeconds: 90,
+        notes: "Mantener la espalda neutra.",
+      },
+      {
+        tenantId,
+        workoutPlanId,
+        exerciseName: "Press de banca",
+        series: 4,
+        reps: "8-10",
+        weight: "Carga progresiva",
+        restSeconds: 90,
+      },
+      {
+        tenantId,
+        workoutPlanId,
+        exerciseName: "Remo con barra",
+        series: 3,
+        reps: "10-12",
+        weight: "Carga moderada",
+        restSeconds: 75,
+      },
+    ],
+  });
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(7, 0, 0, 0);
+  const classEnd = new Date(tomorrow.getTime() + 60 * 60 * 1000);
+  await tx.classSession.upsert({
+    where: {
+      tenantId_id: {
+        tenantId,
+        id: `seed-member-class-${tenantId}`,
+      },
+    },
+    update: {
+      branchId,
+      name: "Entrenamiento Funcional",
+      trainer: "Coach Gerpy",
+      startTime: tomorrow,
+      endTime: classEnd,
+      capacity: 20,
+    },
+    create: {
+      id: `seed-member-class-${tenantId}`,
+      tenantId,
+      branchId,
+      name: "Entrenamiento Funcional",
+      trainer: "Coach Gerpy",
+      startTime: tomorrow,
+      endTime: classEnd,
+      capacity: 20,
+    },
+  });
+
+  await tx.memberPortalSetting.upsert({
+    where: {
+      tenantId_membershipId: {
+        tenantId,
+        membershipId: identity.membership.id,
+      },
+    },
+    update: {},
+    create: {
+      tenantId,
+      membershipId: identity.membership.id,
+    },
+  });
+
+  return identity;
+}
+
 async function seedFinanceAndPeople(
   tx,
   tenantId,
@@ -1052,12 +1194,19 @@ export async function runSeed() {
           primary.branch.id,
           people.employee.id,
         );
-        await seedOperations(
+        const operations = await seedOperations(
           tx,
           primary.tenant.id,
           primary.branch.id,
           products,
           identities.admin.user.id,
+        );
+        const memberIdentity = await seedMemberPortal(
+          tx,
+          config,
+          primary.tenant.id,
+          primary.branch.id,
+          operations.member,
         );
 
         return {
@@ -1066,6 +1215,7 @@ export async function runSeed() {
           branch: primary.branch,
           admin: identities.admin.user,
           employee: identities.employee.user,
+          member: memberIdentity.user,
           payrollPeriod: people.payrollPeriod,
         };
       },
@@ -1084,7 +1234,10 @@ export async function runSeed() {
       password: config.admin.password,
       employeeEmail: config.employee.email,
       employeePassword: config.employee.password,
+      memberEmail: config.member.email,
+      memberPassword: config.member.password,
       tenant: result.tenant.name,
+      tenantSlug: result.tenant.slug,
       branch: result.branch.name,
       tenants: result.workspaces.map(({ tenant }) => tenant.name),
       tenantIds: result.workspaces.map(({ tenant }) => tenant.id),
@@ -1109,6 +1262,9 @@ async function runCli() {
   console.log(`Login password: ${result.password}`);
   console.log(`Employee email: ${result.employeeEmail}`);
   console.log(`Employee password: ${result.employeePassword}`);
+  console.log(`Member email: ${result.memberEmail}`);
+  console.log(`Member password: ${result.memberPassword}`);
+  console.log(`Member portal: /es/portal/${result.tenantSlug}`);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {

@@ -5,6 +5,7 @@ import { resolveWritableBranchId, scopedBranchWhere } from "@/lib/api/branch";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
 import { created, fail, ok } from "@/lib/api/response";
+import { assertTenantReferenceIds } from "@/lib/api/tenant-reference";
 
 const CreatePaymentSchema = z.object({
   branchId: z.string().optional(),
@@ -25,7 +26,10 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "finance" });
+    const context = await requireApiContext({
+      moduleId: "finance",
+      permission: "finance.read",
+    });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = {
@@ -52,26 +56,62 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "finance" });
+    const context = await requireApiContext({
+      moduleId: "finance",
+      permission: "finance.write",
+    });
     const data = CreatePaymentSchema.parse(await request.json());
     const branchId = await resolveWritableBranchId(context, data.branchId);
 
-    const payment = await prisma.payment.create({
-      data: {
-        tenantId: context.tenantId,
-        branchId,
-        invoiceId: data.invoiceId,
-        memberId: data.memberId,
-        subscriptionId: data.subscriptionId,
-        saleId: data.saleId,
-        amount: new Prisma.Decimal(data.amount),
-        currency: data.currency.toUpperCase(),
-        method: data.method,
-        status: data.status,
-        provider: data.provider,
-        externalReference: data.externalReference,
-        paidAt: data.paidAt ? new Date(data.paidAt) : new Date(),
-      },
+    const payment = await prisma.$transaction(async (tx) => {
+      await Promise.all([
+        assertTenantReferenceIds("Invoice", [data.invoiceId], (ids) =>
+          tx.invoice.findMany({
+            where: { tenantId: context.tenantId, branchId, id: { in: ids } },
+            select: { id: true },
+          }),
+        ),
+        assertTenantReferenceIds("Member", [data.memberId], (ids) =>
+          tx.member.findMany({
+            where: { tenantId: context.tenantId, branchId, id: { in: ids } },
+            select: { id: true },
+          }),
+        ),
+        assertTenantReferenceIds("Subscription", [data.subscriptionId], (ids) =>
+          tx.subscription.findMany({
+            where: {
+              tenantId: context.tenantId,
+              id: { in: ids },
+              member: { branchId },
+            },
+            select: { id: true },
+          }),
+        ),
+        assertTenantReferenceIds("Sale", [data.saleId], (ids) =>
+          tx.sale.findMany({
+            where: { tenantId: context.tenantId, branchId, id: { in: ids } },
+            select: { id: true },
+          }),
+        ),
+      ]);
+
+      return tx.payment.create({
+        data: {
+          tenantId: context.tenantId,
+          branchId,
+          invoiceId: data.invoiceId,
+          memberId: data.memberId,
+          subscriptionId: data.subscriptionId,
+          saleId: data.saleId,
+          amount: new Prisma.Decimal(data.amount),
+          currency: data.currency.toUpperCase(),
+          method: data.method,
+          status: data.status,
+          provider: data.provider,
+          externalReference: data.externalReference,
+          paidAt: data.paidAt ? new Date(data.paidAt) : new Date(),
+        },
+      });
     });
 
     return created(payment);

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import { fail, ok, ApiError } from "@/lib/api/response";
 import { resolveWritableBranchId } from "@/lib/api/branch";
+import { requireBranchAccess } from "@/lib/auth/rbac";
 
 const UpdateDeviceSchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
@@ -21,7 +22,10 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const context = await requireApiContext({ moduleId: "access" });
+    const context = await requireApiContext({
+      moduleId: "access",
+      permission: "access.write",
+    });
     const data = UpdateDeviceSchema.parse(await request.json());
 
     // Verify ownership and existence
@@ -35,6 +39,7 @@ export async function PATCH(
     if (!device) {
       return fail(new ApiError("Device not found or not owned by this tenant.", 404));
     }
+    requireBranchAccess(context, device.branchId);
 
     const updateData: any = {};
     if (data.name !== undefined) updateData.name = data.name;
@@ -46,7 +51,7 @@ export async function PATCH(
     }
 
     const updatedDevice = await prisma.accessDevice.update({
-      where: { id },
+      where: { id, tenantId: context.tenantId },
       data: updateData,
     });
 
@@ -62,7 +67,10 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const context = await requireApiContext({ moduleId: "access" });
+    const context = await requireApiContext({
+      moduleId: "access",
+      permission: "access.admin",
+    });
 
     // Verify ownership
     const device = await prisma.accessDevice.findFirst({
@@ -75,9 +83,10 @@ export async function DELETE(
     if (!device) {
       return fail(new ApiError("Device not found or not owned by this tenant.", 404));
     }
+    requireBranchAccess(context, device.branchId);
 
     await prisma.accessDevice.delete({
-      where: { id },
+      where: { id, tenantId: context.tenantId },
     });
 
     return ok({ success: true });

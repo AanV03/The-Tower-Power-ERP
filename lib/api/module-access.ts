@@ -6,6 +6,7 @@ export type ModuleAccess = {
   moduleKey: ModuleKey;
   permission: string;
   allowSystemWithoutTenant?: boolean;
+  minimumScope?: "TENANT";
 };
 
 type RoutePermission = {
@@ -34,6 +35,7 @@ const MODULE_ACCESS: Record<ModuleId, ModuleAccess> = {
     moduleKey: "ADMIN",
     permission: "admin.read",
     allowSystemWithoutTenant: true,
+    minimumScope: "TENANT",
   },
   catalog: { moduleKey: "CATALOG", permission: "catalog.read" },
   purchases: { moduleKey: "PURCHASES", permission: "purchases.read" },
@@ -41,12 +43,18 @@ const MODULE_ACCESS: Record<ModuleId, ModuleAccess> = {
   accounting: {
     moduleKey: "ACCOUNTING",
     permission: "accounting.read",
+    minimumScope: "TENANT",
   },
-  payroll: { moduleKey: "PAYROLL", permission: "payroll.read" },
+  payroll: {
+    moduleKey: "PAYROLL",
+    permission: "payroll.read",
+    minimumScope: "TENANT",
+  },
   analytics: { moduleKey: "ANALYTICS", permission: "analytics.read" },
   integrations: {
     moduleKey: "INTEGRATIONS",
     permission: "integrations.read",
+    minimumScope: "TENANT",
   },
   maintenance: {
     moduleKey: "MAINTENANCE",

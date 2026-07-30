@@ -4,6 +4,8 @@ import type { Session } from "next-auth";
 
 import { auth } from "@/auth";
 import { getTenantContextFromCookies } from "@/lib/auth/server-session";
+import { getTenantContext } from "@/lib/auth/tenant-context";
+import { prisma } from "@/lib/db/prisma";
 import {
   requireBranchAccess,
   requireModuleAccess,
@@ -102,15 +104,123 @@ function translateGuardError(error: unknown): never {
   throw guards[error.message] ?? error;
 }
 
+async function hasActiveTenantPermission(
+  context: TenantContext,
+  permission: string,
+) {
+  const now = new Date();
+  const assignment = await prisma.roleAssignment.findFirst({
+    where: {
+      branchId: null,
+      revokedAt: null,
+      validFrom: { lte: now },
+      OR: [
+        { validUntil: null },
+        { validUntil: { gte: now } },
+      ],
+      AND: [
+        {
+          OR: [
+            {
+              tenantId: context.tenantId,
+              role: { scope: RoleScope.TENANT },
+            },
+            {
+              role: { scope: RoleScope.SYSTEM },
+            },
+          ],
+        },
+      ],
+      membership: {
+        userId: context.userId,
+        status: "ACTIVE",
+        tenant: { status: "ACTIVE" },
+      },
+      role: {
+        permissions: {
+          some: {
+            permission: { key: permission },
+          },
+        },
+      },
+    },
+    select: { id: true },
+  });
+
+  return Boolean(assignment);
+}
+
 async function getAuthorizationContext() {
+  let claimedContext: AuthorizationContext | null = null;
+
   try {
     const customContext = await getTenantContextFromCookies();
-    if (customContext) return customContext;
+    if (customContext) claimedContext = customContext;
   } catch {
     // Fall through to the NextAuth session.
   }
 
-  return sessionToAuthorizationContext(await auth());
+  claimedContext ??= sessionToAuthorizationContext(await auth());
+  if (!claimedContext) return null;
+
+  if (claimedContext.tenantId) {
+    return getTenantContext(claimedContext.userId, {
+      tenantId: claimedContext.tenantId,
+      branchId: claimedContext.branchId,
+    });
+  }
+
+  if (!claimedContext.isSystemAdmin) return null;
+
+  const now = new Date();
+  const systemAssignments = await prisma.roleAssignment.findMany({
+    where: {
+      branchId: null,
+      revokedAt: null,
+      validFrom: { lte: now },
+      OR: [
+        { validUntil: null },
+        { validUntil: { gte: now } },
+      ],
+      role: { scope: RoleScope.SYSTEM },
+      membership: {
+        userId: claimedContext.userId,
+        status: "ACTIVE",
+        user: { status: "ACTIVE" },
+        tenant: { status: "ACTIVE" },
+      },
+    },
+    select: {
+      role: {
+        select: {
+          name: true,
+          permissions: {
+            select: {
+              permission: { select: { key: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (systemAssignments.length === 0) return null;
+
+  return {
+    ...claimedContext,
+    roles: Array.from(
+      new Set(systemAssignments.map(({ role }) => role.name)),
+    ),
+    roleScopes: [RoleScope.SYSTEM],
+    permissions: Array.from(
+      new Set(
+        systemAssignments.flatMap(({ role }) =>
+          role.permissions.map(({ permission }) => permission.key),
+        ),
+      ),
+    ),
+    isSystemAdmin: true,
+  };
 }
 
 async function authorizeApiContext(
@@ -146,6 +256,12 @@ async function authorizeApiContext(
     if (options.moduleId && !moduleAccess) {
       throw new ApiError("Unknown module.", 404, "MODULE_NOT_FOUND");
     }
+    const routePermission = resolveRoutePermission(
+      requestHeaders.get("x-request-method") ?? "",
+      requestHeaders.get("x-request-path") ?? "",
+    );
+    const permission =
+      options.permission ?? routePermission ?? moduleAccess?.permission;
 
     const systemWithoutTenant =
       context.isSystemAdmin && context.tenantId === null;
@@ -159,21 +275,22 @@ async function authorizeApiContext(
 
       requireSystemAdmin(context);
     } else {
-      requireTenantContext(context);
+      const tenantContext = requireTenantContext(context);
       if (moduleAccess) {
-        requireModuleAccess(context, moduleAccess.moduleKey);
+        requireModuleAccess(tenantContext, moduleAccess.moduleKey);
+        if (
+          moduleAccess.minimumScope === "TENANT" &&
+          (!permission ||
+            !(await hasActiveTenantPermission(tenantContext, permission)))
+        ) {
+          throw new Error("PERMISSION_DENIED");
+        }
       }
       if (options.branchId) {
-        requireBranchAccess(context, options.branchId);
+        requireBranchAccess(tenantContext, options.branchId);
       }
     }
 
-    const routePermission = resolveRoutePermission(
-      requestHeaders.get("x-request-method") ?? "",
-      requestHeaders.get("x-request-path") ?? "",
-    );
-    const permission =
-      options.permission ?? routePermission ?? moduleAccess?.permission;
     if (permission) {
       requirePermission(context, permission);
     }

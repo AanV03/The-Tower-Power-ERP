@@ -6,6 +6,7 @@ const rateLimitModule = await import(
 ) as typeof import("../lib/auth/login-rate-limit");
 const {
   consumeLoginAttempt,
+  consumeTwoFactorAttempt,
   resetLoginRateLimitForTests,
 } = rateLimitModule;
 
@@ -40,6 +41,30 @@ test("isolates IP buckets and resets them after one minute", () => {
   );
   assert.equal(
     consumeLoginAttempt("203.0.113.10", now + 60_000).allowed,
+    true,
+  );
+});
+
+test("isolates 2FA attempts by user and IP", () => {
+  const now = Date.parse("2026-07-27T12:00:00.000Z");
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    assert.equal(
+      consumeTwoFactorAttempt("user-a", "203.0.113.10", now).allowed,
+      true,
+    );
+  }
+
+  assert.equal(
+    consumeTwoFactorAttempt("user-a", "203.0.113.10", now).allowed,
+    false,
+  );
+  assert.equal(
+    consumeTwoFactorAttempt("user-b", "203.0.113.10", now).allowed,
+    true,
+  );
+  assert.equal(
+    consumeTwoFactorAttempt("user-a", "198.51.100.20", now).allowed,
     true,
   );
 });

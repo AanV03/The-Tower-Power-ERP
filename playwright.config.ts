@@ -1,11 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const port = process.env.PLAYWRIGHT_PORT ?? "3100";
 const configuredBaseUrl = process.env.PLAYWRIGHT_BASE_URL;
-const baseURL = configuredBaseUrl ?? `http://127.0.0.1:${port}`;
+const baseURL = configuredBaseUrl ?? "http://127.0.0.1:3000";
 
 export default defineConfig({
-  testDir: "./tests/e2e",
+  testDir: "./tests",
   globalSetup: "./tests/e2e/global-setup.ts",
   timeout: 180_000,
   fullyParallel: false,
@@ -26,10 +25,12 @@ export default defineConfig({
   webServer: configuredBaseUrl
     ? undefined
     : {
-        command: `npm run dev -- --turbopack --hostname=127.0.0.1 --port=${port}`,
+        command: "npm run dev",
         url: baseURL,
         reuseExistingServer: !process.env.CI,
         timeout: 300_000,
+        stdout: "pipe",
+        stderr: "pipe",
       },
   projects: [
     {

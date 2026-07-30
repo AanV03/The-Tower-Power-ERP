@@ -35,6 +35,41 @@ function branchWhere(context: TenantContext) {
   return context.branchId ? { tenantId: context.tenantId, branchId: context.branchId } : tenantWhere(context);
 }
 
+function subscriptionWhere(context: TenantContext) {
+  return {
+    tenantId: context.tenantId,
+    ...(context.branchId ? { member: { branchId: context.branchId } } : {}),
+  };
+}
+
+function inventoryWhere(context: TenantContext) {
+  return {
+    tenantId: context.tenantId,
+    ...(context.branchId ? { warehouse: { branchId: context.branchId } } : {}),
+  };
+}
+
+function cashSessionWhere(context: TenantContext) {
+  return {
+    tenantId: context.tenantId,
+    ...(context.branchId ? { register: { branchId: context.branchId } } : {}),
+  };
+}
+
+function employeeContractWhere(context: TenantContext) {
+  return {
+    tenantId: context.tenantId,
+    ...(context.branchId ? { employee: { branchId: context.branchId } } : {}),
+  };
+}
+
+function specialistSettlementWhere(context: TenantContext) {
+  return {
+    tenantId: context.tenantId,
+    ...(context.branchId ? { specialist: { branchId: context.branchId } } : {}),
+  };
+}
+
 function startOfToday() {
   const date = new Date();
   date.setHours(0, 0, 0, 0);
@@ -54,14 +89,14 @@ function sumDecimal(value: Prisma.Decimal | null | undefined) {
 async function dashboardSummary(context: TenantContext): Promise<ApiModuleSummary> {
   const [activeMembers, activeSubscriptions, revenue, lowStock] = await Promise.all([
     prisma.member.count({ where: { ...branchWhere(context), status: "ACTIVE" } }),
-    prisma.subscription.count({ where: { ...tenantWhere(context), status: "ACTIVE" } }),
+    prisma.subscription.count({ where: { ...subscriptionWhere(context), status: "ACTIVE" } }),
     prisma.payment.aggregate({
       where: { ...branchWhere(context), status: "SUCCEEDED" },
       _sum: { amount: true },
     }),
     prisma.inventoryItem.count({
       where: {
-        tenantId: context.tenantId,
+        ...inventoryWhere(context),
         quantityOnHand: { lte: prisma.inventoryItem.fields.reorderPoint },
       },
     }),
@@ -92,8 +127,8 @@ async function membershipsSummary(context: TenantContext): Promise<ApiModuleSumm
   const [members, plans, activeSubscriptions, pastDue] = await Promise.all([
     prisma.member.count({ where: { ...branchWhere(context), status: "ACTIVE" } }),
     prisma.membershipPlan.count({ where: { ...tenantWhere(context), status: "ACTIVE" } }),
-    prisma.subscription.count({ where: { ...tenantWhere(context), status: "ACTIVE" } }),
-    prisma.subscription.count({ where: { ...tenantWhere(context), status: "PAST_DUE" } }),
+    prisma.subscription.count({ where: { ...subscriptionWhere(context), status: "ACTIVE" } }),
+    prisma.subscription.count({ where: { ...subscriptionWhere(context), status: "PAST_DUE" } }),
   ]);
 
   return {
@@ -171,7 +206,7 @@ async function posSummary(context: TenantContext): Promise<ApiModuleSummary> {
     prisma.sale.aggregate({ where: { ...branchWhere(context), status: "PAID", paidAt: { gte: today } }, _sum: { total: true } }),
     prisma.sale.count({ where: { ...branchWhere(context), status: "PAID", paidAt: { gte: today } } }),
     prisma.posRegister.count({ where: branchWhere(context) }),
-    prisma.cashSession.count({ where: { ...tenantWhere(context), status: "OPEN" } }),
+    prisma.cashSession.count({ where: { ...cashSessionWhere(context), status: "OPEN" } }),
   ]);
 
   return {
@@ -197,11 +232,11 @@ async function inventorySummary(context: TenantContext): Promise<ApiModuleSummar
     prisma.warehouse.count({ where: branchWhere(context) }),
     prisma.inventoryItem.count({
       where: {
-        tenantId: context.tenantId,
+        ...inventoryWhere(context),
         quantityOnHand: { lte: prisma.inventoryItem.fields.reorderPoint },
       },
     }),
-    prisma.inventoryMovement.count({ where: { ...tenantWhere(context), createdAt: { gte: startOfToday() } } }),
+    prisma.inventoryMovement.count({ where: { ...inventoryWhere(context), createdAt: { gte: startOfToday() } } }),
   ]);
 
   return {
@@ -234,7 +269,7 @@ async function hrSummary(context: TenantContext): Promise<ApiModuleSummary> {
     prisma.employee.count({ where: { ...branchWhere(context), status: "ACTIVE" } }),
     prisma.timeClock.count({ where: { ...branchWhere(context), clockIn: { gte: today.start, lt: today.end } } }),
     prisma.timeClock.count({ where: { ...branchWhere(context), clockIn: { gte: today.start, lt: today.end }, clockOut: null } }),
-    prisma.employeeContract.count({ where: tenantWhere(context) }),
+    prisma.employeeContract.count({ where: employeeContractWhere(context) }),
   ]);
 
   return {
@@ -257,7 +292,7 @@ async function hrSummary(context: TenantContext): Promise<ApiModuleSummary> {
 async function marketingSummary(context: TenantContext): Promise<ApiModuleSummary> {
   const [members, activeSubscriptions, overduePayments] = await Promise.all([
     prisma.member.count({ where: branchWhere(context) }),
-    prisma.subscription.count({ where: { ...tenantWhere(context), status: "ACTIVE" } }),
+    prisma.subscription.count({ where: { ...subscriptionWhere(context), status: "ACTIVE" } }),
     prisma.payment.count({ where: { ...branchWhere(context), status: "FAILED" } }),
   ]);
 
@@ -290,7 +325,7 @@ async function specialistsSummary(context: TenantContext): Promise<ApiModuleSumm
     prisma.specialistSession.count({
       where: { ...branchWhere(context), scheduledAt: { gte: today.start, lt: today.end } },
     }),
-    prisma.specialistSettlement.count({ where: { ...tenantWhere(context), status: "DRAFT" } }),
+    prisma.specialistSettlement.count({ where: { ...specialistSettlementWhere(context), status: "DRAFT" } }),
   ]);
 
   return {
@@ -365,7 +400,7 @@ async function purchasesSummary(context: TenantContext): Promise<ApiModuleSummar
     prisma.supplier.count({ where: { ...tenantWhere(context), status: "ACTIVE" } }),
     prisma.invoice.aggregate({ where: { ...branchWhere(context), type: "PAYABLE" }, _sum: { total: true } }),
     prisma.invoice.count({ where: { ...branchWhere(context), type: "PAYABLE", status: { in: ["DRAFT", "ISSUED", "OVERDUE"] } } }),
-    prisma.inventoryMovement.count({ where: { ...tenantWhere(context), type: "PURCHASE", createdAt: { gte: startOfToday() } } }),
+    prisma.inventoryMovement.count({ where: { ...inventoryWhere(context), type: "PURCHASE", createdAt: { gte: startOfToday() } } }),
   ]);
 
   return {
@@ -393,13 +428,13 @@ async function warehouseSummary(context: TenantContext): Promise<ApiModuleSummar
     prisma.warehouse.count({ where: branchWhere(context) }),
     prisma.inventoryItem.count({
       where: {
-        tenantId: context.tenantId,
+        ...inventoryWhere(context),
         quantityOnHand: { lte: prisma.inventoryItem.fields.reorderPoint },
       },
     }),
-    prisma.inventoryMovement.count({ where: { ...tenantWhere(context), createdAt: { gte: startOfToday() } } }),
+    prisma.inventoryMovement.count({ where: { ...inventoryWhere(context), createdAt: { gte: startOfToday() } } }),
     prisma.inventoryMovement.count({
-      where: { ...tenantWhere(context), type: { in: ["TRANSFER_IN", "TRANSFER_OUT"] }, createdAt: { gte: startOfToday() } },
+      where: { ...inventoryWhere(context), type: { in: ["TRANSFER_IN", "TRANSFER_OUT"] }, createdAt: { gte: startOfToday() } },
     }),
   ]);
 
@@ -490,14 +525,14 @@ async function analyticsSummary(
 ): Promise<ApiModuleSummary> {
   const queryContext = {
     ...context,
-    branchId: options?.branchId !== undefined ? (options.branchId === "" ? null : options.branchId) : context.branchId
+    branchId: options?.branchId ?? context.branchId,
   };
 
   const [branches, members, activeSubscriptions, cancelledSubscriptions] = await Promise.all([
-    prisma.branch.count({ where: tenantWhere(queryContext) }),
+    prisma.branch.count({ where: branchWhere(queryContext) }),
     prisma.member.count({ where: branchWhere(queryContext) }),
-    prisma.subscription.count({ where: { ...tenantWhere(queryContext), status: "ACTIVE" } }),
-    prisma.subscription.count({ where: { ...tenantWhere(queryContext), status: "CANCELLED" } }),
+    prisma.subscription.count({ where: { ...subscriptionWhere(queryContext), status: "ACTIVE" } }),
+    prisma.subscription.count({ where: { ...subscriptionWhere(queryContext), status: "CANCELLED" } }),
   ]);
   const denominator = activeSubscriptions + cancelledSubscriptions;
   const dbChurnRate = denominator > 0 ? Math.round((cancelledSubscriptions / denominator) * 100) : 0;

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { assertMaintenanceBranchBelongsToTenant } from "@/lib/api/maintenance";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
-import { created, fail, ok } from "@/lib/api/response";
+import { ApiError, created, fail, ok } from "@/lib/api/response";
 import { prisma } from "@/lib/db/prisma";
 import { connectMongo } from "@/lib/db/mongodb";
 import { MaintenanceTicket } from "@/lib/db/mongo-models";
@@ -23,7 +23,10 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "maintenance" });
+    const context = await requireApiContext({
+      moduleId: "maintenance",
+      permission: "maintenance.read",
+    });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const branchId = searchParams.get("branchId") ?? context.branchId ?? undefined;
@@ -50,10 +53,42 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "maintenance" });
+    const context = await requireApiContext({
+      moduleId: "maintenance",
+      permission: "maintenance.write",
+    });
     const data = CreateMaintenanceTicketSchema.parse(await request.json());
     requireBranchAccess(context, data.branchId);
     await assertMaintenanceBranchBelongsToTenant(prisma, context.tenantId, data.branchId);
+
+    if (data.assignedToUserId) {
+      const now = new Date();
+      const assignee = await prisma.tenantMembership.findFirst({
+        where: {
+          tenantId: context.tenantId,
+          userId: data.assignedToUserId,
+          status: "ACTIVE",
+          branchMemberships: {
+            some: {
+              branchId: data.branchId,
+              revokedAt: null,
+              validFrom: { lte: now },
+              OR: [{ validUntil: null }, { validUntil: { gte: now } }],
+            },
+          },
+        },
+        select: { id: true },
+      });
+
+      if (!assignee) {
+        throw new ApiError(
+          "The assignee is not active in this tenant and branch.",
+          400,
+          "ASSIGNEE_NOT_AVAILABLE_IN_BRANCH",
+        );
+      }
+    }
+
     await connectMongo();
 
     const ticket = await MaintenanceTicket.create({

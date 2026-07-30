@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import { fail, ok, ApiError } from "@/lib/api/response";
+import { assertTenantReferenceIds } from "@/lib/api/tenant-reference";
 
 const UpdateCategorySchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -17,7 +18,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "catalog" });
+    const context = await requireApiContext({
+      moduleId: "catalog",
+      permission: "catalog.write",
+    });
     const { id } = await params;
     const data = UpdateCategorySchema.parse(await request.json());
 
@@ -35,13 +39,28 @@ export async function PUT(
       return fail(new ApiError("Una categoría no puede ser su propio elemento principal.", 400));
     }
 
-    const category = await prisma.productCategory.update({
-      where: { id },
-      data: {
-        name: data.name,
-        parentId: data.parentId || null,
-        status: data.status,
-      },
+    const category = await prisma.$transaction(async (tx) => {
+      await assertTenantReferenceIds(
+        "Parent category",
+        [data.parentId],
+        (ids) =>
+          tx.productCategory.findMany({
+            where: {
+              tenantId: context.tenantId,
+              id: { in: ids, not: id },
+            },
+            select: { id: true },
+          }),
+      );
+
+      return tx.productCategory.update({
+        where: { id, tenantId: context.tenantId },
+        data: {
+          name: data.name,
+          parentId: data.parentId || null,
+          status: data.status,
+        },
+      });
     });
 
     return ok(category);
@@ -55,7 +74,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "catalog" });
+    const context = await requireApiContext({
+      moduleId: "catalog",
+      permission: "catalog.admin",
+    });
     const { id } = await params;
 
     // Verify category belongs to tenant
@@ -69,8 +91,8 @@ export async function DELETE(
 
     // Check for products or subcategories linked
     const [productCount, childCount] = await Promise.all([
-      prisma.product.count({ where: { categoryId: id } }),
-      prisma.productCategory.count({ where: { parentId: id } }),
+      prisma.product.count({ where: { tenantId: context.tenantId, categoryId: id } }),
+      prisma.productCategory.count({ where: { tenantId: context.tenantId, parentId: id } }),
     ]);
 
     if (productCount > 0 || childCount > 0) {
@@ -83,7 +105,7 @@ export async function DELETE(
     }
 
     await prisma.productCategory.delete({
-      where: { id },
+      where: { id, tenantId: context.tenantId },
     });
 
     return ok({ success: true });

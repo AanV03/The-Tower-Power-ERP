@@ -10,6 +10,7 @@ import {
   OnboardingPanel,
 } from "../_components/onboarding-layout";
 import { OnboardingNavButton } from "../_components/onboarding-nav-button";
+import { localizedPath } from "@/lib/localized-routing";
 
 const steps = [
   { label: "Info Gimnasio", href: "/onboarding/gym-info", icon: Building2 },
@@ -19,7 +20,7 @@ const steps = [
 export default function FinishPage() {
   const router = useRouter();
   const params = useParams<{ locale?: string }>();
-  const dashboardHref = `/${params?.locale ?? "es"}/dashboard`;
+  const dashboardHref = localizedPath(params?.locale, "dashboard");
 
   return (
     <OnboardingLayout currentStep={2} steps={steps}>
@@ -55,7 +56,7 @@ export default function FinishPage() {
             type="button"
             className="ml-auto bg-black text-white"
             onClick={() => {
-              router.push(dashboardHref as any);
+              router.push(dashboardHref);
               router.refresh();
             }}
           >

@@ -9,9 +9,12 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const range = searchParams.get("range") || "30d";
-    const branchId = searchParams.get("branchId") || "";
+    const branchId = searchParams.get("branchId")?.trim() || undefined;
 
-    const context = await requireApiContext({ moduleId: "analytics" });
+    const context = await requireApiContext({
+      moduleId: "analytics",
+      branchId,
+    });
     const summary = await getModuleSummary("analytics", context, { range, branchId });
     return ok(summary);
   } catch (error) {

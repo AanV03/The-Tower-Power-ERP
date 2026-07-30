@@ -21,6 +21,7 @@ import { getActiveNavigationGroupId, getNavSectionTheme } from "@/components/lay
 import NotificationsPopover from "@/components/layout/notifications-popover";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { getDictionary, type Locale, locales } from "@/lib/i18n";
+import { localizedPath } from "@/lib/localized-routing";
 import { cn } from "@/lib/utils";
 
 export function Topbar({ locale }: { locale: Locale }) {
@@ -81,7 +82,7 @@ export function Topbar({ locale }: { locale: Locale }) {
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => null);
-    await signOut({ callbackUrl: "/login" });
+    await signOut({ callbackUrl: localizedPath(locale, "login") });
   };
 
   const timeLabel =

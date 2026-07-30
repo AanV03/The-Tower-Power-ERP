@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireApiContext } from "@/lib/api/context";
 import { fail } from "@/lib/api/response";
 import { prisma } from "@/lib/db/prisma";
+import { requireBranchAccess } from "@/lib/auth/rbac";
 
 const AccessValidateSchema = z
   .object({
@@ -24,14 +25,35 @@ function denied(message = "Acceso Denegado", status = 403) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "access" });
+    const context = await requireApiContext({
+      moduleId: "access",
+      permission: "access.write",
+    });
     const data = AccessValidateSchema.parse(await request.json());
     const now = new Date();
     const identifier = data.memberId ?? data.accessCode ?? "UNKNOWN";
+    const device = data.deviceCode
+      ? await prisma.accessDevice.findFirst({
+          where: {
+            tenantId: context.tenantId,
+            code: data.deviceCode,
+            status: "ONLINE",
+          },
+          select: { branchId: true },
+        })
+      : null;
+
+    if (data.deviceCode && !device) {
+      return denied("Acceso Denegado: dispositivo invalido.", 400);
+    }
+
+    if (device) requireBranchAccess(context, device.branchId);
+    const branchId = device?.branchId ?? context.branchId;
 
     const member = await prisma.member.findFirst({
       where: {
         tenantId: context.tenantId,
+        ...(branchId ? { branchId } : {}),
         OR: [
           ...(data.memberId ? [{ id: data.memberId }] : []),
           ...(data.accessCode

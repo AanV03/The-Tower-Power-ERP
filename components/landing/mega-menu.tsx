@@ -193,6 +193,7 @@ export function LandingMegaMenu({ locale = "es", mode }: LandingMegaMenuProps) {
     >
       <button
         type="button"
+        onClick={() => setIsOpen((current) => !current)}
         aria-expanded={isOpen}
         aria-controls="landing-desktop-module-menu"
         className="group relative inline-flex min-h-10 min-w-32 items-center justify-center gap-2 border border-[color:var(--landing-border)] bg-[var(--landing-panel-muted)] px-4 text-xs font-black uppercase tracking-[0.22em] text-[var(--landing-copy)] transition-colors hover:border-[color:var(--landing-accent-strong)] hover:bg-[var(--landing-panel-hover)] hover:text-[var(--landing-accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent-strong)]"

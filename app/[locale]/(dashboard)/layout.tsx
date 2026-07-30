@@ -8,6 +8,7 @@ import { MobileModuleNav } from "@/components/layout/mobile-module-nav";
 import { BrandColorApplier } from "@/components/branding/brand-color-applier";
 import { getTenantContextFromCookies } from "@/lib/auth/server-session";
 import type { Locale } from "@/lib/i18n";
+import { localizedPath } from "@/lib/localized-routing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export default async function DashboardLayout({
   const tenantId = customContext?.tenantId || session?.user?.tenantId;
 
   if (!customContext?.tenantId && !session?.user?.tenantId) {
-    redirect("/login");
+    redirect(localizedPath(locale, "login"));
   }
   
   let brandColors = null;

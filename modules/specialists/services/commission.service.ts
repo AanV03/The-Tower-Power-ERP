@@ -111,6 +111,14 @@ export async function createSpecialistSettlement(
     timeZone,
   );
 
+  await tx.$queryRaw`
+    SELECT pg_advisory_xact_lock(
+      hashtext(
+        ${`${input.tenantId}:${input.specialistId}:${periodStart.toISOString()}:${periodEnd.toISOString()}:settlement`}
+      )
+    )
+  `;
+
   const contract = await tx.specialistContract.findFirst({
     where: {
       tenantId: input.tenantId,

@@ -5,6 +5,7 @@ import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
 import { ApiError, created, fail, ok } from "@/lib/api/response";
 import { isBalancedJournal } from "@/lib/accounting/payroll-posting";
+import { assertTenantReferenceIds } from "@/lib/api/tenant-reference";
 
 const JournalLineSchema = z.object({
   accountId: z.string(),
@@ -70,24 +71,36 @@ export async function POST(request: Request) {
       throw new ApiError("Journal entry must be balanced before it can be saved.", 400, "JOURNAL_NOT_BALANCED");
     }
 
-    const entry = await prisma.journalEntry.create({
-      data: {
-        tenantId: context.tenantId,
-        sourceType: data.sourceType,
-        sourceId: data.sourceId,
-        entryDate: new Date(data.entryDate),
-        description: data.description,
-        status: data.status,
-        lines: {
-          create: data.lines.map((line) => ({
-            tenantId: context.tenantId,
-            accountId: line.accountId,
-            debit: new Prisma.Decimal(line.debit),
-            credit: new Prisma.Decimal(line.credit),
-          })),
+    const entry = await prisma.$transaction(async (tx) => {
+      await assertTenantReferenceIds(
+        "Chart account",
+        data.lines.map((line) => line.accountId),
+        (ids) =>
+          tx.chartAccount.findMany({
+            where: { tenantId: context.tenantId, id: { in: ids } },
+            select: { id: true },
+          }),
+      );
+
+      return tx.journalEntry.create({
+        data: {
+          tenantId: context.tenantId,
+          sourceType: data.sourceType,
+          sourceId: data.sourceId,
+          entryDate: new Date(data.entryDate),
+          description: data.description,
+          status: data.status,
+          lines: {
+            create: data.lines.map((line) => ({
+              tenantId: context.tenantId,
+              accountId: line.accountId,
+              debit: new Prisma.Decimal(line.debit),
+              credit: new Prisma.Decimal(line.credit),
+            })),
+          },
         },
-      },
-      include: { lines: true },
+        include: { lines: true },
+      });
     });
 
     return created(entry);

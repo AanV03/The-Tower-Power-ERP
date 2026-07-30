@@ -85,24 +85,41 @@ export async function createInventoryMovement(
 
     const warehouse = await resolveWarehouse(tx, context, input);
     const quantityDelta = signedQuantity(input.type, input.quantity);
-    const existingItem = await tx.inventoryItem.findUnique({
-      where: {
-        tenantId_warehouseId_productId: {
+    let item;
+    if (quantityDelta.isNegative()) {
+      const outboundQuantity = quantityDelta.abs();
+      const updated = await tx.inventoryItem.updateMany({
+        where: {
           tenantId: context.tenantId,
           warehouseId: warehouse.id,
           productId: product.id,
+          quantityOnHand: { gte: outboundQuantity },
         },
-      },
-    });
-    const currentQuantity = existingItem?.quantityOnHand ?? new Prisma.Decimal(0);
-    const nextQuantity = currentQuantity.plus(quantityDelta);
+        data: {
+          quantityOnHand: { decrement: outboundQuantity },
+        },
+      });
 
-    if (nextQuantity.lessThan(0)) {
-      throw new ApiError("Inventory movement would make stock negative.", 400, "NEGATIVE_STOCK");
-    }
+      if (updated.count !== 1) {
+        throw new ApiError(
+          "Inventory movement would make stock negative.",
+          409,
+          "INSUFFICIENT_STOCK",
+        );
+      }
 
-    const [item, movement] = await Promise.all([
-      tx.inventoryItem.upsert({
+      item = await tx.inventoryItem.findUniqueOrThrow({
+        where: {
+          tenantId_warehouseId_productId: {
+            tenantId: context.tenantId,
+            warehouseId: warehouse.id,
+            productId: product.id,
+          },
+        },
+        include: { product: true, warehouse: { include: { branch: true } } },
+      });
+    } else {
+      item = await tx.inventoryItem.upsert({
         where: {
           tenantId_warehouseId_productId: {
             tenantId: context.tenantId,
@@ -118,14 +135,12 @@ export async function createInventoryMovement(
           quantityReserved: new Prisma.Decimal(0),
           reorderPoint: new Prisma.Decimal(0),
         },
-        update: {
-          quantityOnHand: {
-            increment: quantityDelta,
-          },
-        },
+        update: { quantityOnHand: { increment: quantityDelta } },
         include: { product: true, warehouse: { include: { branch: true } } },
-      }),
-      tx.inventoryMovement.create({
+      });
+    }
+
+    const movement = await tx.inventoryMovement.create({
         data: {
           tenantId: context.tenantId,
           warehouseId: warehouse.id,
@@ -137,8 +152,7 @@ export async function createInventoryMovement(
           sourceId: input.sourceId,
         },
         include: { product: true, warehouse: { include: { branch: true } } },
-      }),
-    ]);
+      });
 
     return { item, movement };
   });

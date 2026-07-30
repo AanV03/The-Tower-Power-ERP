@@ -29,7 +29,7 @@ function normalizeItems(items: CreateSaleDTO["items"]) {
 export class PosService {
   static async executeSale(
     tenantId: string,
-    _branchId: string | null,
+    branchId: string | null,
     cashierId: string,
     payload: CreateSaleDTO,
   ) {
@@ -58,21 +58,35 @@ export class PosService {
         );
       }
 
+      if (branchId && cashSession.register.branchId !== branchId) {
+        throw new ApiError(
+          "La sesion de caja no pertenece a la sucursal activa.",
+          403,
+          "BRANCH_ACCESS_DENIED",
+        );
+      }
+
+      const saleBranchId = cashSession.register.branchId;
+
       if (payload.memberId) {
         const member = await tx.member.findFirst({
           where: {
             id: payload.memberId,
             tenantId,
+            branchId: saleBranchId,
           },
           select: { id: true },
         });
 
         if (!member) {
-          throw new ApiError("El miembro seleccionado no pertenece a este tenant.", 400, "MEMBER_NOT_FOUND");
+          throw new ApiError(
+            "El miembro seleccionado no pertenece a la sucursal de la venta.",
+            400,
+            "MEMBER_NOT_FOUND",
+          );
         }
       }
 
-      const saleBranchId = cashSession.register.branchId;
       const warehouse = await tx.warehouse.findFirst({
         where: {
           tenantId,

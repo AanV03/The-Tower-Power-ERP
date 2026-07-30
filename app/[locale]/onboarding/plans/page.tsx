@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   BadgeCheck,
   Building2,
@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { localizedPath } from "@/lib/localized-routing";
 import { cn } from "@/lib/utils";
 import {
   OnboardingLayout,
@@ -75,6 +76,7 @@ type OnboardingPlanId = (typeof plans)[number]["id"];
 
 export default function PlansPage() {
   const router = useRouter();
+  const { locale } = useParams<{ locale: string }>();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activePlanId, setActivePlanId] = useState<OnboardingPlanId | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<OnboardingPlanId | null>(null);
@@ -122,7 +124,7 @@ export default function PlansPage() {
       return;
     }
 
-    router.push("/onboarding/finish" as any);
+    router.push(localizedPath(locale, "onboarding/finish"));
   }
 
   return (

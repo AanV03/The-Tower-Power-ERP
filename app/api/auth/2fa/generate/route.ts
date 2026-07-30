@@ -7,6 +7,7 @@ import {
   verifyAuthToken,
 } from '@/lib/auth/session';
 import { getTenantContextFromRequest } from '@/lib/auth/server-session';
+import { ApiError, fail } from '@/lib/api/response';
 import { AuthService } from '@/modules/auth/services/auth.service';
 
 export async function POST(req: NextRequest) {
@@ -35,6 +36,19 @@ export async function POST(req: NextRequest) {
       { status: 200 },
     );
   } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message === 'TWO_FACTOR_ALREADY_ENABLED'
+    ) {
+      return fail(
+        new ApiError(
+          'La autenticacion de dos factores ya esta activa.',
+          409,
+          'TWO_FACTOR_ALREADY_ENABLED',
+        ),
+      );
+    }
+
     console.error('[2FA_GENERATE_ERROR]', error);
     return NextResponse.json(
       { ok: false, error: 'INTERNAL_ERROR', message: 'No se pudo generar 2FA.' },

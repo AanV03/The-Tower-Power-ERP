@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { resolveWritableBranchId } from "@/lib/api/branch";
 import { requireApiContext } from "@/lib/api/context";
-import { created, fail, ok } from "@/lib/api/response";
+import { ApiError, created, fail, ok } from "@/lib/api/response";
 
 const AttendanceSchema = z.object({
   employeeId: z.string().min(1),
@@ -34,40 +34,51 @@ export async function POST(request: Request) {
     }
 
     const branchId = await resolveWritableBranchId(context, data.branchId || employee.branchId);
+    if (branchId !== employee.branchId) {
+      throw new ApiError(
+        "The selected branch does not match the employee branch.",
+        400,
+        "EMPLOYEE_BRANCH_MISMATCH",
+      );
+    }
 
     if (data.action === "clock-in") {
-      // Check if there is already an open session
-      const openRecord = await prisma.attendanceRecord.findFirst({
-        where: {
-          tenantId: context.tenantId,
-          employeeId: data.employeeId,
-          clockOut: null,
-        },
-      });
+      const record = await prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`
+          SELECT pg_advisory_xact_lock(
+            hashtext(${`${context.tenantId}:${data.employeeId}:attendance`})
+          )
+        `;
 
-      if (openRecord) {
-        return Response.json(
-          {
-            ok: false,
-            error: "ATTENDANCE_ALREADY_OPEN",
-            message: "El colaborador ya cuenta con una entrada activa.",
+        const openRecord = await tx.attendanceRecord.findFirst({
+          where: {
+            tenantId: context.tenantId,
+            employeeId: data.employeeId,
+            clockOut: null,
           },
-          { status: 400 }
-        );
-      }
+        });
 
-      const record = await prisma.attendanceRecord.create({
-        data: {
-          tenantId: context.tenantId,
-          employeeId: data.employeeId,
-          branchId,
-          clockIn: new Date(),
-          source: AttendanceSource.MANUAL,
-        },
-        include: {
-          employee: true,
-          branch: true,
-        },
+        if (openRecord) {
+          throw new ApiError(
+            "El colaborador ya cuenta con una entrada activa.",
+            409,
+            "ATTENDANCE_ALREADY_OPEN",
+          );
+        }
+
+        return tx.attendanceRecord.create({
+          data: {
+            tenantId: context.tenantId,
+            employeeId: data.employeeId,
+            branchId,
+            clockIn: new Date(),
+            source: AttendanceSource.MANUAL,
+          },
+          include: {
+            employee: true,
+            branch: true,
+          },
+        });
       });
 
       return created(record);

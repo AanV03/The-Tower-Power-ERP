@@ -3,6 +3,7 @@ import { getToken } from "next-auth/jwt";
 
 import { defaultLocale, locales } from "@/lib/i18n";
 import { isAdministrationPath } from "@/lib/api/module-access";
+import { isPublicStaticAssetPath } from "@/lib/api/request-path";
 import {
   TOWER_POWER_SESSION_COOKIE,
   getAuthSecret,
@@ -10,8 +11,6 @@ import {
   validateSessionJti,
   verifyAuthToken,
 } from "@/lib/auth/session";
-
-const PUBLIC_FILE = /\.(.*)$/;
 
 const PUBLIC_PAGES = new Set([
   "/",
@@ -54,6 +53,7 @@ const PROTECTED_PAGE_PREFIXES = [
   "/memberships",
   "/payroll",
   "/pos",
+  "/portal",
   "/profile",
   "/purchases",
   "/settings",
@@ -270,7 +270,7 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico" ||
-    PUBLIC_FILE.test(pathname)
+    isPublicStaticAssetPath(pathname)
   ) {
     return NextResponse.next();
   }

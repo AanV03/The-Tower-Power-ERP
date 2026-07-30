@@ -1,5 +1,12 @@
 import { redirect } from "next/navigation";
 
-export default function SetupPage() {
-  redirect("/onboarding/plans" as any);
+import { localizedPath } from "@/lib/localized-routing";
+
+export default async function SetupPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect(localizedPath(locale, "onboarding/plans"));
 }

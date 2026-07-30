@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import { fail, ok, ApiError } from "@/lib/api/response";
+import { assertTenantReferenceIds } from "@/lib/api/tenant-reference";
 
 const UpdateProductSchema = z.object({
   sku: z.string().trim().min(2).max(80),
@@ -22,7 +23,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "catalog" });
+    const context = await requireApiContext({
+      moduleId: "catalog",
+      permission: "catalog.write",
+    });
     const { id } = await params;
     const data = UpdateProductSchema.parse(await request.json());
 
@@ -35,18 +39,27 @@ export async function PUT(
       return fail(new ApiError("Producto no encontrado", 404));
     }
 
-    const product = await prisma.product.update({
-      where: { id },
-      data: {
-        sku: data.sku,
-        name: data.name,
-        categoryId: data.categoryId || null,
-        price: new Prisma.Decimal(data.price),
-        cost: new Prisma.Decimal(data.cost),
-        taxRate: new Prisma.Decimal(data.taxRate),
-        imageUrl: data.imageUrl || null,
-        status: data.status,
-      },
+    const product = await prisma.$transaction(async (tx) => {
+      await assertTenantReferenceIds("Category", [data.categoryId], (ids) =>
+        tx.productCategory.findMany({
+          where: { tenantId: context.tenantId, id: { in: ids } },
+          select: { id: true },
+        }),
+      );
+
+      return tx.product.update({
+        where: { id, tenantId: context.tenantId },
+        data: {
+          sku: data.sku,
+          name: data.name,
+          categoryId: data.categoryId || null,
+          price: new Prisma.Decimal(data.price),
+          cost: new Prisma.Decimal(data.cost),
+          taxRate: new Prisma.Decimal(data.taxRate),
+          imageUrl: data.imageUrl || null,
+          status: data.status,
+        },
+      });
     });
 
     return ok(product);
@@ -60,7 +73,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const context = await requireApiContext({ moduleId: "catalog" });
+    const context = await requireApiContext({
+      moduleId: "catalog",
+      permission: "catalog.admin",
+    });
     const { id } = await params;
 
     // Verify product belongs to tenant
@@ -74,10 +90,10 @@ export async function DELETE(
 
     // Check for transactional references to prevent database constraint crash
     const [invoiceItemCount, inventoryItemCount, saleItemCount, inventoryMovementCount] = await Promise.all([
-      prisma.invoiceItem.count({ where: { productId: id } }),
-      prisma.inventoryItem.count({ where: { productId: id } }),
-      prisma.saleItem.count({ where: { productId: id } }),
-      prisma.inventoryMovement.count({ where: { productId: id } }),
+      prisma.invoiceItem.count({ where: { tenantId: context.tenantId, productId: id } }),
+      prisma.inventoryItem.count({ where: { tenantId: context.tenantId, productId: id } }),
+      prisma.saleItem.count({ where: { tenantId: context.tenantId, productId: id } }),
+      prisma.inventoryMovement.count({ where: { tenantId: context.tenantId, productId: id } }),
     ]);
 
     if (invoiceItemCount > 0 || inventoryItemCount > 0 || saleItemCount > 0 || inventoryMovementCount > 0) {
@@ -90,7 +106,7 @@ export async function DELETE(
     }
 
     await prisma.product.delete({
-      where: { id },
+      where: { id, tenantId: context.tenantId },
     });
 
     return ok({ success: true });

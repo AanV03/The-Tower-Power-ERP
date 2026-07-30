@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
 import { created, fail, ok } from "@/lib/api/response";
+import { assertTenantReferenceIds } from "@/lib/api/tenant-reference";
 
 const CreateProductSchema = z.object({
   sku: z.string().trim().min(2).max(80).optional(),
@@ -19,7 +20,10 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "inventory" });
+    const context = await requireApiContext({
+      moduleId: "inventory",
+      permission: "inventory.read",
+    });
     const { searchParams } = new URL(request.url);
     const pagination = parsePagination(searchParams);
     const where = {
@@ -30,7 +34,18 @@ export async function GET(request: Request) {
     const [items, total] = await Promise.all([
       prisma.product.findMany({
         where,
-        include: { category: true, inventoryItems: { include: { warehouse: true } } },
+        include: {
+          category: true,
+          inventoryItems: {
+            where: {
+              tenantId: context.tenantId,
+              ...(context.branchId
+                ? { warehouse: { branchId: context.branchId } }
+                : {}),
+            },
+            include: { warehouse: true },
+          },
+        },
         orderBy: { createdAt: "desc" },
         skip: pagination.skip,
         take: pagination.take,
@@ -38,7 +53,17 @@ export async function GET(request: Request) {
       prisma.product.count({ where }),
     ]);
 
-    return ok({ items, total, pagination });
+    return ok({
+      items: items.map((item) => ({
+        ...item,
+        category:
+          item.category?.tenantId === context.tenantId
+            ? item.category
+            : null,
+      })),
+      total,
+      pagination,
+    });
   } catch (error) {
     return fail(error);
   }
@@ -46,21 +71,36 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const context = await requireApiContext({ moduleId: "inventory" });
+    const context = await requireApiContext({
+      moduleId: "inventory",
+      permission: "inventory.write",
+    });
     const data = CreateProductSchema.parse(await request.json());
 
-    const product = await prisma.product.create({
-      data: {
-        tenantId: context.tenantId,
-        sku: data.sku ?? `SKU-${Date.now().toString(36).toUpperCase()}`,
-        name: data.name,
-        categoryId: data.categoryId,
-        price: new Prisma.Decimal(data.price),
-        cost: new Prisma.Decimal(data.cost ?? data.price),
-        taxRate: new Prisma.Decimal(data.taxRate),
-        status: data.status,
-      },
-      include: { category: true, inventoryItems: { include: { warehouse: true } } },
+    const product = await prisma.$transaction(async (tx) => {
+      await assertTenantReferenceIds("Category", [data.categoryId], (ids) =>
+        tx.productCategory.findMany({
+          where: { tenantId: context.tenantId, id: { in: ids } },
+          select: { id: true },
+        }),
+      );
+
+      return tx.product.create({
+        data: {
+          tenantId: context.tenantId,
+          sku: data.sku ?? `SKU-${Date.now().toString(36).toUpperCase()}`,
+          name: data.name,
+          categoryId: data.categoryId,
+          price: new Prisma.Decimal(data.price),
+          cost: new Prisma.Decimal(data.cost ?? data.price),
+          taxRate: new Prisma.Decimal(data.taxRate),
+          status: data.status,
+        },
+        include: {
+          category: true,
+          inventoryItems: { include: { warehouse: true } },
+        },
+      });
     });
 
     return created(product);

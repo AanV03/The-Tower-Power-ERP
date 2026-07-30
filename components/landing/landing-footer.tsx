@@ -11,9 +11,7 @@ const legalLinks = [
 ] as const;
 
 const contactLinks = [
-  { label: "hello@towerpower.example", href: "mailto:hello@towerpower.example", icon: Mail },
-  { label: "+1 (555) 018-2046", href: "tel:+15550182046", icon: Phone },
-  { label: "Austin, TX", href: "https://maps.example.com/tower_power", icon: MapPin },
+  { label: "support@gerpy.com", href: "mailto:support@gerpy.com", icon: Mail },
 ];
 
 export function LandingFooter({ locale = "es" }: { locale?: Locale }) {
@@ -55,6 +53,24 @@ export function LandingFooter({ locale = "es" }: { locale?: Locale }) {
                 </a>
               </li>
             ))}
+            <li>
+              <Link
+                href={localizedPath(locale, "contact")}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--landing-copy)] transition-colors hover:text-[var(--landing-text)]"
+              >
+                <Phone className="h-4 w-4 text-[var(--landing-muted)]" aria-hidden="true" />
+                Hablar con ventas
+              </Link>
+            </li>
+            <li>
+              <Link
+                href={localizedPath(locale, "contact")}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--landing-copy)] transition-colors hover:text-[var(--landing-text)]"
+              >
+                <MapPin className="h-4 w-4 text-[var(--landing-muted)]" aria-hidden="true" />
+                Ubicacion y contacto
+              </Link>
+            </li>
           </ul>
         </div>
       </div>

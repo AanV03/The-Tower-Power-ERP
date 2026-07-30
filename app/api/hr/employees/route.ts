@@ -5,6 +5,7 @@ import { resolveWritableBranchId, scopedBranchWhere } from "@/lib/api/branch";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
 import { created, fail, ok } from "@/lib/api/response";
+import { assertTenantReferenceIds } from "@/lib/api/tenant-reference";
 import { normalizeEmail } from "@/lib/auth/password";
 import { prisma } from "@/lib/db/prisma";
 
@@ -79,6 +80,13 @@ export async function POST(request: Request) {
     const branchId = await resolveWritableBranchId(context, data.branchId);
 
     const employee = await prisma.$transaction(async (tx) => {
+      await assertTenantReferenceIds("Position", [data.positionId], (ids) =>
+        tx.position.findMany({
+          where: { tenantId: context.tenantId, id: { in: ids } },
+          select: { id: true },
+        }),
+      );
+
       const positionId =
         data.positionId ??
         (data.positionName

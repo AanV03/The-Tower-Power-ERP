@@ -13,10 +13,32 @@ import {
   verifyAuthToken,
 } from '@/lib/auth/session';
 import { getTenantContextFromRequest } from '@/lib/auth/server-session';
+import { consumeTwoFactorAttempt } from '@/lib/auth/login-rate-limit';
 import { twoFactorVerifySchema } from '@/modules/auth/schemas/auth.schema';
 import { AuthService } from '@/modules/auth/services/auth.service';
 
 const secureCookie = process.env.NODE_ENV === 'production';
+
+function rateLimitedResponse(resetAt: Date, retryAfterSeconds: number) {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: 'RATE_LIMITED',
+      message: 'Demasiados intentos de codigo 2FA. Intenta de nuevo en un minuto.',
+    },
+    {
+      status: 429,
+      headers: {
+        'Retry-After': String(retryAfterSeconds),
+        'X-RateLimit-Limit': '5',
+        'X-RateLimit-Remaining': '0',
+        'X-RateLimit-Reset': String(
+          Math.ceil(resetAt.getTime() / 1_000),
+        ),
+      },
+    },
+  );
+}
 
 export async function POST(req: NextRequest) {
   const metadata = getSessionRequestMetadata(req);
@@ -42,6 +64,16 @@ export async function POST(req: NextRequest) {
       }
 
       challengeForAudit = challenge;
+      const rateLimit = consumeTwoFactorAttempt(
+        challenge.userId,
+        metadata.ipAddress,
+      );
+      if (!rateLimit.allowed) {
+        return rateLimitedResponse(
+          rateLimit.resetAt,
+          rateLimit.retryAfterSeconds,
+        );
+      }
       const result = await AuthService.verifyTwoFactorLogin(challenge, code);
       const { token: sessionToken } = await createPersistedSession(
         result.payload,
@@ -86,6 +118,16 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      const rateLimit = consumeTwoFactorAttempt(
+        setup.userId,
+        metadata.ipAddress,
+      );
+      if (!rateLimit.allowed) {
+        return rateLimitedResponse(
+          rateLimit.resetAt,
+          rateLimit.retryAfterSeconds,
+        );
+      }
       await AuthService.enableTwoFactor(setup.userId, code);
       const result = await AuthService.createAuthenticatedResult(setup.userId);
       const { token: sessionToken } = await createPersistedSession(
@@ -126,6 +168,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const rateLimit = consumeTwoFactorAttempt(
+      context.userId,
+      metadata.ipAddress,
+    );
+    if (!rateLimit.allowed) {
+      return rateLimitedResponse(
+        rateLimit.resetAt,
+        rateLimit.retryAfterSeconds,
+      );
+    }
     const result = await AuthService.enableTwoFactor(context.userId, code);
     return NextResponse.json({ ok: true, ...result }, { status: 200 });
   } catch (error: any) {

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import { fail, ok, ApiError } from "@/lib/api/response";
 import { resolveWritableBranchId } from "@/lib/api/branch";
+import { requireBranchAccess } from "@/lib/auth/rbac";
 
 const UpdateInvoiceSchema = z.object({
   status: z.enum(InvoiceStatus).optional(),
@@ -20,7 +21,10 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const context = await requireApiContext({ moduleId: "finance" });
+    const context = await requireApiContext({
+      moduleId: "finance",
+      permission: "finance.write",
+    });
     const data = UpdateInvoiceSchema.parse(await request.json());
 
     // Verify ownership and existence
@@ -34,6 +38,7 @@ export async function PATCH(
     if (!invoice) {
       return fail(new ApiError("Invoice not found or not owned by this tenant.", 404));
     }
+    requireBranchAccess(context, invoice.branchId);
 
     const updateData: any = {};
     if (data.status !== undefined) updateData.status = data.status;
@@ -44,7 +49,7 @@ export async function PATCH(
     }
 
     const updatedInvoice = await prisma.invoice.update({
-      where: { id },
+      where: { id, tenantId: context.tenantId },
       data: updateData,
       include: { items: true, customer: true, supplier: true, payments: true },
     });
@@ -61,7 +66,10 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const context = await requireApiContext({ moduleId: "finance" });
+    const context = await requireApiContext({
+      moduleId: "finance",
+      permission: "finance.admin",
+    });
 
     // Verify ownership
     const invoice = await prisma.invoice.findFirst({
@@ -74,9 +82,10 @@ export async function DELETE(
     if (!invoice) {
       return fail(new ApiError("Invoice not found or not owned by this tenant.", 404));
     }
+    requireBranchAccess(context, invoice.branchId);
 
     await prisma.invoice.delete({
-      where: { id },
+      where: { id, tenantId: context.tenantId },
     });
 
     return ok({ success: true });

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Building2, Clock3, CreditCard, MapPin } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { localizedPath } from "@/lib/localized-routing";
 import { cn } from "@/lib/utils";
 import {
   OnboardingLayout,
@@ -44,6 +45,7 @@ const rfcRegex = /^([A-ZÑ&]{3,4})\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])[A-Z0
 
 export default function GymInfoPage() {
   const router = useRouter();
+  const { locale } = useParams<{ locale: string }>();
   const [form, setForm] = useState<OnboardingGymInfo>({
     gymName: "",
     address: "",
@@ -110,7 +112,7 @@ export default function GymInfoPage() {
 
     setErrors(emptyErrors);
     setStoredGymInfo(validation.data);
-    router.push("/onboarding/plans" as any);
+    router.push(localizedPath(locale, "onboarding/plans"));
   }
 
   return (

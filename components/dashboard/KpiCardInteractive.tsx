@@ -54,7 +54,15 @@ export default function KpiCardInteractive({
               }}>
                 {expanded ? dictionary.common.collapse : dictionary.common.drillDown}
               </Button>
-              <Button size="sm" variant="ghost">
+              <Button
+                size="sm"
+                variant="ghost"
+                aria-label={expanded ? dictionary.common.collapse : dictionary.common.drillDown}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setExpanded((current) => !current);
+                }}
+              >
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>

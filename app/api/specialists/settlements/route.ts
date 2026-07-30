@@ -91,11 +91,7 @@ export async function POST(request: Request) {
       where: {
         id: data.specialistId,
         tenantId: context.tenantId,
-        ...(context.branchId
-          ? {
-              OR: [{ branchId: context.branchId }, { branchId: null }],
-            }
-          : {}),
+        ...(context.branchId ? { branchId: context.branchId } : {}),
       },
       include: { branch: { select: { timezone: true } } },
     });
@@ -138,9 +134,7 @@ export async function PATCH(request: Request) {
         where: {
           id: data.settlementId,
           tenantId: context.tenantId,
-          specialist: {
-            OR: [{ branchId: context.branchId }, { branchId: null }],
-          },
+          specialist: { branchId: context.branchId },
         },
         select: { id: true },
       });
