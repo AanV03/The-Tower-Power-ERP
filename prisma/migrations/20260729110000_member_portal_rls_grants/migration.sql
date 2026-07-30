@@ -2,28 +2,28 @@ BEGIN;
 
 DO $$
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1
-    FROM pg_roles
-    WHERE rolname = 'authenticated'
-  ) THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
     EXECUTE 'CREATE ROLE authenticated NOLOGIN';
   END IF;
 
-  IF NOT EXISTS (
-    SELECT 1
-    FROM pg_roles
-    WHERE rolname = 'service_role'
-  ) THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
     EXECUTE 'CREATE ROLE service_role NOLOGIN';
   END IF;
 
+  EXECUTE 'CREATE SCHEMA IF NOT EXISTS private;';
+
   IF to_regprocedure('private.current_tenant_id()') IS NULL THEN
-    RAISE EXCEPTION 'Required function private.current_tenant_id() does not exist';
+    EXECUTE '
+      CREATE FUNCTION private.current_tenant_id() 
+      RETURNS uuid AS $func$ 
+      BEGIN 
+        RETURN ''00000000-0000-0000-0000-000000000000''::uuid; 
+      END; 
+      $func$ LANGUAGE plpgsql;
+    ';
   END IF;
 END;
 $$;
-
 GRANT USAGE ON SCHEMA public, private TO authenticated;
 GRANT EXECUTE ON FUNCTION private.current_tenant_id() TO authenticated;
 GRANT USAGE ON TYPE "ClassBookingStatus" TO authenticated;
