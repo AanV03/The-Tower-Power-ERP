@@ -62,26 +62,11 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
-      - name: Create local RLS execution role
+      - name: Bootstrap Supabase roles
         run: |
-          psql "$DIRECT_URL" -v ON_ERROR_STOP=1 <<'SQL'
-          DO $$
-          BEGIN
-            IF NOT EXISTS (
-              SELECT 1 FROM pg_roles WHERE rolname = 'authenticated'
-            ) THEN
-              CREATE ROLE authenticated
-                NOLOGIN
-                NOSUPERUSER
-                NOCREATEDB
-                NOCREATEROLE
-                NOINHERIT
-                NOBYPASSRLS;
-            END IF;
-          END;
-          $$;
-          GRANT authenticated TO postgres;
-          SQL
+          psql $DATABASE_URL -c "CREATE ROLE authenticated NOLOGIN;" || true
+          psql $DATABASE_URL -c "CREATE ROLE anon NOLOGIN;" || true
+          psql $DATABASE_URL -c "CREATE ROLE service_role NOLOGIN;" || true
 
       - name: Apply Prisma migrations
         run: npx prisma migrate deploy
