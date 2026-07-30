@@ -1,19 +1,22 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const isCI = Boolean(process.env.CI);
 const configuredBaseUrl = process.env.PLAYWRIGHT_BASE_URL;
-const baseURL = configuredBaseUrl ?? "http://127.0.0.1:3000";
+const serverPort = process.env.PLAYWRIGHT_PORT ?? "3000";
+const baseURL =
+  configuredBaseUrl ?? `http://127.0.0.1:${serverPort}`;
 
 export default defineConfig({
   testDir: "./tests",
   globalSetup: "./tests/e2e/global-setup.ts",
-  timeout: 180_000,
+  timeout: isCI ? 120_000 : 180_000,
   fullyParallel: false,
-  forbidOnly: Boolean(process.env.CI),
-  retries: process.env.CI ? 2 : 0,
+  forbidOnly: isCI,
+  retries: isCI ? 2 : 0,
   workers: 1,
   reporter: [["list"], ["html", { open: "never" }]],
   expect: {
-    timeout: 20_000,
+    timeout: isCI ? 20_000 : 10_000,
   },
   use: {
     baseURL,
@@ -25,10 +28,12 @@ export default defineConfig({
   webServer: configuredBaseUrl
     ? undefined
     : {
-        command: "npm run dev",
+        command: isCI
+          ? `npm run build && npm start -- --hostname 127.0.0.1 --port ${serverPort}`
+          : `npm run dev -- --hostname 127.0.0.1 --port ${serverPort}`,
         url: baseURL,
-        reuseExistingServer: !process.env.CI,
-        timeout: 300_000,
+        reuseExistingServer: !isCI,
+        timeout: isCI ? 600_000 : 300_000,
         stdout: "pipe",
         stderr: "pipe",
       },

@@ -255,16 +255,13 @@ test.describe("Suite B: aislamiento multi-tenant y RBAC zero-trust", () => {
       });
     });
 
-    await test.step("ignora tenantId manipulado en URLs de lectura", async () => {
+    await test.step("bloquea Nómina y mantiene RR. HH. aislado ante tenantId manipulado", async () => {
       const payrollResponse = await page.request.get(
         `/api/payroll/periods?tenantId=${encodeURIComponent(tenantBId!)}`,
       );
-      const payrollPayload = await payrollResponse.json() as ApiEnvelope<{
-        items: TenantRecord[];
-      }>;
-      expect(payrollResponse.status()).toBe(200);
-      expect(payrollPayload.data?.items.length).toBeGreaterThan(0);
-      expect(payrollPayload.data?.items.every((item) => item.tenantId === tenantAId)).toBe(true);
+      const payrollPayload = await payrollResponse.json() as ApiEnvelope<unknown>;
+      expect(payrollResponse.status()).toBe(403);
+      expect(payrollPayload.error).toBe("PERMISSION_DENIED");
 
       const employeeResponse = await page.request.get(
         `/api/hr/employees?tenantId=${encodeURIComponent(tenantBId!)}`,
@@ -295,7 +292,7 @@ test.describe("Suite B: aislamiento multi-tenant y RBAC zero-trust", () => {
         { waitUntil: "networkidle" },
       );
       await expect(page.getByTestId("payroll-page")).toBeVisible();
-      await expect(page.getByTestId("payroll-period-status")).toHaveText("Aprobado");
+      await expect(page.getByTestId("payroll-access-denied")).toBeVisible();
     });
   });
 });
