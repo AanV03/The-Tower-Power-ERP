@@ -16,6 +16,8 @@ tsconfig.tsbuildinfo
 playwright-report/
 test-results/
 tmp/
-tsconfig.tsbuildinfo
+*.tsbuildinfo
+sentry-wizard-*.log
 # Sentry Config File
 .env.sentry-build-plugin
+
