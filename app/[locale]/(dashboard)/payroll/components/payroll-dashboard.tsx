@@ -22,6 +22,7 @@ import type {
 } from "@/components/modules/payroll/types";
 import { requireApiContext } from "@/lib/api/context";
 import { formatCurrency } from "@/lib/api/pagination";
+import { ApiError } from "@/lib/api/response";
 import { prisma } from "@/lib/db/prisma";
 import { DEFAULT_TIME_ZONE, getDayBoundsForTimeZone } from "@/lib/date/timezone";
 import type { Locale } from "@/lib/i18n";
@@ -64,6 +65,18 @@ function payrollSourceLabel(email: string | null) {
     : "Empleado";
 }
 
+async function getPayrollContext() {
+  try {
+    return await requireApiContext({ moduleId: "payroll" });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 403) {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
 export async function PayrollDashboard({
   locale,
   selectedPeriodId,
@@ -71,7 +84,26 @@ export async function PayrollDashboard({
   locale: Locale;
   selectedPeriodId?: string;
 }) {
-  const context = await requireApiContext({ moduleId: "payroll" });
+  const context = await getPayrollContext();
+
+  if (!context) {
+    return (
+      <div className="space-y-6 p-4 sm:p-6" data-testid="payroll-page">
+        <div
+          className="flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card/60 p-6 text-center"
+          data-testid="payroll-access-denied"
+          role="alert"
+        >
+          <AlertCircle className="size-8 text-destructive" aria-hidden="true" />
+          <h1 className="text-2xl font-bold text-foreground">Acceso denegado</h1>
+          <p className="max-w-lg text-sm text-muted-foreground">
+            No tienes permisos para consultar o administrar la nómina de esta sucursal.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const employeeWhere = {
     tenantId: context.tenantId,
     ...(context.branchId ? { branchId: context.branchId } : {}),

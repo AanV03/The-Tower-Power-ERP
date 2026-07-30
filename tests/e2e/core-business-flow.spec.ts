@@ -222,23 +222,21 @@ test.describe("Suite B: aislamiento multi-tenant y RBAC zero-trust", () => {
     await test.step("rechaza con 403 el pago directo de nómina", async () => {
       await page.goto("/es/payroll", { waitUntil: "networkidle" });
       await expect(page.getByTestId("payroll-page")).toBeVisible();
-      const payButton = page.getByTestId("payroll-pay-button");
-      await expect(payButton).toBeEnabled();
+      await expect(page.getByTestId("payroll-access-denied")).toBeVisible();
+      await expect(
+        page.getByText("Acceso denegado", { exact: true }),
+      ).toBeVisible();
 
-      const payResponsePromise = page.waitForResponse(
-        (response) =>
-          /\/api\/payroll\/periods\/[^/]+\/pay$/.test(response.url()) &&
-          response.request().method() === "POST",
+      const payrollPeriodId = process.env.E2E_PAYROLL_PERIOD_ID;
+      expect(payrollPeriodId).toBeTruthy();
+
+      const payResponse = await page.request.post(
+        `/api/payroll/periods/${encodeURIComponent(payrollPeriodId!)}/pay`,
       );
-      await payButton.click();
-      const payResponse = await payResponsePromise;
       const payload = await payResponse.json() as ApiEnvelope<unknown>;
 
       expect(payResponse.status()).toBe(403);
       expect(payload.error).toBe("PERMISSION_DENIED");
-      await expect(
-        page.getByText("Permisos insuficientes en esta sucursal", { exact: true }),
-      ).toBeVisible();
     });
   });
 
