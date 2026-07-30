@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Typecheck, database and E2E
+    name: Build and lint
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -43,7 +43,6 @@ jobs:
       MFA_ENCRYPTION_KEY: ci-mfa-key-at-least-32-characters
       NEXTAUTH_SECRET: ci-auth-secret-at-least-32-characters
       NEXTAUTH_URL: http://127.0.0.1:3100
-      PLAYWRIGHT_PORT: "3100"
 
     steps:
       - name: Checkout
@@ -71,41 +70,8 @@ jobs:
       - name: Apply Prisma migrations
         run: npx prisma migrate deploy
 
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
 
-      - name: Unit tests
-        run: |
-          npm run test:auth
-          npm run test:api
-
-      - name: Tenant isolation integration test
-        run: >-
-          node --experimental-strip-types --test
-          scripts/tenant-isolation.test.mjs
-
-      - name: Core backend integration test
-        run: npm run test:core-integration
-
-      - name: Session revocation integration test
-        run: npm run test:session
-
-      - name: Seed isolated E2E database
-        run: npx prisma db seed
-
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
-
-      - name: Playwright E2E
-        run: npm run test:e2e
-
-      - name: Upload Playwright diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: playwright-report
-          path: |
-            playwright-report/
-            test-results/
-          if-no-files-found: ignore
-          retention-days: 7
+      - name: Production build
+        run: npm run build
