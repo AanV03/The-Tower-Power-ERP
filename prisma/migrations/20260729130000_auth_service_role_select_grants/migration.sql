@@ -1,6 +1,18 @@
 BEGIN;
 
 DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_roles
+    WHERE rolname = 'service_role' AND rolbypassrls = false
+  ) THEN
+    EXECUTE 'ALTER ROLE service_role BYPASSRLS';
+  END IF;
+END;
+$$;
+
+DO $$
 DECLARE
   service_role_bypasses_rls boolean;
 BEGIN
