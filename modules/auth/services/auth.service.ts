@@ -347,7 +347,7 @@ export class AuthService {
 
   static async generateTwoFactorSetup(userId: string) {
     return prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`
+      await tx.$executeRaw`
         SELECT pg_advisory_xact_lock(
           hashtext(${`${userId}:mfa-setup`})
         )

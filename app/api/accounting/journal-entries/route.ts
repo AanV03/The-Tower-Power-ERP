@@ -1,6 +1,6 @@
 import { JournalEntryStatus, Prisma } from "@prisma/client";
 import { z } from "zod";
-import { prisma } from "@/lib/db/prisma";
+import { prisma, withTenantTransaction } from "@/lib/db/prisma";
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
 import { ApiError, created, fail, ok } from "@/lib/api/response";
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       throw new ApiError("Journal entry must be balanced before it can be saved.", 400, "JOURNAL_NOT_BALANCED");
     }
 
-    const entry = await prisma.$transaction(async (tx) => {
+    const entry = await withTenantTransaction(context.tenantId, async (tx) => {
       await assertTenantReferenceIds(
         "Chart account",
         data.lines.map((line) => line.accountId),

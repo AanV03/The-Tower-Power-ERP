@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # The-Tower-Power-ERP
 
 The-Tower-Power-ERP, anteriormente Gerpy, es un ERP financiero y operativo
@@ -7,17 +6,11 @@ Supabase PostgreSQL y MongoDB. Su arquitectura combina sesiones revocables
 mediante JTI, RBAC por tenant y sucursal, Row-Level Security, gamificación
 aislada, contabilización idempotente y procesamiento asíncrono mediante
 Outbox.
-=======
-# Gerpy — ERP Financiero y Operativo Multi-Tenant
-
-**Gerpy** (The Tower Power) es una plataforma ERP SaaS de grado empresarial construida para la gestión operativa y financiera multi-sucursal de centros deportivos y gimnasios. 
->>>>>>> a8d59c92aebe313924b1399de1671b90df68d3a4
 
 Desarrollada sobre **Next.js 15 App Router**, **TypeScript**, **Prisma ORM sobre PostgreSQL** (con **Row-Level Security**) y **MongoDB/Mongoose** para almacenamiento documental/eventos.
 
 ---
 
-<<<<<<< HEAD
 - Modelo multi-tenant y RBAC.
 - Aislamiento PostgreSQL RLS y guards de sucursal.
 - Sesiones, 2FA, rate limiting y auditoría.
@@ -26,9 +19,6 @@ Desarrollada sobre **Next.js 15 App Router**, **TypeScript**, **Prisma ORM sobre
 - Flujo transaccional de nómina a contabilidad.
 - Idempotencia, Outbox, cron y webhooks HMAC.
 - Estrategia de pruebas y pipeline de CI.
-=======
-##  Características Principales
->>>>>>> a8d59c92aebe313924b1399de1671b90df68d3a4
 
 ### Multi-Tenancy y Seguridad Avanzada
 - **Aislamiento Estricto por Tenant**: Derivación segura de contexto desde la sesión Auth.js/JWT; no se permite suplantación por headers.
