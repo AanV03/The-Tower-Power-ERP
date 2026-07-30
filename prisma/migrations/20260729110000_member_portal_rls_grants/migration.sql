@@ -7,7 +7,15 @@ BEGIN
     FROM pg_roles
     WHERE rolname = 'authenticated'
   ) THEN
-    RAISE EXCEPTION 'Required database role "authenticated" does not exist';
+    EXECUTE 'CREATE ROLE authenticated NOLOGIN';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_roles
+    WHERE rolname = 'service_role'
+  ) THEN
+    EXECUTE 'CREATE ROLE service_role NOLOGIN';
   END IF;
 
   IF to_regprocedure('private.current_tenant_id()') IS NULL THEN
