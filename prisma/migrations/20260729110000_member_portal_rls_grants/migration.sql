@@ -15,9 +15,9 @@ BEGIN
   IF to_regprocedure('private.current_tenant_id()') IS NULL THEN
     EXECUTE '
       CREATE FUNCTION private.current_tenant_id() 
-      RETURNS uuid AS $func$ 
+      RETURNS text AS $func$
       BEGIN 
-        RETURN ''00000000-0000-0000-0000-000000000000''::uuid; 
+        RETURN ''00000000-0000-0000-0000-000000000000''::text;
       END; 
       $func$ LANGUAGE plpgsql;
     ';
