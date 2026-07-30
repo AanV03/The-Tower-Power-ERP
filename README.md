@@ -129,7 +129,6 @@ pnpm lhci:all
 
 # Compilación de producción
 pnpm build
-```
 
 ---
 
