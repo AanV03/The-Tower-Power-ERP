@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { loginSchema } from '@/modules/auth/schemas/auth.schema';
 import { AuthService } from '@/modules/auth/services/auth.service';
-import { consumeLoginAttempt } from '@/lib/auth/login-rate-limit';
+import {
+  consumeLoginAttempt,
+  shouldBypassRateLimit,
+} from '@/lib/auth/login-rate-limit';
 import {
   createAuthToken,
   createPersistedSession,
@@ -19,10 +22,12 @@ const secureCookie = process.env.NODE_ENV === 'production';
 
 export async function POST(req: NextRequest) {
   const metadata = getSessionRequestMetadata(req);
-  const rateLimit = consumeLoginAttempt(metadata.ipAddress);
+  const rateLimit = shouldBypassRateLimit(req.headers)
+    ? null
+    : consumeLoginAttempt(metadata.ipAddress);
   let attemptedEmail: string | null = null;
 
-  if (!rateLimit.allowed) {
+  if (rateLimit && !rateLimit.allowed) {
     return NextResponse.json(
       {
         ok: false,

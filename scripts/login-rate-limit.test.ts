@@ -8,6 +8,7 @@ const {
   consumeLoginAttempt,
   consumeTwoFactorAttempt,
   resetLoginRateLimitForTests,
+  shouldBypassRateLimit,
 } = rateLimitModule;
 
 afterEach(() => {
@@ -67,4 +68,57 @@ test("isolates 2FA attempts by user and IP", () => {
     consumeTwoFactorAttempt("user-a", "198.51.100.20", now).allowed,
     true,
   );
+});
+
+test("allows the E2E bypass only with the server flag and header", () => {
+  const previousValue = process.env.E2E_RATE_LIMIT_BYPASS;
+  const previousCi = process.env.CI;
+  const previousNodeEnv = process.env.NODE_ENV;
+
+  try {
+    process.env.E2E_RATE_LIMIT_BYPASS = "true";
+    assert.equal(
+      shouldBypassRateLimit(
+        new Headers({ "x-e2e-bypass-rate-limit": "true" }),
+      ),
+      true,
+    );
+    assert.equal(shouldBypassRateLimit(new Headers()), false);
+
+    process.env.E2E_RATE_LIMIT_BYPASS = "false";
+    assert.equal(
+      shouldBypassRateLimit(
+        new Headers({ "x-e2e-bypass-rate-limit": "true" }),
+      ),
+      false,
+    );
+
+    process.env.E2E_RATE_LIMIT_BYPASS = "true";
+    delete process.env.CI;
+    Reflect.set(process.env, "NODE_ENV", "production");
+    assert.equal(
+      shouldBypassRateLimit(
+        new Headers({ "x-e2e-bypass-rate-limit": "true" }),
+      ),
+      false,
+    );
+  } finally {
+    if (previousValue === undefined) {
+      delete process.env.E2E_RATE_LIMIT_BYPASS;
+    } else {
+      process.env.E2E_RATE_LIMIT_BYPASS = previousValue;
+    }
+
+    if (previousCi === undefined) {
+      delete process.env.CI;
+    } else {
+      process.env.CI = previousCi;
+    }
+
+    if (previousNodeEnv === undefined) {
+      Reflect.deleteProperty(process.env, "NODE_ENV");
+    } else {
+      Reflect.set(process.env, "NODE_ENV", previousNodeEnv);
+    }
+  }
 });

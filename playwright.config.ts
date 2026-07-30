@@ -21,6 +21,9 @@ export default defineConfig({
   use: {
     baseURL,
     headless: true,
+    extraHTTPHeaders: {
+      "x-e2e-bypass-rate-limit": "true",
+    },
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
     video: "retain-on-failure",
@@ -34,6 +37,9 @@ export default defineConfig({
         url: baseURL,
         reuseExistingServer: !isCI,
         timeout: isCI ? 600_000 : 300_000,
+        env: {
+          E2E_RATE_LIMIT_BYPASS: "true",
+        },
         stdout: "pipe",
         stderr: "pipe",
       },

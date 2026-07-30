@@ -13,7 +13,10 @@ import {
   verifyAuthToken,
 } from '@/lib/auth/session';
 import { getTenantContextFromRequest } from '@/lib/auth/server-session';
-import { consumeTwoFactorAttempt } from '@/lib/auth/login-rate-limit';
+import {
+  consumeTwoFactorAttempt,
+  shouldBypassRateLimit,
+} from '@/lib/auth/login-rate-limit';
 import { twoFactorVerifySchema } from '@/modules/auth/schemas/auth.schema';
 import { AuthService } from '@/modules/auth/services/auth.service';
 
@@ -42,6 +45,7 @@ function rateLimitedResponse(resetAt: Date, retryAfterSeconds: number) {
 
 export async function POST(req: NextRequest) {
   const metadata = getSessionRequestMetadata(req);
+  const bypassRateLimit = shouldBypassRateLimit(req.headers);
   let challengeForAudit: TwoFactorChallengePayload | null = null;
 
   try {
@@ -64,11 +68,13 @@ export async function POST(req: NextRequest) {
       }
 
       challengeForAudit = challenge;
-      const rateLimit = consumeTwoFactorAttempt(
-        challenge.userId,
-        metadata.ipAddress,
-      );
-      if (!rateLimit.allowed) {
+      const rateLimit = bypassRateLimit
+        ? null
+        : consumeTwoFactorAttempt(
+            challenge.userId,
+            metadata.ipAddress,
+          );
+      if (rateLimit && !rateLimit.allowed) {
         return rateLimitedResponse(
           rateLimit.resetAt,
           rateLimit.retryAfterSeconds,
@@ -118,11 +124,13 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const rateLimit = consumeTwoFactorAttempt(
-        setup.userId,
-        metadata.ipAddress,
-      );
-      if (!rateLimit.allowed) {
+      const rateLimit = bypassRateLimit
+        ? null
+        : consumeTwoFactorAttempt(
+            setup.userId,
+            metadata.ipAddress,
+          );
+      if (rateLimit && !rateLimit.allowed) {
         return rateLimitedResponse(
           rateLimit.resetAt,
           rateLimit.retryAfterSeconds,
@@ -168,11 +176,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const rateLimit = consumeTwoFactorAttempt(
-      context.userId,
-      metadata.ipAddress,
-    );
-    if (!rateLimit.allowed) {
+    const rateLimit = bypassRateLimit
+      ? null
+      : consumeTwoFactorAttempt(
+          context.userId,
+          metadata.ipAddress,
+        );
+    if (rateLimit && !rateLimit.allowed) {
       return rateLimitedResponse(
         rateLimit.resetAt,
         rateLimit.retryAfterSeconds,

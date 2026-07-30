@@ -2,6 +2,9 @@ const LOGIN_ATTEMPT_LIMIT = 5;
 const LOGIN_WINDOW_MS = 60_000;
 const MAX_TRACKED_IPS = 10_000;
 
+export const E2E_RATE_LIMIT_BYPASS_HEADER =
+  "x-e2e-bypass-rate-limit";
+
 type RateLimitBucket = {
   attempts: number;
   resetAt: number;
@@ -28,6 +31,19 @@ const state =
   { buckets: new Map<string, RateLimitBucket>(), lastSweepAt: 0 };
 
 globalRateLimit.__towerPowerLoginRateLimit = state;
+
+export function shouldBypassRateLimit(headers: Headers) {
+  const isAutomatedTestRuntime =
+    process.env.CI === "true" ||
+    process.env.NODE_ENV !== "production";
+
+  return (
+    isAutomatedTestRuntime &&
+    process.env.E2E_RATE_LIMIT_BYPASS === "true" &&
+    headers.get(E2E_RATE_LIMIT_BYPASS_HEADER)?.trim().toLowerCase() ===
+      "true"
+  );
+}
 
 function sweepExpiredBuckets(now: number) {
   if (now - state.lastSweepAt < LOGIN_WINDOW_MS) return;
