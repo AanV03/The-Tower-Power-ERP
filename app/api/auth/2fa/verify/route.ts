@@ -4,6 +4,7 @@ import {
   createPersistedSession,
   getSessionRequestMetadata,
   recordMfaChallengeFailure,
+  shouldUseSecureAuthCookies,
   TOWER_POWER_SESSION_COOKIE,
   TOWER_POWER_TWO_FACTOR_COOKIE,
   TOWER_POWER_TWO_FACTOR_SETUP_COOKIE,
@@ -19,8 +20,6 @@ import {
 } from '@/lib/auth/login-rate-limit';
 import { twoFactorVerifySchema } from '@/modules/auth/schemas/auth.schema';
 import { AuthService } from '@/modules/auth/services/auth.service';
-
-const secureCookie = process.env.NODE_ENV === 'production';
 
 function rateLimitedResponse(resetAt: Date, retryAfterSeconds: number) {
   return NextResponse.json(
@@ -46,6 +45,7 @@ function rateLimitedResponse(resetAt: Date, retryAfterSeconds: number) {
 export async function POST(req: NextRequest) {
   const metadata = getSessionRequestMetadata(req);
   const bypassRateLimit = shouldBypassRateLimit(req.headers);
+  const secureCookie = shouldUseSecureAuthCookies();
   let challengeForAudit: TwoFactorChallengePayload | null = null;
 
   try {

@@ -38,7 +38,13 @@ export default defineConfig({
         reuseExistingServer: !isCI,
         timeout: isCI ? 600_000 : 300_000,
         env: {
+          E2E_ALLOW_INSECURE_AUTH_COOKIES: "true",
+          E2E_DISABLE_SENTRY: "true",
           E2E_RATE_LIMIT_BYPASS: "true",
+          NEXT_PUBLIC_SENTRY_DISABLED: "true",
+          NEXT_PUBLIC_SENTRY_DSN: "",
+          SENTRY_DSN: "",
+          SENTRY_IGNORE_API_RESOLUTION_ERROR: "1",
         },
         stdout: "pipe",
         stderr: "pipe",

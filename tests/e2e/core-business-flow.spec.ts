@@ -94,15 +94,23 @@ async function login(
 test.describe.configure({ mode: "serial" });
 
 test.describe("Suite A: frontera de seguridad y autenticación", () => {
-  test("bloquea el sexto intento de fuerza bruta por IP", async ({ page }) => {
+  test.afterAll(async () => {
+    await resetE2ESeed();
+  });
+
+  test("bloquea el sexto intento de fuerza bruta por IP", async ({ page }, testInfo) => {
+    const bruteForceIp = `199.199.199.${199 + testInfo.retry}`;
+
     await page.route("**/api/auth/login", async (route) => {
       const headers = await route.request().allHeaders();
       delete headers["x-e2e-bypass-rate-limit"];
+      headers["x-forwarded-for"] = bruteForceIp;
+      headers["x-real-ip"] = bruteForceIp;
       await route.continue({ headers });
     });
 
     await test.step("abre el login con una IP aislada", async () => {
-      await openLogin(page, "203.0.113.11");
+      await openLogin(page, bruteForceIp);
       await page.getByTestId("login-email").fill("ataque@towerpower.local");
       await page.getByTestId("login-password").fill("CredencialIncorrecta!2026");
     });

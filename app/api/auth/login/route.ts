@@ -11,6 +11,7 @@ import {
   createPersistedSession,
   getSessionRequestMetadata,
   recordLoginFailure,
+  shouldUseSecureAuthCookies,
   TOWER_POWER_SESSION_COOKIE,
   TOWER_POWER_TWO_FACTOR_COOKIE,
   TOWER_POWER_TWO_FACTOR_SETUP_COOKIE,
@@ -18,37 +19,37 @@ import {
   TWO_FACTOR_CHALLENGE_MAX_AGE_SECONDS,
 } from '@/lib/auth/session';
 
-const secureCookie = process.env.NODE_ENV === 'production';
-
 export async function POST(req: NextRequest) {
   const metadata = getSessionRequestMetadata(req);
-  const rateLimit = shouldBypassRateLimit(req.headers)
-    ? null
-    : consumeLoginAttempt(metadata.ipAddress);
   let attemptedEmail: string | null = null;
 
-  if (rateLimit && !rateLimit.allowed) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: 'RATE_LIMITED',
-        message: 'Demasiados intentos de inicio de sesion. Intenta de nuevo en un minuto.',
-      },
-      {
-        status: 429,
-        headers: {
-          'Retry-After': String(rateLimit.retryAfterSeconds),
-          'X-RateLimit-Limit': '5',
-          'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': String(
-            Math.ceil(rateLimit.resetAt.getTime() / 1_000),
-          ),
+  if (!shouldBypassRateLimit(req.headers)) {
+    const rateLimit = consumeLoginAttempt(metadata.ipAddress);
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'RATE_LIMITED',
+          message: 'Demasiados intentos de inicio de sesion. Intenta de nuevo en un minuto.',
         },
-      },
-    );
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimit.retryAfterSeconds),
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': String(
+              Math.ceil(rateLimit.resetAt.getTime() / 1_000),
+            ),
+          },
+        },
+      );
+    }
   }
 
   try {
+    const secureCookie = shouldUseSecureAuthCookies();
     const body = await req.json();
     const credentials = loginSchema.parse(body);
     attemptedEmail = credentials.email;

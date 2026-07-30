@@ -16,6 +16,18 @@ export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 export const TWO_FACTOR_CHALLENGE_MAX_AGE_SECONDS = 60 * 5;
 export const TWO_FACTOR_SETUP_MAX_AGE_SECONDS = 60 * 10;
 
+export function shouldUseSecureAuthCookies() {
+  const allowsInsecureE2ECookies =
+    process.env.E2E_ALLOW_INSECURE_AUTH_COOKIES === "true" &&
+    (process.env.CI === "true" ||
+      process.env.NODE_ENV !== "production");
+
+  return (
+    process.env.NODE_ENV === "production" &&
+    !allowsInsecureE2ECookies
+  );
+}
+
 type TokenType = "session" | "2fa" | "2fa_setup";
 
 type BaseTokenPayload = {

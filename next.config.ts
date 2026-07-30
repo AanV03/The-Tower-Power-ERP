@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
 };
 
-export default withSentryConfig(nextConfig, {
+const sentryConfig = {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
@@ -41,4 +41,8 @@ export default withSentryConfig(nextConfig, {
       removeDebugLogging: true,
     },
   },
-});
+};
+
+export default process.env.E2E_DISABLE_SENTRY === "true"
+  ? nextConfig
+  : withSentryConfig(nextConfig, sentryConfig);

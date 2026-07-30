@@ -8,6 +8,7 @@ import {
   TWO_FACTOR_SETUP_MAX_AGE_SECONDS,
   createAuthToken,
   getSessionRequestMetadata,
+  shouldUseSecureAuthCookies,
 } from "@/lib/auth/session";
 import { verifyInvitationToken } from "@/lib/auth/invitation-token";
 import { ApiError, fail } from "@/lib/api/response";
@@ -17,10 +18,9 @@ import { activateInvitedUser } from "@/modules/auth/services/invitation.service"
 
 export const runtime = "nodejs";
 
-const secureCookie = process.env.NODE_ENV === "production";
-
 export async function POST(request: NextRequest) {
   try {
+    const secureCookie = shouldUseSecureAuthCookies();
     const body = await request.json().catch(() => {
       throw new ApiError(
         "El cuerpo debe ser JSON valido.",

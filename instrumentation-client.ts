@@ -4,24 +4,31 @@
 
 import * as Sentry from "@sentry/nextjs";
 
+const sentryDisabled =
+  process.env.NEXT_PUBLIC_SENTRY_DISABLED === "true";
+const sentryDsn =
+  process.env.NEXT_PUBLIC_SENTRY_DSN ??
+  "https://ad1bf9cb7b8d2d67a20cbc290ecd5afa@o4511748453826560.ingest.us.sentry.io/4511748464705536";
+
 Sentry.init({
-  dsn: "https://ad1bf9cb7b8d2d67a20cbc290ecd5afa@o4511748453826560.ingest.us.sentry.io/4511748464705536",
+  dsn: sentryDisabled ? undefined : sentryDsn,
+  enabled: !sentryDisabled,
 
   // Add optional integrations for additional features
-  integrations: [Sentry.replayIntegration()],
+  integrations: sentryDisabled ? [] : [Sentry.replayIntegration()],
 
   // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  tracesSampleRate: sentryDisabled ? 0 : 1,
   // Enable logs to be sent to Sentry
-  enableLogs: true,
+  enableLogs: !sentryDisabled,
 
   // Define how likely Replay events are sampled.
   // This sets the sample rate to be 10%. You may want this to be 100% while
   // in development and sample at a lower rate in production
-  replaysSessionSampleRate: 0.1,
+  replaysSessionSampleRate: sentryDisabled ? 0 : 0.1,
 
   // Define how likely Replay events are sampled when an error occurs.
-  replaysOnErrorSampleRate: 1.0,
+  replaysOnErrorSampleRate: sentryDisabled ? 0 : 1.0,
 
   dataCollection: {
     // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
