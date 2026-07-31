@@ -8,6 +8,10 @@ import { ModuleKey } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { generateSecret, generateURI, verify } from 'otplib';
 
+type TotpVerifyResult = {
+  valid: boolean;
+  timeStep: number;
+};
 
 import { normalizeEmail, verifyPassword } from '@/lib/auth/password';
 import { getTenantContext } from '@/lib/auth/tenant-context';
