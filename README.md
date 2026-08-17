@@ -1,5 +1,6 @@
 # The-Tower-Power-ERP
 
+
 The-Tower-Power-ERP, anteriormente Gerpy, es un ERP financiero y operativo
 multi-tenant construido con Next.js App Router, TypeScript, Prisma ORM,
 Supabase PostgreSQL y MongoDB. Su arquitectura combina sesiones revocables
