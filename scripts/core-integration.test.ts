@@ -76,6 +76,7 @@ const [
   onboardingSchemaModule,
   onboardingServiceModule,
   notificationServiceModule,
+  tenantBootstrapModule,
 ] = await Promise.all([
   import(moduleUrl("../lib/db/prisma.ts")) as Promise<
     typeof import("../lib/db/prisma")
@@ -98,6 +99,9 @@ const [
   import(moduleUrl("../lib/services/notification-service.ts")) as Promise<
     typeof import("../lib/services/notification-service")
   >,
+  import(moduleUrl("../lib/auth/tenant-context.ts")) as Promise<
+    typeof import("../lib/auth/tenant-context")
+  >,
 ]);
 
 const { prisma, withTenantTransaction } = databaseModule;
@@ -115,6 +119,11 @@ const {
   saveOnboardingPlan,
 } = onboardingServiceModule;
 const { triggerNotification } = notificationServiceModule;
+const {
+  DEFAULT_OWNER_PERMISSIONS,
+  enableDefaultTenantModules,
+  permissionDefinition,
+} = tenantBootstrapModule;
 
 type IntegrationState = {
   tenantId: string | null;
@@ -241,6 +250,7 @@ test(
             },
           },
         });
+        await enableDefaultTenantModules(tx, tenant.id);
         const branch = await tx.branch.create({
           data: {
             tenantId: tenant.id,
@@ -278,6 +288,25 @@ test(
             name: `Integration Admin ${suffix}`,
             scope: RoleScope.TENANT,
           },
+        });
+        const ownerPermissions = await Promise.all(
+          DEFAULT_OWNER_PERMISSIONS.map((key) =>
+            tx.permission.upsert({
+              where: { key },
+              update: {},
+              create: {
+                ...permissionDefinition(key),
+                description: `Allows ${key}.`,
+              },
+            }),
+          ),
+        );
+        await tx.rolePermission.createMany({
+          data: ownerPermissions.map((permission) => ({
+            roleId: adminRole.id,
+            permissionId: permission.id,
+          })),
+          skipDuplicates: true,
         });
         await tx.roleAssignment.create({
           data: {

@@ -1,6 +1,10 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, RoleScope } from "@prisma/client";
 
 import { ApiError } from "@/lib/api/response";
+import {
+  DEFAULT_OWNER_PERMISSIONS,
+  enableDefaultTenantModules,
+} from "@/lib/auth/tenant-context";
 import {
   withTenantTransaction,
   type TenantTransactionClient,
@@ -233,6 +237,101 @@ async function loadSerializedState(
   return serializeState(tenant, primaryBranch);
 }
 
+async function ensureFounderOwnerAccess(
+  tx: TenantTransactionClient,
+  context: ServiceContext,
+  membershipId: string,
+) {
+  const founderMembership = await tx.tenantMembership.findFirst({
+    where: { tenantId: context.tenantId },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: { id: true },
+  });
+
+  if (founderMembership?.id !== membershipId) return;
+
+  const ownerRole =
+    (await tx.role.findFirst({
+      where: {
+        tenantId: context.tenantId,
+        name: { in: ["Owner", "OWNER"] },
+      },
+      orderBy: { createdAt: "asc" },
+    })) ??
+    (await tx.role.create({
+      data: {
+        tenantId: context.tenantId,
+        name: "Owner",
+        scope: RoleScope.TENANT,
+        description: "Full access role restored during onboarding.",
+      },
+    }));
+
+  if (ownerRole.scope !== RoleScope.TENANT) {
+    await tx.role.update({
+      where: { id: ownerRole.id },
+      data: { scope: RoleScope.TENANT },
+    });
+  }
+
+  const permissions = await tx.permission.findMany({
+    where: { key: { in: DEFAULT_OWNER_PERMISSIONS } },
+    select: { id: true, key: true },
+  });
+  const permissionKeys = new Set(
+    permissions.map((permission) => permission.key),
+  );
+  const missingPermissions = DEFAULT_OWNER_PERMISSIONS.filter(
+    (permission) => !permissionKeys.has(permission),
+  );
+
+  if (missingPermissions.length > 0) {
+    throw new ApiError(
+      "The owner permission catalog is incomplete.",
+      503,
+      "OWNER_PERMISSION_CATALOG_INCOMPLETE",
+    );
+  }
+
+  await tx.rolePermission.createMany({
+    data: permissions.map((permission) => ({
+      roleId: ownerRole.id,
+      permissionId: permission.id,
+    })),
+    skipDuplicates: true,
+  });
+
+  const assignment = await tx.roleAssignment.findFirst({
+    where: {
+      tenantId: context.tenantId,
+      membershipId,
+      roleId: ownerRole.id,
+      branchId: null,
+    },
+    select: { id: true },
+  });
+
+  if (assignment) {
+    await tx.roleAssignment.update({
+      where: { id: assignment.id },
+      data: {
+        validFrom: new Date(),
+        validUntil: null,
+        revokedAt: null,
+      },
+    });
+  } else {
+    await tx.roleAssignment.create({
+      data: {
+        tenantId: context.tenantId,
+        membershipId,
+        roleId: ownerRole.id,
+        assignedByMembershipId: membershipId,
+      },
+    });
+  }
+}
+
 export async function getOnboardingState(context: ServiceContext) {
   return withTenantTransaction(context.tenantId, (tx) =>
     loadSerializedState(tx, context),
@@ -440,6 +539,13 @@ export async function completeOnboarding(context: ServiceContext) {
         "ONBOARDING_INCOMPLETE",
       );
     }
+
+    await enableDefaultTenantModules(tx, context.tenantId);
+    await ensureFounderOwnerAccess(
+      tx,
+      context,
+      tenant.memberships[0].id,
+    );
 
     const completedAt = new Date().toISOString();
     await tx.tenant.update({

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { hashPassword, normalizeEmail } from "@/lib/auth/password";
 import type { TenantContext } from "@/lib/auth/rbac";
 
-const DEFAULT_MODULES: ModuleKey[] = [
+export const DEFAULT_TENANT_MODULES: ModuleKey[] = [
   ModuleKey.DASHBOARD,
   ModuleKey.MEMBERSHIPS,
   ModuleKey.ACCESS,
@@ -31,8 +31,10 @@ const DEFAULT_PERMISSION_LEVELS = [
   "admin",
 ] as const;
 
-const DEFAULT_PERMISSIONS = [
+export const DEFAULT_OWNER_PERMISSIONS = Array.from(new Set([
   "dashboard.read",
+  "admin.read",
+  "admin.write",
   "hr.read",
   "hr.employee.write",
   "hr.contract.write",
@@ -48,12 +50,12 @@ const DEFAULT_PERMISSIONS = [
   "accounting.journal.write",
   "accounting.post",
   "accounting.void",
-  ...DEFAULT_MODULES.flatMap((moduleKey) =>
+  ...DEFAULT_TENANT_MODULES.flatMap((moduleKey) =>
     DEFAULT_PERMISSION_LEVELS.map(
       (level) => `${moduleKey.toLowerCase()}.${level}`,
     ),
   ),
-];
+]));
 
 type PrismaTx = Prisma.TransactionClient;
 
@@ -71,7 +73,7 @@ function workspaceName(name: string | null | undefined, email: string | null | u
   return emailPrefix ? `${emailPrefix} Workspace` : "The Tower Power Workspace";
 }
 
-function permissionDefinition(key: string) {
+export function permissionDefinition(key: string) {
   const [moduleSegment, ...segments] = key.split(".");
   const action = segments.pop() ?? "manage";
   const resource = segments.join(".") || moduleSegment;
@@ -82,6 +84,28 @@ function permissionDefinition(key: string) {
   }
 
   return { key, moduleKey, resource, action };
+}
+
+export async function enableDefaultTenantModules(
+  tx: PrismaTx,
+  tenantId: string,
+) {
+  await tx.tenantModule.createMany({
+    data: DEFAULT_TENANT_MODULES.map((moduleKey) => ({
+      tenantId,
+      moduleKey,
+      enabled: true,
+    })),
+    skipDuplicates: true,
+  });
+
+  await tx.tenantModule.updateMany({
+    where: {
+      tenantId,
+      moduleKey: { in: DEFAULT_TENANT_MODULES },
+    },
+    data: { enabled: true },
+  });
 }
 
 async function bootstrapTenantForUser(
@@ -104,7 +128,7 @@ async function bootstrapTenantForUser(
       limits: {
         branches: 1,
         users: 5,
-        modules: DEFAULT_MODULES,
+        modules: DEFAULT_TENANT_MODULES,
       },
     },
   });
@@ -128,14 +152,7 @@ async function bootstrapTenantForUser(
     },
   });
 
-  await tx.tenantModule.createMany({
-    data: DEFAULT_MODULES.map((moduleKey) => ({
-      tenantId: tenant.id,
-      moduleKey,
-      enabled: true,
-    })),
-    skipDuplicates: true,
-  });
+  await enableDefaultTenantModules(tx, tenant.id);
 
   const role = await tx.role.create({
     data: {
@@ -147,7 +164,7 @@ async function bootstrapTenantForUser(
   });
 
   const permissions = await Promise.all(
-    DEFAULT_PERMISSIONS.map((key) => {
+    DEFAULT_OWNER_PERMISSIONS.map((key) => {
       const definition = permissionDefinition(key);
 
       return tx.permission.upsert({

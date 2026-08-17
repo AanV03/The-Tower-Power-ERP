@@ -4,7 +4,7 @@ import {
   createHash,
   randomBytes,
 } from 'node:crypto';
-import { ModuleKey } from '@prisma/client';
+import { RoleScope } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { generateSecret, generateURI, verify } from 'otplib';
 
@@ -14,32 +14,17 @@ type TotpVerifyResult = {
 };
 
 import { normalizeEmail, verifyPassword } from '@/lib/auth/password';
-import { getTenantContext } from '@/lib/auth/tenant-context';
+import {
+  DEFAULT_OWNER_PERMISSIONS,
+  enableDefaultTenantModules,
+  getTenantContext,
+  permissionDefinition,
+} from '@/lib/auth/tenant-context';
 import type { AuthTokenPayload, TwoFactorChallengePayload } from '@/lib/auth/session';
 import { prisma } from '@/lib/db/prisma';
 import { LoginDTO, RegisterDTO } from '../schemas/auth.schema';
 
 type SessionPayloadInput = Omit<AuthTokenPayload, 'iat' | 'exp' | 'sub'>;
-
-const DEFAULT_BOOTSTRAP_MODULES = ['DASHBOARD', 'POS'] as const;
-const DEFAULT_BOOTSTRAP_PERMISSIONS = [
-  'dashboard.read',
-  'pos.read',
-  'pos.write',
-] as const;
-
-function permissionDefinition(key: string) {
-  const [moduleSegment, ...segments] = key.split('.');
-  const action = segments.pop() ?? 'manage';
-  const resource = segments.join('.') || moduleSegment;
-  const moduleKey = moduleSegment.toUpperCase() as ModuleKey;
-
-  if (!Object.values(ModuleKey).includes(moduleKey)) {
-    throw new Error(`INVALID_PERMISSION_MODULE:${key}`);
-  }
-
-  return { key, moduleKey, resource, action };
-}
 
 function getMfaEncryptionKey() {
   const secret =
@@ -146,6 +131,8 @@ export class AuthService {
         },
       });
 
+      await enableDefaultTenantModules(tx, tenant.id);
+
       const branch = await tx.branch.create({
         data: {
           tenantId: tenant.id,
@@ -154,34 +141,17 @@ export class AuthService {
         },
       });
 
-      await tx.tenantModule.createMany({
-        data: DEFAULT_BOOTSTRAP_MODULES.map((moduleKey) => ({
+      const role = await tx.role.create({
+        data: {
           tenantId: tenant.id,
-          moduleKey,
-          enabled: true,
-        })),
-        skipDuplicates: true,
+          name: 'Owner',
+          scope: RoleScope.TENANT,
+          description: 'Full access role created during tenant bootstrap.',
+        },
       });
 
-      const role =
-        (await tx.role.findFirst({
-          where: {
-            tenantId: tenant.id,
-            name: { in: ['OWNER', 'ADMIN'] },
-          },
-          orderBy: { name: 'desc' },
-        })) ??
-        (await tx.role.create({
-          data: {
-            tenantId: tenant.id,
-            name: 'OWNER',
-            scope: 'TENANT',
-            description: 'Owner role created during tenant bootstrap.',
-          },
-        }));
-
       const permissions = await Promise.all(
-        DEFAULT_BOOTSTRAP_PERMISSIONS.map((key) => {
+        DEFAULT_OWNER_PERMISSIONS.map((key) => {
           const definition = permissionDefinition(key);
 
           return tx.permission.upsert({
@@ -232,6 +202,7 @@ export class AuthService {
           tenantId: tenant.id,
           membershipId: membership.id,
           roleId: role.id,
+          assignedByMembershipId: membership.id,
         },
       });
 

@@ -53,6 +53,14 @@ test("throws explicit auth and scope errors for server guards", () => {
 test("seeds action-specific permissions for hr payroll and accounting", () => {
   const seed = readFileSync(join(process.cwd(), "prisma/seed.ts"), "utf8");
   const tenantBootstrap = readFileSync(join(process.cwd(), "lib/auth/tenant-context.ts"), "utf8");
+  const registrationBootstrap = readFileSync(
+    join(process.cwd(), "modules/auth/services/auth.service.ts"),
+    "utf8",
+  );
+  const onboardingService = readFileSync(
+    join(process.cwd(), "modules/onboarding/services/onboarding.service.ts"),
+    "utf8",
+  );
   const required = [
     "hr.read",
     "hr.employee.write",
@@ -76,8 +84,22 @@ test("seeds action-specific permissions for hr payroll and accounting", () => {
     assert.match(tenantBootstrap, new RegExp(`"${permission}"`), `${permission} is granted to bootstrap owners`);
   }
 
+  for (const permission of ["dashboard.read", "admin.read", "admin.write"]) {
+    assert.match(
+      tenantBootstrap,
+      new RegExp(`"${permission}"`),
+      `${permission} is granted to bootstrap owners`,
+    );
+  }
+
   assert.match(seed, /name: "Auditor"[\s\S]*"accounting\.read"/);
   assert.doesNotMatch(seed, /name: "Auditor"[\s\S]*"accounting\.manage"/);
   assert.match(seed, /name: "Entrenador"[\s\S]*"hr\.attendance\.write"/);
   assert.doesNotMatch(seed, /name: "Entrenador"[\s\S]*"payroll\.manage"/);
+  assert.match(registrationBootstrap, /enableDefaultTenantModules\(tx, tenant\.id\)/);
+  assert.match(registrationBootstrap, /DEFAULT_OWNER_PERMISSIONS\.map/);
+  assert.match(registrationBootstrap, /scope: RoleScope\.TENANT/);
+  assert.doesNotMatch(registrationBootstrap, /DEFAULT_BOOTSTRAP_MODULES/);
+  assert.match(onboardingService, /ensureFounderOwnerAccess/);
+  assert.match(onboardingService, /enableDefaultTenantModules/);
 });
