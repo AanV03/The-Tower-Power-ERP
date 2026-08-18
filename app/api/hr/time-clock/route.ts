@@ -1,10 +1,11 @@
 import { AttendanceSource } from "@prisma/client";
-import { z } from "zod";
+import { NextResponse } from "next/server";
+import { z, ZodError } from "zod";
 
 import { requireApiContext } from "@/lib/api/context";
 import { parsePagination } from "@/lib/api/pagination";
 import { ApiError, created, fail, ok } from "@/lib/api/response";
-import { prisma } from "@/lib/db/prisma";
+import { withTenantTransaction } from "@/lib/db/prisma";
 
 const ClockActionSchema = z.enum(["CLOCK_IN", "CLOCK_OUT"]);
 
@@ -17,7 +18,41 @@ const TimeClockSchema = z.object({
 });
 
 function parseDate(value: string | null) {
-  return value ? new Date(value) : undefined;
+  if (!value) return undefined;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new ApiError("Invalid date filter.", 400, "INVALID_DATE");
+  }
+
+  return date;
+}
+
+async function parseJsonBody(request: Request) {
+  try {
+    return await request.json();
+  } catch {
+    throw new ApiError(
+      "Request body must be valid JSON.",
+      400,
+      "INVALID_JSON",
+    );
+  }
+}
+
+function handleTimeClockError(error: unknown, operation: "GET" | "POST") {
+  console.error(`[HR_TIME_CLOCK_${operation}_ERROR]`, error);
+
+  if (error instanceof ApiError || error instanceof ZodError) {
+    return fail(error);
+  }
+
+  const message =
+    error instanceof Error && error.message
+      ? error.message
+      : "Error interno";
+
+  return NextResponse.json({ error: message }, { status: 500 });
 }
 
 export const runtime = "nodejs";
@@ -45,31 +80,35 @@ export async function GET(request: Request) {
       ...(from || to ? { clockIn: { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) } } : {}),
     };
 
-    const [items, total] = await Promise.all([
-      prisma.timeClock.findMany({
-        where,
-        include: { employee: true, branch: true },
-        orderBy: { clockIn: "desc" },
-        skip: pagination.skip,
-        take: pagination.take,
-      }),
-      prisma.timeClock.count({ where }),
-    ]);
+    const [items, total] = await withTenantTransaction(
+      context.tenantId,
+      (tx) =>
+        Promise.all([
+          tx.timeClock.findMany({
+            where,
+            include: { employee: true, branch: true },
+            orderBy: { clockIn: "desc" },
+            skip: pagination.skip,
+            take: pagination.take,
+          }),
+          tx.timeClock.count({ where }),
+        ]),
+    );
 
     return ok({ items, total, pagination });
   } catch (error) {
-    return fail(error);
+    return handleTimeClockError(error, "GET");
   }
 }
 
 export async function POST(request: Request) {
   try {
     const context = await requireApiContext({ moduleId: "hr", permission: "hr.attendance.write" });
-    const data = TimeClockSchema.parse(await request.json());
+    const data = TimeClockSchema.parse(await parseJsonBody(request));
     const now = new Date();
 
-    const clock = await prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`
+    const clock = await withTenantTransaction(context.tenantId, async (tx) => {
+      await tx.$executeRaw`
         SELECT pg_advisory_xact_lock(
           hashtext(${`${context.tenantId}:${data.employeeId}:time-clock`})
         )
@@ -158,6 +197,6 @@ export async function POST(request: Request) {
 
     return created(clock);
   } catch (error) {
-    return fail(error);
+    return handleTimeClockError(error, "POST");
   }
 }
