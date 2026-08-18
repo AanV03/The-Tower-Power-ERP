@@ -21,7 +21,7 @@ import {
   permissionDefinition,
 } from '@/lib/auth/tenant-context';
 import type { AuthTokenPayload, TwoFactorChallengePayload } from '@/lib/auth/session';
-import { prisma } from '@/lib/db/prisma';
+import { prisma, setTenantTransactionContext } from '@/lib/db/prisma';
 import { LoginDTO, RegisterDTO } from '../schemas/auth.schema';
 
 type SessionPayloadInput = Omit<AuthTokenPayload, 'iat' | 'exp' | 'sub'>;
@@ -115,104 +115,130 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(payload.password, salt);
     const tenantName = payload.gymName?.trim() || "Gimnasio pendiente de configuración";
 
-    return prisma.$transaction(async (tx) => {
-      const existingUser = await tx.user.findUnique({
-        where: { email },
-      });
+    return prisma.$transaction(
+      async (tx) => {
+        const existingUser = await tx.user.findUnique({
+          where: { email },
+        });
 
-      if (existingUser) {
-        throw new Error('EMAIL_IN_USE');
-      }
+        if (existingUser) {
+          throw new Error('EMAIL_IN_USE');
+        }
 
-      const tenant = await tx.tenant.create({
-        data: {
-          name: tenantName,
-          status: 'ACTIVE',
-        },
-      });
-
-      await enableDefaultTenantModules(tx, tenant.id);
-
-      const branch = await tx.branch.create({
-        data: {
-          tenantId: tenant.id,
-          name: 'Sucursal Matriz',
-          code: `MAT-${tenant.id.substring(0, 4).toUpperCase()}`,
-        },
-      });
-
-      const role = await tx.role.create({
-        data: {
-          tenantId: tenant.id,
-          name: 'Owner',
-          scope: RoleScope.TENANT,
-          description: 'Full access role created during tenant bootstrap.',
-        },
-      });
-
-      const permissions = await Promise.all(
-        DEFAULT_OWNER_PERMISSIONS.map((key) => {
+        const permissionDefinitions = DEFAULT_OWNER_PERMISSIONS.map((key) => {
           const definition = permissionDefinition(key);
 
-          return tx.permission.upsert({
-            where: { key },
-            update: {},
-            create: { ...definition, description: `Allows ${key}.` },
-          });
-        }),
-      );
+          return { ...definition, description: `Allows ${key}.` };
+        });
 
-      await tx.rolePermission.createMany({
-        data: permissions.map((permission) => ({
-          roleId: role.id,
-          permissionId: permission.id,
-        })),
-        skipDuplicates: true,
-      });
+        await tx.permission.createMany({
+          data: permissionDefinitions,
+          skipDuplicates: true,
+        });
 
-      const user = await tx.user.create({
-        data: {
-          name: payload.name,
-          email,
-          passwordHash: hashedPassword,
-          status: 'ACTIVE',
-        },
-      });
+        const permissions = await tx.permission.findMany({
+          where: { key: { in: DEFAULT_OWNER_PERMISSIONS } },
+          select: { id: true, key: true },
+        });
 
-      const membership = await tx.tenantMembership.create({
-        data: {
+        if (permissions.length !== DEFAULT_OWNER_PERMISSIONS.length) {
+          throw new Error('OWNER_PERMISSION_CATALOG_INCOMPLETE');
+        }
+
+        const user = await tx.user.create({
+          data: {
+            name: payload.name,
+            email,
+            passwordHash: hashedPassword,
+            status: 'ACTIVE',
+          },
+        });
+
+        const tenant = await tx.tenant.create({
+          data: {
+            name: tenantName,
+            status: 'ACTIVE',
+            brandIdentity: {
+              adminOnboardingCompleted: false,
+              adminOnboardingVersion: 1,
+              onboarding: {
+                lastStep: 'gym-info',
+                gymInfoCompleted: false,
+                planCompleted: false,
+              },
+            },
+          },
+        });
+
+        await setTenantTransactionContext(tx, tenant.id);
+        await enableDefaultTenantModules(tx, tenant.id);
+
+        const branch = await tx.branch.create({
+          data: {
+            tenantId: tenant.id,
+            name: 'Sucursal Matriz',
+            code: `MAT-${tenant.id.substring(0, 4).toUpperCase()}`,
+            timezone: 'America/Mexico_City',
+            status: 'ACTIVE',
+          },
+        });
+
+        const role = await tx.role.create({
+          data: {
+            tenantId: tenant.id,
+            name: 'Owner',
+            scope: RoleScope.TENANT,
+            description: 'Full access role created during tenant bootstrap.',
+          },
+        });
+
+        await tx.rolePermission.createMany({
+          data: permissions.map((permission) => ({
+            roleId: role.id,
+            permissionId: permission.id,
+          })),
+          skipDuplicates: true,
+        });
+
+        const membership = await tx.tenantMembership.create({
+          data: {
+            tenantId: tenant.id,
+            userId: user.id,
+            defaultBranchId: branch.id,
+            status: 'ACTIVE',
+            joinedAt: new Date(),
+          },
+        });
+
+        await tx.branchMembership.create({
+          data: {
+            tenantId: tenant.id,
+            membershipId: membership.id,
+            branchId: branch.id,
+          },
+        });
+
+        await tx.roleAssignment.create({
+          data: {
+            tenantId: tenant.id,
+            membershipId: membership.id,
+            roleId: role.id,
+            assignedByMembershipId: membership.id,
+          },
+        });
+
+        return {
           tenantId: tenant.id,
           userId: user.id,
-          defaultBranchId: branch.id,
-          status: 'ACTIVE',
-          joinedAt: new Date(),
-        },
-      });
-
-      await tx.branchMembership.create({
-        data: {
-          tenantId: tenant.id,
-          membershipId: membership.id,
-          branchId: branch.id,
-        },
-      });
-
-      await tx.roleAssignment.create({
-        data: {
-          tenantId: tenant.id,
-          membershipId: membership.id,
-          roleId: role.id,
-          assignedByMembershipId: membership.id,
-        },
-      });
-
-      return {
-        tenantId: tenant.id,
-        userId: user.id,
-        email: user.email,
-        gymName: tenant.name,
-      };
-    });
+          email: user.email,
+          gymName: tenant.name,
+        };
+      },
+      {
+        maxWait: 10_000,
+        timeout: 30_000,
+      },
+    );
   }
 
   static async createSessionPayloadForUser(userId: string, typ: 'session' | '2fa' | '2fa_setup' = 'session') {
